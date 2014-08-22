@@ -61,7 +61,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
-		#if (windows || mac || linux)
+		#if ((windows || mac || linux) && !v8)
 		
 		var useManifest = false;
 		::if (assets != null)::::foreach assets::::if (embed)::
@@ -182,7 +182,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		return BitmapData.fromImage (ApplicationMain.images.get (path.get (id)));
 		
-		#elseif js
+		#elseif (js && !v8)
 		
 		return cast (ApplicationMain.loaders.get (path.get (id)).contentLoaderInfo.content, Bitmap).bitmapData;
 		
@@ -202,7 +202,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		return cast (Type.createInstance (className.get (id), []), ByteArray);
 
-		#elseif (js || openfl_html5 || pixi)
+		#elseif ((js && !v8) || openfl_html5 || pixi)
 		
 		var bytes:ByteArray = null;
 		var data = ApplicationMain.urlLoaders.get (path.get (id)).data;
@@ -337,7 +337,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 	
 	public override function getText (id:String):String {
 		
-		#if js
+		#if (js && !v8)
 		
 		var bytes:ByteArray = null;
 		var data = ApplicationMain.urlLoaders.get (path.get (id)).data;

@@ -297,6 +297,8 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 			data[i] = b[position + i];
 		}
 		var bytes = new Bytes (8, data);
+		#elseif v8
+		var bytes = new Bytes (8, b.slice (position, position + 8));
 		#end
 		
 		position += 8;
@@ -334,6 +336,8 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 			data[i] = b[position + i];
 		}
 		var bytes = new Bytes (4, data);
+		#elseif v8
+		var bytes = new Bytes (4, b.slice (position, position + 4));
 		#end
 		
 		position += 4;
@@ -430,6 +434,8 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 			return result.substr (0, length - 1);
 		}
 		return result;
+		#elseif v8
+		return null;
 		#elseif cpp
 		var result = "";
 		untyped __global__.__hxcpp_string_of_bytes (b, result, p, length);

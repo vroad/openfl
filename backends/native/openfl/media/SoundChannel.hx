@@ -11,6 +11,9 @@ import openfl.Lib;
 #if neko
 import neko.vm.Thread;
 import neko.vm.Mutex;
+#elseif v8
+import v8.vm.Thread;
+import v8.vm.Mutex;
 #elseif java
 import java.vm.Thread;
 import java.vm.Mutex;
@@ -129,7 +132,7 @@ class SoundChannel extends EventDispatcher {
 				
 			}
 			
-			#if (!audio_thread_disabled && !emscripten)
+			#if (!audio_thread_disabled && !emscripten && !v8)
 			
 			if (__addedToThread || (__soundInstance != null && __soundInstance.__audioType == InternalAudioType.MUSIC)) {
 				
@@ -175,7 +178,7 @@ class SoundChannel extends EventDispatcher {
 	}
 	
 	
-	#if (!audio_thread_disabled && !emscripten)
+	#if (!audio_thread_disabled && !emscripten && !v8)
 	
 	private static function __checkCompleteBackgroundThread () {		
 		

@@ -1008,7 +1008,7 @@ class Stage extends DisplayObjectContainer {
 			
 		}
 		
-		#if !java
+		#if (!java && !v8)
 		Timer.__checkTimers ();
 		#end
 		SoundChannel.__pollComplete ();
@@ -1140,7 +1140,11 @@ class Stage extends DisplayObjectContainer {
 		#if java
 		return 0;
 		#else
+		#if !v8
 		var nextWake = Timer.__nextWake (315000000.0);
+		#else
+		var nextWake = 0.0;
+		#end
 		
 		if (nextWake > 0.001 && SoundChannel.__dynamicSoundCount > 0) {
 			
