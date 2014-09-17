@@ -5,6 +5,7 @@ import js.html.webgl.ContextAttributes;
 import js.html.webgl.RenderingContext;
 import js.html.CanvasElement;
 import js.Browser;
+import openfl.events.Event;
 import openfl.display.Stage;
 import openfl.geom.Rectangle;
 import openfl.gl.GL;
@@ -22,7 +23,7 @@ class OpenGLView extends DirectRenderer {
 	private var __added:Bool;
 	private var __canvas:CanvasElement;
 	private var __context:RenderingContext;
-	
+	private var __posUpdated:Bool;
 	
 	public function new () {
 		
@@ -33,6 +34,7 @@ class OpenGLView extends DirectRenderer {
 		__canvas = cast Browser.document.createElement ("canvas");
 		__canvas.width = Lib.current.stage.stageWidth;
 		__canvas.height = Lib.current.stage.stageHeight;
+		Lib.current.stage.addEventListener(Event.RESIZE, onResize);
 		
 		var attributes:ContextAttributes = {alpha:false};
 		__context = cast __canvas.getContextWebGL (attributes);
@@ -48,6 +50,7 @@ class OpenGLView extends DirectRenderer {
 		#end
 		
 		GL.__context = __context;
+		__posUpdated = true;
 		
 		#end
 		
@@ -88,12 +91,30 @@ class OpenGLView extends DirectRenderer {
 				var rect = null;
 				
 				if (scrollRect == null) {
-					
-					rect = new Rectangle (0, 0, stage.stageWidth, stage.stageHeight);
+					if (__posUpdated)
+					{
+						__canvas.style.left = 0 + "px";
+						__canvas.style.top = 0 + "px";
+						__canvas.width = Std.int(Lib.current.stage.stageWidth);
+						__canvas.height = Std.int(Lib.current.stage.stageHeight);
+						__canvas.style.width = Std.int(Lib.current.stage.stageWidth) + 'px';
+						__canvas.style.height = Std.int(Lib.current.stage.stageHeight) + 'px';
+						__posUpdated = false;
+					}
+					rect = new Rectangle (0, 0, __canvas.width, __canvas.height);
 					
 				} else {
-					
-					rect = new Rectangle (x + scrollRect.x, y + scrollRect.y, scrollRect.width, scrollRect.height);
+					if (__posUpdated)
+					{
+						__canvas.style.left = (x + scrollRect.x) + "px";
+						__canvas.style.top = (y + scrollRect.y) + "px";
+						__canvas.width = Std.int(scrollRect.width);
+						__canvas.height = Std.int(scrollRect.height);
+						__canvas.style.width = Std.int(scrollRect.width) + 'px';
+						__canvas.style.height = Std.int(scrollRect.height) + 'px';
+						__posUpdated = false;
+					}
+					rect = new Rectangle (x + scrollRect.x, y + scrollRect.y, __canvas.width, __canvas.height);
 					
 				}
 				
@@ -139,12 +160,27 @@ class OpenGLView extends DirectRenderer {
 		
 	}
 	
+	private function onResize(e:Event)
+	{
+		__posUpdated = true;
+	}
+	
 	
 	
 	// Getters & Setters
 	
 	
+	public override function set_x(x:Float):Float
+	{
+		__posUpdated = true;
+		return super.x = x;
+	}
 	
+	public override function set_y(y:Float)
+	{
+		__posUpdated = true;
+		return super.y = y;
+	}
 	
 	private static function get_isSupported ():Bool {
 		
