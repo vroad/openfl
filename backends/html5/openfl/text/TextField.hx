@@ -952,7 +952,7 @@ class TextField extends InteractiveObject {
 		if (__canvas != null) {
 			
 			// TODO: Make this more accurate
-			return __textFormat.size * 1.185;
+			return __textFormat.size;
 			
 		} else if (__div != null) {
 			
