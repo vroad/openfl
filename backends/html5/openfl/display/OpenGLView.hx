@@ -97,8 +97,6 @@ class OpenGLView extends DirectRenderer {
 						__canvas.style.top = 0 + "px";
 						__canvas.width = Std.int(Lib.current.stage.stageWidth);
 						__canvas.height = Std.int(Lib.current.stage.stageHeight);
-						__canvas.style.width = Std.int(Lib.current.stage.stageWidth) + 'px';
-						__canvas.style.height = Std.int(Lib.current.stage.stageHeight) + 'px';
 						__posUpdated = false;
 					}
 					rect = new Rectangle (0, 0, __canvas.width, __canvas.height);
@@ -110,8 +108,6 @@ class OpenGLView extends DirectRenderer {
 						__canvas.style.top = (y + scrollRect.y) + "px";
 						__canvas.width = Std.int(scrollRect.width);
 						__canvas.height = Std.int(scrollRect.height);
-						__canvas.style.width = Std.int(scrollRect.width) + 'px';
-						__canvas.style.height = Std.int(scrollRect.height) + 'px';
 						__posUpdated = false;
 					}
 					rect = new Rectangle (x + scrollRect.x, y + scrollRect.y, __canvas.width, __canvas.height);
