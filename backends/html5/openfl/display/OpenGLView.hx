@@ -36,7 +36,7 @@ class OpenGLView extends DirectRenderer {
 		__canvas.height = Lib.current.stage.stageHeight;
 		Lib.current.stage.addEventListener(Event.RESIZE, onResize);
 		
-		var attributes:ContextAttributes = {alpha:false};
+		var attributes:ContextAttributes = {alpha:false, premultipliedAlpha: false, antialias:false};
 		__context = cast __canvas.getContextWebGL (attributes);
 		
 		if (__context == null) {
