@@ -14,7 +14,7 @@ class URLRequestTest {
 		var urlRequest = new URLRequest ();
 		var exists = urlRequest.contentType;
 		
-		#if (openfl_native) // to be revisited later
+		#if (!openfl_next && openfl_native) // to be revisited later
 		Assert.isNotNull (exists);
 		#else
 		Assert.isNull (exists);
@@ -74,10 +74,12 @@ class URLRequestTest {
 		
 		// TODO: Confirm functionality
 		
+		#if !flash
 		var urlRequest = new URLRequest ();
 		var exists = urlRequest.userAgent;
 		
 		Assert.isNull (exists);
+		#end
 		
 	}
 	

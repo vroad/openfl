@@ -1,58 +1,182 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl;
-#if display
+package openfl; #if (flash || openfl_next || js || display)
+#if !macro
 
 
-class Lib {
+import haxe.Timer;
+import lime.system.System;
+import openfl.display.Application;
+import openfl.display.MovieClip;
+import openfl.display.Stage;
+import openfl.net.URLRequest;
 
-	public static var current : openfl.display.MovieClip;
+#if js
+import js.html.HtmlElement;
+import js.Browser;
+#end
 
-	public inline static function getTimer() : Int {
-		return 0;
-	}
 
-	public static function eval( path : String ) : Dynamic {
-		return null;
-	}
-
-	public static function getURL( url : openfl.net.URLRequest, ?target : String ) {
+@:access(openfl.display.Stage) class Lib {
+	
+	
+	public static var application:Application;
+	
+	#if !flash
+	public static var current (default, null):MovieClip = new MovieClip ();
+	#else
+	public static var current (get, set):MovieClip;
+	#end
+	
+	@:noCompletion private static var __sentWarnings = new Map<String, Bool> ();
+	@:noCompletion private static var __startTime:Float = Timer.stamp ();
+	
+	
+	public static function as<T> (v:Dynamic, c:Class<T>):Null<T> {
 		
-	}
-
-	public static function fscommand( cmd : String, ?param : String ) {
+		#if flash
+		return flash.Lib.as (v,c);
+		#else
+		return Std.is (v, c) ? v : null;
+		#end
 		
-	}
-
-	public static function trace( arg : Dynamic ) {
-		haxe.Log.trace (arg);
-	}
-
-	public static function attach( name : String ) : openfl.display.MovieClip {
-		return null;
-	}
-
-	public inline static function as<T>( v : Dynamic, c : Class<T> ) : Null<T> {
-		return cast v;
 	}
 	
-	public static function redirectTraces() {
+	
+	public static function attach (name:String):MovieClip {
+		
+		#if flash
+		return flash.Lib.attach (name);
+		#else
+		return new MovieClip ();
+		#end
 		
 	}
-
-	static function traceToConsole(v : Dynamic, ?inf : haxe.PosInfos ) {
+	
+	
+	#if js
+	@:keep @:expose("openfl.embed")
+	public static function embed (elementName:String, width:Null<Int> = null, height:Null<Int> = null, background:String = null) {
+		
+		System.embed (elementName, width, height, background);
 		
 	}
+	#end
+	
+	
+	#if flash
+	public static function eval (path:String):Dynamic {
+		
+		return flash.Lib.eval (path);
+		
+	}
+	#end
+	
+	
+	#if flash
+	public static function fscommand (cmd:String, ?param:String) {
+		
+		return flash.Lib.fscommand (cmd, param);
+		
+	}
+	#end
+	
+	
+	public static function getTimer ():Int {
+		
+		#if flash
+		return flash.Lib.getTimer ();
+		#else
+		return Std.int ((Timer.stamp () - __startTime) * 1000);
+		#end
+		
+	}
+	
+	
+	public static function getURL (request:URLRequest, target:String = null) {
+		
+		if (target == null) {
+			
+			target = "_blank";
+			
+		}
+		
+		#if js
+		Browser.window.open (request.url, target);
+		#elseif flash
+		return flash.Lib.getURL (request, target);
+		#end
+		
+	}
+	
+	
+	public static function notImplemented (api:String):Void {
+		
+		if (!__sentWarnings.exists (api)) {
+			
+			__sentWarnings.set (api, true);
+			
+			trace ("Warning: " + api + " is not implemented");
+			
+		}
+		
+	}
+	
+	
+	public static function preventDefaultTouchMove ():Void {
+		
+		#if js
+		Browser.document.addEventListener ("touchmove", function (evt:js.html.Event):Void {
+			
+			evt.preventDefault ();
+			
+		}, false);
+		#end
+		
+	}
+	
+	
+	#if flash
+	public static function redirectTraces () {
+		
+		return flash.Lib.redirectTraces ();
+		
+	}
+	#end
+	
+	
+	public static function trace (arg:Dynamic):Void {
+		
+		haxe.Log.trace (arg);
+		
+	}
+	
+	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	#if flash
+	@:noCompletion private static function get_current ():MovieClip {
+		
+		return flash.Lib.current;
+		
+	}
+	
+	
+	@:noCompletion private static function set_current (current:MovieClip):MovieClip {
+		
+		return flash.Lib.current = current;
+		
+	}
+	#end
+	
+	
 }
 
 
-#elseif macro
+#else
 
 
 import haxe.macro.Compiler;
@@ -65,16 +189,20 @@ class Lib {
 	
 	public static function includeBackend (type:String) {
 		
-		Compiler.define ("openfl");
-		Compiler.define ("openfl_" + type);
-		
-		var paths = Context.getClassPath();
-		
-		for (path in paths) {
+		if (type == "native" || type == "legacy") {
 			
-			if (FileSystem.exists (path + "/backends/" + type)) {
+			Compiler.define ("openfl");
+			Compiler.define ("openfl_native");
+			
+			var paths = Context.getClassPath();
+			
+			for (path in paths) {
 				
-				Compiler.addClassPath (path + "/backends/" + type);
+				if (FileSystem.exists (path + "/legacy/openfl")) {
+					
+					Compiler.addClassPath (path + "/legacy");
+					
+				}
 				
 			}
 			
@@ -86,4 +214,7 @@ class Lib {
 }
 
 
+#end
+#else
+typedef Lib = openfl._v2.Lib;
 #end

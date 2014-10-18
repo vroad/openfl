@@ -1,13 +1,18 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
-package openfl.display;
-#if display
+
+import openfl.errors.ArgumentError;
+import openfl._internal.renderer.opengl.utils.GraphicsRenderer;
+import openfl.display.Tilesheet;
+import openfl.geom.Matrix;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
+import openfl.Vector;
+
+#if js
+import js.html.CanvasElement;
+import js.html.CanvasRenderingContext2D;
+#end
 
 
 /**
@@ -24,9 +29,43 @@ package openfl.display;
  *
  * <p>The Graphics class is final; it cannot be subclassed.</p>
  */
-@:final extern class Graphics {
-	function new() : Void;
-
+class Graphics {
+	
+	
+	public static inline var TILE_SCALE = 0x0001;
+	public static inline var TILE_ROTATION = 0x0002;
+	public static inline var TILE_RGB = 0x0004;
+	public static inline var TILE_ALPHA = 0x0008;
+	public static inline var TILE_TRANS_2x2 = 0x0010;
+	public static inline var TILE_BLEND_NORMAL = 0x00000000;
+	public static inline var TILE_BLEND_ADD = 0x00010000;
+	
+	@:noCompletion private var __bounds:Rectangle;
+	@:noCompletion private var __commands:Array<DrawCommand> = [];
+	@:noCompletion private var __dirty:Bool = true;
+	@:noCompletion private var __glData:Array<GLData> = [];
+	@:noCompletion private var __glGraphicsData:Array<DrawPath>;
+	@:noCompletion private var __halfStrokeWidth:Float;
+	@:noCompletion private var __positionX:Float;
+	@:noCompletion private var __positionY:Float;
+	@:noCompletion private var __visible:Bool = true;
+	
+	#if js
+	@:noCompletion private var __canvas:CanvasElement;
+	@:noCompletion private var __context:CanvasRenderingContext2D;
+	#end
+	
+	
+	public function new () {
+		
+		__commands = new Array ();
+		__halfStrokeWidth = 0;
+		__positionX = 0;
+		__positionY = 0;
+		
+	}
+	
+	
 	/**
 	 * Fills a drawing area with a bitmap image. The bitmap can be repeated or
 	 * tiled to fill the area. The fill remains in effect until you call the
@@ -64,8 +103,15 @@ package openfl.display;
 	 *               using a bilinear algorithm. Rendering by using the nearest
 	 *               neighbor algorithm is faster.
 	 */
-	function beginBitmapFill(bitmap : BitmapData, ?matrix : openfl.geom.Matrix, repeat : Bool = true, smooth : Bool = false) : Void;
-
+	public function beginBitmapFill (bitmap:BitmapData, matrix:Matrix = null, repeat:Bool = true, smooth:Bool = false) {
+		
+		__commands.push (BeginBitmapFill (bitmap, matrix, repeat, smooth));
+		
+		__visible = true;
+		
+	}
+	
+	
 	/**
 	 * Specifies a simple one-color fill that subsequent calls to other Graphics
 	 * methods(such as <code>lineTo()</code> or <code>drawCircle()</code>) use
@@ -80,8 +126,15 @@ package openfl.display;
 	 * @param color The color of the fill(0xRRGGBB).
 	 * @param alpha The alpha value of the fill(0.0 to 1.0).
 	 */
-	function beginFill(color : UInt, alpha : Float = 1) : Void;
-
+	public function beginFill (color:Int = 0, alpha:Float = 1):Void {
+		
+		__commands.push (BeginFill (color & 0xFFFFFF, alpha));
+		
+		if (alpha > 0) __visible = true;
+		
+	}
+	
+	
 	/**
 	 * Specifies a gradient fill used by subsequent calls to other Graphics
 	 * methods(such as <code>lineTo()</code> or <code>drawCircle()</code>) for
@@ -147,14 +200,70 @@ package openfl.display;
 	 *                            a <code>focalPointRatio</code> set to 0.75:
 	 * @throws ArgumentError If the <code>type</code> parameter is not valid.
 	 */
-	function beginGradientFill(type : GradientType, colors : Array<UInt>, alphas : Array<Dynamic>, ratios : Array<Dynamic>, ?matrix : openfl.geom.Matrix, ?spreadMethod : SpreadMethod, ?interpolationMethod : InterpolationMethod, focalPointRatio : Float = 0) : Void;
-
+	public function beginGradientFill (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix = null, spreadMethod:Null<SpreadMethod> = null, interpolationMethod:Null<InterpolationMethod> = null, focalPointRatio:Null<Float> = null):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.beginGradientFill");
+		
+	}
+	
+	
 	/**
 	 * Clears the graphics that were drawn to this Graphics object, and resets
 	 * fill and line style settings.
 	 * 
 	 */
-	function clear() : Void;
+	public function clear ():Void {
+		
+		__commands = new Array ();
+		__halfStrokeWidth = 0;
+		
+		if (__bounds != null) {
+			
+			__dirty = true;
+			__bounds = null;
+			
+		}
+		
+		__visible = false;
+		
+	}
+	
+	
+	public function copyFrom (sourceGraphics:Graphics):Void {
+		
+		__bounds = sourceGraphics.__bounds.clone ();
+		__commands = sourceGraphics.__commands.copy ();
+		__dirty = true;
+		__halfStrokeWidth = sourceGraphics.__halfStrokeWidth;
+		__positionX = sourceGraphics.__positionX;
+		__positionY = sourceGraphics.__positionY;
+		__visible = sourceGraphics.__visible;
+		
+	}
+	
+	
+	public function cubicCurveTo (controlX1:Float, controlY1:Float, controlX2:Float, controlY2:Float, anchorX:Float, anchorY:Float):Void {
+		
+		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
+		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		
+		// TODO: Is this the right calculation for bounds?
+		
+		__inflateBounds (controlX1, controlY1);
+		__inflateBounds (controlX2, controlY2);
+		
+		__positionX = anchorX;
+		__positionY = anchorY;
+		
+		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
+		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		
+		__commands.push (CubicCurveTo (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY));
+		
+		__dirty = true;
+		
+	}
+	
 	
 	/**
 	 * Draws a curve using the current line style from the current drawing
@@ -186,8 +295,28 @@ package openfl.display;
 	 *                 anchor point relative to the registration point of the
 	 *                 parent display object.
 	 */
-	function curveTo(controlX : Float, controlY : Float, anchorX : Float, anchorY : Float) : Void;
-
+	public function curveTo (controlX:Float, controlY:Float, anchorX:Float, anchorY:Float) {
+		
+		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
+		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		
+		// TODO: Be a little less lenient in canvas size?
+		
+		__inflateBounds (controlX, controlY);
+		
+		__positionX = anchorX;
+		__positionY = anchorY;
+		
+		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
+		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		
+		__commands.push (CurveTo (controlX, controlY, anchorX, anchorY));
+		
+		__dirty = true;
+		
+	}
+	
+	
 	/**
 	 * Draws a circle. Set the line style, fill, or both before you call the
 	 * <code>drawCircle()</code> method, by calling the <code>linestyle()</code>,
@@ -203,8 +332,20 @@ package openfl.display;
 	 *               pixels).
 	 * @param radius The radius of the circle(in pixels).
 	 */
-	function drawCircle(x : Float, y : Float, radius : Float) : Void;
-
+	public function drawCircle (x:Float, y:Float, radius:Float):Void {
+		
+		if (radius <= 0) return;
+		
+		__inflateBounds (x - radius - __halfStrokeWidth, y - radius - __halfStrokeWidth);
+		__inflateBounds (x + radius + __halfStrokeWidth, y + radius + __halfStrokeWidth);
+		
+		__commands.push (DrawCircle (x, y, radius));
+		
+		__dirty = true;
+		
+	}
+	
+	
 	/**
 	 * Draws an ellipse. Set the line style, fill, or both before you call the
 	 * <code>drawEllipse()</code> method, by calling the
@@ -221,8 +362,20 @@ package openfl.display;
 	 * @param width  The width of the ellipse(in pixels).
 	 * @param height The height of the ellipse(in pixels).
 	 */
-	function drawEllipse(x : Float, y : Float, width : Float, height : Float) : Void;
-
+	public function drawEllipse (x:Float, y:Float, width:Float, height:Float):Void {
+		
+		if (width <= 0 || height <= 0) return;
+		
+		__inflateBounds (x - __halfStrokeWidth, y - __halfStrokeWidth);
+		__inflateBounds (x + width + __halfStrokeWidth, y + height + __halfStrokeWidth);
+		
+		__commands.push (DrawEllipse (x, y, width, height));
+		
+		__dirty = true;
+		
+	}
+	
+	
 	/**
 	 * Submits a series of IGraphicsData instances for drawing. This method
 	 * accepts a Vector containing objects including paths, fills, and strokes
@@ -235,8 +388,13 @@ package openfl.display;
 	 * sub-paths are rendered during this operation. </p>
 	 * 
 	 */
-	function drawGraphicsData(graphicsData : openfl.Vector<IGraphicsData>) : Void;
-
+	public function drawGraphicsData (graphicsData:Vector<IGraphicsData>):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.drawGraphicsData");
+		
+	}
+	
+	
 	/**
 	 * Submits a series of commands for drawing. The <code>drawPath()</code>
 	 * method uses vector arrays to consolidate individual <code>moveTo()</code>,
@@ -282,8 +440,13 @@ package openfl.display;
 	 * @param winding Specifies the winding rule using a value defined in the
 	 *                GraphicsPathWinding class.
 	 */
-	function drawPath(commands : openfl.Vector<Int>, data : openfl.Vector<Float>, ?winding : GraphicsPathWinding) : Void;
-
+	public function drawPath (commands:Vector<Int>, data:Vector<Float>, winding:GraphicsPathWinding = null):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.drawPath");
+		
+	}
+	
+	
 	/**
 	 * Draws a rectangle. Set the line style, fill, or both before you call the
 	 * <code>drawRect()</code> method, by calling the <code>linestyle()</code>,
@@ -301,8 +464,20 @@ package openfl.display;
 	 *                       parameters are not a number
 	 *                      (<code>Number.NaN</code>).
 	 */
-	function drawRect(x : Float, y : Float, width : Float, height : Float) : Void;
-
+	public function drawRect (x:Float, y:Float, width:Float, height:Float):Void {
+		
+		if (width <= 0 || height <= 0) return;
+		
+		__inflateBounds (x - __halfStrokeWidth, y - __halfStrokeWidth);
+		__inflateBounds (x + width + __halfStrokeWidth, y + height + __halfStrokeWidth);
+		
+		__commands.push (DrawRect (x, y, width, height));
+		
+		__dirty = true;
+		
+	}
+	
+	
 	/**
 	 * Draws a rounded rectangle. Set the line style, fill, or both before you
 	 * call the <code>drawRoundRect()</code> method, by calling the
@@ -329,9 +504,46 @@ package openfl.display;
 	 *                       <code>ellipseHeight</code> parameters are not a
 	 *                       number(<code>Number.NaN</code>).
 	 */
-	function drawRoundRect(x : Float, y : Float, width : Float, height : Float, ellipseWidth : Float, ?ellipseHeight : Float) : Void;
-	function drawRoundRectComplex(x : Float, y : Float, width : Float, height : Float, topLeftRadius : Float, topRightRadius : Float, bottomLeftRadius : Float, bottomRightRadius : Float) : Void;
-
+	public function drawRoundRect (x:Float, y:Float, width:Float, height:Float, rx:Float, ry:Float = -1):Void {
+		
+		if (width <= 0 || height <= 0) return;
+		if (rx > width / 2) rx = width / 2;
+		if (ry > height / 2) ry = height / 2;
+		if (ry < 0) ry = rx;
+		
+		__inflateBounds (x - __halfStrokeWidth, y - __halfStrokeWidth);
+		__inflateBounds (x + width + __halfStrokeWidth, y + height + __halfStrokeWidth);
+		
+		__commands.push (DrawRoundRect (x, y, width, height, rx, ry));
+		
+		__dirty = true;
+		
+	}
+	
+	
+	public function drawRoundRectComplex (x:Float, y:Float, width:Float, height:Float, topLeftRadius:Float, topRightRadius:Float, bottomLeftRadius:Float, bottomRightRadius:Float):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.drawRoundRectComplex");
+		
+	}
+	
+	
+	public function drawTiles (sheet:Tilesheet, tileData:Array<Float>, smooth:Bool = false, flags:Int = 0, count:Int = -1):Void {
+		
+		// Checking each tile for extents did not include rotation or scale, and could overflow the maximum canvas
+		// size of some mobile browsers. Always use the full stage size for drawTiles instead?
+		
+		__inflateBounds (0, 0);
+		__inflateBounds (Lib.current.stage.stageWidth, Lib.current.stage.stageHeight);
+		
+		__commands.push (DrawTiles (sheet, tileData, smooth, flags, count));
+		
+		__dirty = true;
+		__visible = true;
+		
+	}
+	
+	
 	/**
 	 * Renders a set of triangles, typically to distort bitmaps and give them a
 	 * three-dimensional appearance. The <code>drawTriangles()</code> method maps
@@ -350,8 +562,47 @@ package openfl.display;
 	 *                parameter can be set to any value defined by the
 	 *                TriangleCulling class.
 	 */
-	function drawTriangles(vertices : openfl.Vector<Float>, ?indices : openfl.Vector<Int>, ?uvtData : openfl.Vector<Float>, ?culling : TriangleCulling) : Void;
-
+	public function drawTriangles (vertices:Vector<Float>, indices:Vector<Int> = null, uvtData:Vector<Float> = null, culling:TriangleCulling = null):Void {
+		
+		var vlen = Std.int(vertices.length / 2);
+		
+		if (culling == null) {
+			culling = NONE;
+		}
+		
+		if (indices == null) {
+			if (vlen % 3 != 0) {
+				throw new ArgumentError("Not enough vertices to close a triangle.");
+			}
+			indices = new Vector<Int>();
+			
+			for (i in 0...vlen) {
+				indices.push(i);
+			}
+		}
+		
+		__inflateBounds (0, 0);
+		
+		var tmpx = Math.NEGATIVE_INFINITY;
+		var tmpy = Math.NEGATIVE_INFINITY;
+		var maxX = Math.NEGATIVE_INFINITY;
+		var maxY = Math.NEGATIVE_INFINITY;		
+		
+		for (i in 0...vlen) {
+			tmpx = vertices[i * 2];
+			tmpy = vertices[i * 2 + 1];
+			if (maxX < tmpx) maxX = tmpx;
+			if (maxY < tmpy) maxY = tmpy;
+		}
+		
+		__inflateBounds (maxX, maxY);
+		__commands.push (DrawTriangles(vertices, indices, uvtData, culling));
+		__dirty = true;
+		__visible = true;
+		
+	}
+	
+	
 	/**
 	 * Applies a fill to the lines and curves that were added since the last call
 	 * to the <code>beginFill()</code>, <code>beginGradientFill()</code>, or
@@ -363,8 +614,13 @@ package openfl.display;
 	 * defined, the path is closed with a line and then filled.
 	 * 
 	 */
-	function endFill() : Void;
-
+	public function endFill ():Void {
+		
+		__commands.push (EndFill);
+		
+	}
+	
+	
 	/**
 	 * Specifies a bitmap to use for the line stroke when drawing lines.
 	 *
@@ -394,8 +650,13 @@ package openfl.display;
 	 * @param repeat Whether to repeat the bitmap in a tiled fashion.
 	 * @param smooth Whether smoothing should be applied to the bitmap.
 	 */
-	function lineBitmapStyle(bitmap : BitmapData, ?matrix : openfl.geom.Matrix, repeat : Bool = true, smooth : Bool = false) : Void;
-
+	public function lineBitmapStyle (bitmap:BitmapData, matrix:Matrix = null, repeat:Bool = true, smooth:Bool = false):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.lineBitmapStyle");
+		
+	}
+	
+	
 	/**
 	 * Specifies a gradient to use for the stroke when drawing lines.
 	 *
@@ -448,8 +709,13 @@ package openfl.display;
 	 *                            image shows a gradient with a
 	 *                            <code>focalPointRatio</code> of -0.75:
 	 */
-	function lineGradientStyle(type : GradientType, colors : Array<UInt>, alphas : Array<Dynamic>, ratios : Array<Dynamic>, ?matrix : openfl.geom.Matrix, ?spreadMethod : SpreadMethod, ?interpolationMethod : InterpolationMethod, focalPointRatio : Float = 0) : Void;
-
+	public function lineGradientStyle (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix = null, spreadMethod:SpreadMethod = null, interpolationMethod:InterpolationMethod = null, focalPointRatio:Null<Float> = null):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.lineGradientStyle");
+		
+	}
+	
+	
 	/**
 	 * Specifies a line style used for subsequent calls to Graphics methods such
 	 * as the <code>lineTo()</code> method or the <code>drawCircle()</code>
@@ -589,8 +855,16 @@ package openfl.display;
 	 *                     has a specific maximum angle for which the miter is
 	 *                     cut off. The following table lists some examples:</p>
 	 */
-	function lineStyle(?thickness : Float, color : UInt = 0, alpha : Float = 1, pixelHinting : Bool = false, ?scaleMode : LineScaleMode, ?caps : CapsStyle, ?joints : JointStyle, miterLimit : Float = 3) : Void;
-
+	public function lineStyle (thickness:Null<Float> = null, color:Null<Int> = null, alpha:Null<Float> = null, pixelHinting:Null<Bool> = null, scaleMode:LineScaleMode = null, caps:CapsStyle = null, joints:JointStyle = null, miterLimit:Null<Float> = null):Void {
+		
+		__halfStrokeWidth = (thickness != null) ? thickness / 2 : 0;
+		__commands.push (LineStyle (thickness, color, alpha, pixelHinting, scaleMode, caps, joints, miterLimit));
+		
+		if (thickness != null) __visible = true;
+		
+	}
+	
+	
 	/**
 	 * Draws a line using the current line style from the current drawing
 	 * position to(<code>x</code>, <code>y</code>); the current drawing position
@@ -607,8 +881,26 @@ package openfl.display;
 	 * @param y A number that indicates the vertical position relative to the
 	 *          registration point of the parent display object(in pixels).
 	 */
-	function lineTo(x : Float, y : Float) : Void;
-
+	public function lineTo (x:Float, y:Float):Void {
+		
+		// TODO: Should we consider the origin instead, instead of inflating in all directions?
+		
+		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
+		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		
+		__positionX = x;
+		__positionY = y;
+		
+		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
+		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		
+		__commands.push (LineTo (x, y));
+		
+		__dirty = true;
+		
+	}
+	
+	
 	/**
 	 * Moves the current drawing position to(<code>x</code>, <code>y</code>). If
 	 * any of the parameters are missing, this method fails and the current
@@ -619,7 +911,355 @@ package openfl.display;
 	 * @param y A number that indicates the vertical position relative to the
 	 *          registration point of the parent display object(in pixels).
 	 */
-	function moveTo(x : Float, y : Float) : Void;
+	public function moveTo (x:Float, y:Float):Void {
+		
+		__positionX = x;
+		__positionY = y;
+		
+		__commands.push (MoveTo (x, y));
+		
+	}
+	
+	
+	@:noCompletion private function __getBounds (rect:Rectangle, matrix:Matrix):Void {
+		
+		if (__bounds == null) return;
+		
+		var bounds = __bounds.clone ().transform (matrix);
+		rect.__expand (bounds.x, bounds.y, bounds.width, bounds.height);
+		
+	}
+	
+	
+	@:noCompletion private function __hitTest (x:Float, y:Float, shapeFlag:Bool, matrix:Matrix):Bool {
+		
+		//TODO: Shape flag
+		
+		if (__bounds == null) return false;
+		
+		var bounds = __bounds.clone ().transform (matrix);
+		return (x > bounds.x && y > bounds.y && x <= bounds.right && y <= bounds.bottom);
+		
+	}
+	
+	
+	@:noCompletion private function __inflateBounds (x:Float, y:Float):Void {
+		
+		if (__bounds == null) {
+			
+			__bounds = new Rectangle (x, y, 0, 0);
+			return;
+			
+		}
+		
+		if (x < __bounds.x) {
+			
+			__bounds.width += __bounds.x - x;
+			__bounds.x = x;
+			
+		}
+		
+		if (y < __bounds.y) {
+			
+			__bounds.height += __bounds.y - y;
+			__bounds.y = y;
+			
+		}
+		
+		if (x > __bounds.x + __bounds.width) {
+			
+			__bounds.width = x - __bounds.x;
+			
+		}
+		
+		if (y > __bounds.y + __bounds.height) {
+			
+			__bounds.height = y - __bounds.y;
+			
+		}
+		
+	}
+	
+	
+}
+
+
+@:noCompletion @:dox(hide) enum DrawCommand {
+	
+	BeginBitmapFill (bitmap:BitmapData, matrix:Matrix, repeat:Bool, smooth:Bool);
+	BeginFill (color:Int, alpha:Float);
+	CubicCurveTo (controlX1:Float, controlY1:Float, controlX2:Float, controlY2:Float, anchorX:Float, anchorY:Float);
+	CurveTo (controlX:Float, controlY:Float, anchorX:Float, anchorY:Float);
+	DrawCircle (x:Float, y:Float, radius:Float);
+	DrawEllipse (x:Float, y:Float, width:Float, height:Float);
+	DrawRect (x:Float, y:Float, width:Float, height:Float);
+	DrawRoundRect (x:Float, y:Float, width:Float, height:Float, rx:Float, ry:Float);
+	DrawTiles (sheet:Tilesheet, tileData:Array<Float>, smooth:Bool, flags:Int, count:Int);
+	DrawTriangles (vertices:Vector<Float>, indices:Vector<Int>, uvtData:Vector<Float>, culling:TriangleCulling);
+	EndFill;
+	LineStyle (thickness:Null<Float>, color:Null<Int>, alpha:Null<Float>, pixelHinting:Null<Bool>, scaleMode:LineScaleMode, caps:CapsStyle, joints:JointStyle, miterLimit:Null<Float>);
+	LineTo (x:Float, y:Float);
+	MoveTo (x:Float, y:Float);
+	
+}
+
+
+#else
+typedef Graphics = openfl._v2.display.Graphics;
+#end
+#else
+
+
+import openfl.geom.Matrix;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
+
+@:access(openfl.display.Tilesheet)
+
+@:forward(beginBitmapFill, beginFill, beginGradientFill, beginShaderFill, clear, copyFrom, cubicCurveTo, curveTo, drawCircle, drawEllipse, drawGraphicsData, drawPath, drawRect, drawRoundRect, drawRoundRectComplex, drawTriangles, endFill, lineBitmapStyle, lineGradientStyle, lineShaderStyle, lineStyle, lineTo, moveTo, recurse)
+
+
+abstract Graphics(flash.display.Graphics) from flash.display.Graphics to flash.display.Graphics {
+	
+	
+	public function drawTiles (sheet:Tilesheet, tileData:Array<Float>, smooth:Bool = false, flags:Int = 0, count:Int = -1):Void {
+		
+		var useScale = (flags & Tilesheet.TILE_SCALE) > 0;
+		var useRotation = (flags & Tilesheet.TILE_ROTATION) > 0;
+		var useRGB = (flags & Tilesheet.TILE_RGB) > 0;
+		var useAlpha = (flags & Tilesheet.TILE_ALPHA) > 0;
+		var useTransform = (flags & Tilesheet.TILE_TRANS_2x2) > 0;
+		
+		if (useTransform || useScale || useRotation || useRGB || useAlpha) {
+			
+			var scaleIndex = 0;
+			var rotationIndex = 0;
+			var rgbIndex = 0;
+			var alphaIndex = 0;
+			var transformIndex = 0;
+			var numValues = 3;
+			
+			if (useScale) { scaleIndex = numValues; numValues ++; }
+			if (useRotation) { rotationIndex = numValues; numValues ++; }
+			if (useTransform) { transformIndex = numValues; numValues += 4; }
+			if (useRGB) { rgbIndex = numValues; numValues += 3; }
+			if (useAlpha) { alphaIndex = numValues; numValues ++; }
+			
+			var totalCount = count;
+			
+			if (count < 0) {
+				
+				totalCount = tileData.length;
+				
+			}
+			
+			var itemCount = Std.int (totalCount / numValues);
+			
+			var ids = sheet.adjustIDs (sheet.__ids, itemCount);
+			var vertices = sheet.adjustLen (sheet.__vertices, itemCount * 8); 
+			var indices = sheet.adjustIndices (sheet.__indices, itemCount * 6); 
+			var uvtData = sheet.adjustLen (sheet.__uvs, itemCount * 8); 
+			
+			var index = 0;
+			var offset8 = 0;
+			var tileIndex:Int = 0;
+			var tileID:Int = 0;
+			var cacheID:Int = -1;
+			
+			var tile:Rectangle = null;
+			var tileUV:Rectangle = null;
+			var tilePoint:Point = null;
+			var tileHalfHeight:Float = 0;
+			var tileHalfWidth:Float = 0;
+			var tileHeight:Float = 0;
+			var tileWidth:Float = 0;
+
+			while (index < totalCount) {
+				
+				var x = tileData[index];
+				var y = tileData[index + 1];
+				var tileID = Std.int (tileData[index + 2]);
+				var scale = 1.0;
+				var rotation = 0.0;
+				var alpha = 1.0;
+				
+				if (useScale) {
+					
+					scale = tileData[index + scaleIndex];
+					
+				}
+				
+				if (useRotation) {
+					
+					rotation = tileData[index + rotationIndex];
+					
+				}
+				
+				if (useRGB) {
+					
+					//ignore for now
+					
+				}
+				
+				if (useAlpha) {
+					
+					alpha = tileData[index + alphaIndex];
+					
+				}
+				
+				if (cacheID != tileID) {
+					
+					cacheID = tileID;
+					tile = sheet.__tileRects[tileID];
+					tileUV = sheet.__tileUVs[tileID];
+					tilePoint = sheet.__centerPoints[tileID];
+					
+				}
+				
+				if (useTransform) {
+					
+					var tw = tile.width;
+					var th = tile.height;
+					var t0 = tileData[index + transformIndex];
+					var t1 = tileData[index + transformIndex + 1];
+					var t2 = tileData[index + transformIndex + 2];
+					var t3 = tileData[index + transformIndex + 3];
+					var ox = tilePoint.x * tw;
+					var oy = tilePoint.y * th;
+					var ox_ = ox * t0 + oy * t2;
+					oy = ox * t1 + oy * t3;
+					x -= ox_;
+					y -= oy;
+					vertices[offset8] = x;
+					vertices[offset8 + 1] = y;
+					vertices[offset8 + 2] = x + tw * t0;
+					vertices[offset8 + 3] = y + tw * t1;
+					vertices[offset8 + 4] = x + th * t2;
+					vertices[offset8 + 5] = y + th * t3;
+					vertices[offset8 + 6] = x + tw * t0 + th * t2;
+					vertices[offset8 + 7] = y + tw * t1 + th * t3;
+					
+				} else {
+					
+					var tileWidth = tile.width * scale;
+					var tileHeight = tile.height * scale;
+					
+					if (rotation != 0) {
+						
+						var kx = tilePoint.x * tileWidth;
+						var ky = tilePoint.y * tileHeight;
+						var akx = (1 - tilePoint.x) * tileWidth;
+						var aky = (1 - tilePoint.y) * tileHeight;
+						var ca = Math.cos (rotation);
+						var sa = Math.sin (rotation);
+						var xc = kx * sa, xs = kx * ca, yc = ky * sa, ys = ky * ca;
+						var axc = akx * sa, axs = akx * ca, ayc = aky * sa, ays = aky * ca;
+						vertices[offset8] = x - (xc + ys);
+						vertices[offset8 + 1] = y - (-xs + yc);
+						vertices[offset8 + 2] = x + axc - ys;
+						vertices[offset8 + 3] = y - (axs + yc);
+						vertices[offset8 + 4] = x - (xc - ays);
+						vertices[offset8 + 5] = y + xs + ayc;
+						vertices[offset8 + 6] = x + axc + ays;
+						vertices[offset8 + 7] = y + (-axs + ayc);
+						
+					} else {
+						
+						x -= tilePoint.x * tileWidth;
+						y -= tilePoint.y * tileHeight;
+						vertices[offset8] = vertices[offset8 + 4] = x;
+						vertices[offset8 + 1] = vertices[offset8 + 3] = y;
+						vertices[offset8 + 2] = vertices[offset8 + 6] = x + tileWidth;
+						vertices[offset8 + 5] = vertices[offset8 + 7] = y + tileHeight;
+						
+					}
+					
+				}
+				
+				if (ids[tileIndex] != tileID) {
+					
+					ids[tileIndex] = tileID;
+					uvtData[offset8] = uvtData[offset8 + 4] = tileUV.left;
+					uvtData[offset8 + 1] = uvtData[offset8 + 3] = tileUV.top;
+					uvtData[offset8 + 2] = uvtData[offset8 + 6] = tileUV.width;
+					uvtData[offset8 + 5] = uvtData[offset8 + 7] = tileUV.height;
+					
+				}
+				
+				offset8 += 8;
+				index += numValues;
+				tileIndex++;
+				
+			}
+			
+			this.beginBitmapFill (sheet.__bitmap, null, false, smooth);
+			this.drawTriangles (vertices, indices, uvtData);
+			
+		} else {
+			
+			var index = 0;
+			var matrix = new Matrix ();
+			
+			while (index < tileData.length) {
+				
+				var x = tileData[index];
+				var y = tileData[index + 1];
+				var tileID = Std.int (tileData[index + 2]);
+				index += 3;
+				
+				var tile = sheet.__tileRects[tileID];
+				var centerPoint = sheet.__centerPoints[tileID];
+				var ox = centerPoint.x * tile.width, oy = centerPoint.y * tile.height;
+				
+				var scale = 1.0;
+				var rotation = 0.0;
+				var alpha = 1.0;
+				
+				if (useScale) {
+					
+					scale = tileData[index];
+					index ++;
+					
+				}
+				
+				if (useRotation) {
+					
+					rotation = tileData[index];
+					index ++;
+					
+				}
+				
+				if (useRGB) {
+					
+					//ignore for now
+					index += 3;
+					
+				}
+				
+				if (useAlpha) {
+					
+					alpha = tileData[index];
+					index++;
+					
+				}
+				
+				matrix.tx = x - tile.x - ox;
+				matrix.ty = y - tile.y - oy;
+				
+				// need to add support for rotation, alpha, scale and RGB
+				
+				this.beginBitmapFill (sheet.__bitmap, matrix, false, smooth);
+				this.drawRect (x - ox, y - oy, tile.width, tile.height);
+				
+			}
+			
+		}
+		
+		this.endFill ();
+		
+	}
+	
+	
 }
 
 

@@ -1,8 +1,10 @@
-package openfl;
+package openfl; #if (flash || openfl_next || js || display || html5)
 #if !macro
 
 
 import haxe.Unserializer;
+import lime.Assets.AssetLibrary in LimeAssetLibrary;
+import lime.Assets in LimeAssets;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.MovieClip;
@@ -13,6 +15,9 @@ import openfl.net.URLRequest;
 import openfl.text.Font;
 import openfl.utils.ByteArray;
 
+@:access(lime.Assets)
+@:access(openfl.AssetLibrary)
+@:access(openfl.display.BitmapData)
 
 /**
  * <p>The Assets class provides a cross-platform interface to access 
@@ -30,21 +35,17 @@ import openfl.utils.ByteArray;
  * and specifying a custom preloader using <window preloader="" />
  * in the project file.</p>
  */
-@:access(openfl.AssetLibrary)
-@:access(openfl.display.BitmapData)
+
+
 class Assets {
 	
 	
 	public static var cache = new AssetCache ();
-	public static var libraries (default, null) = new Map <String, AssetLibrary> ();
 	
 	private static var dispatcher = new EventDispatcher ();
-	private static var initialized = false;
 	
 	
 	public static function addEventListener (type:String, listener:Dynamic, useCapture:Bool = false, priority:Int = 0, useWeakReference:Bool = false):Void {
-		
-		initialize ();
 		
 		dispatcher.addEventListener (type, listener, useCapture, priority, useWeakReference);
 		
@@ -53,8 +54,6 @@ class Assets {
 	
 	public static function dispatchEvent (event:Event):Bool {
 		
-		initialize ();
-		
 		return dispatcher.dispatchEvent (event);
 		
 	}
@@ -62,29 +61,7 @@ class Assets {
 	
 	public static function exists (id:String, type:AssetType = null):Bool {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		if (type == null) {
-			
-			type = BINARY;
-			
-		}
-		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			return library.exists (symbolName, type);
-			
-		}
-		
-		#end
-		
-		return false;
+		return LimeAssets.exists (id, cast type);
 		
 	}
 	
@@ -97,8 +74,6 @@ class Assets {
 	 * @return		A new BitmapData object
 	 */
 	public static function getBitmapData (id:String, useCache:Bool = true):BitmapData {
-		
-		initialize ();
 		
 		#if (tools && !display)
 		
@@ -114,41 +89,23 @@ class Assets {
 			
 		}
 		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
+		var image = LimeAssets.getImage (id, false);
 		
-		if (library != null) {
+		if (image != null) {
 			
-			if (library.exists (symbolName, IMAGE)) {
+			#if flash
+			var bitmapData = image.src;
+			#else
+			var bitmapData = BitmapData.fromImage (image);
+			#end
+			
+			if (useCache && cache.enabled) {
 				
-				if (library.isLocal (symbolName, IMAGE)) {
-					
-					var bitmapData = library.getBitmapData (symbolName);
-					
-					if (useCache && cache.enabled) {
-						
-						cache.bitmapData.set (id, bitmapData);
-						
-					}
-					
-					return bitmapData;
-					
-				} else {
-					
-					trace ("[openfl.Assets] BitmapData asset \"" + id + "\" exists, but only asynchronously");
-					
-				}
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no BitmapData asset with an ID of \"" + id + "\"");
+				cache.bitmapData.set (id, bitmapData);
 				
 			}
 			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
+			return bitmapData;
 			
 		}
 		
@@ -167,43 +124,7 @@ class Assets {
 	 */
 	public static function getBytes (id:String):ByteArray {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		var libraryName = id.substring (0, id.indexOf(":"));
-		var symbolName = id.substr (id.indexOf(":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, BINARY)) {
-				
-				if (library.isLocal (symbolName, BINARY)) {
-					
-					return library.getBytes (symbolName);
-					
-				} else {
-					
-					trace ("[openfl.Assets] String or ByteArray asset \"" + id + "\" exists, but only asynchronously");
-					
-				}
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no String or ByteArray asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
-		#end
-		
-		return null;
+		return LimeAssets.getBytes (id);
 		
 	}
 	
@@ -216,8 +137,6 @@ class Assets {
 	 */
 	public static function getFont (id:String, useCache:Bool = true):Font {
 		
-		initialize ();
-		
 		#if (tools && !display)
 		
 		if (useCache && cache.enabled && cache.font.exists (id)) {
@@ -226,52 +145,22 @@ class Assets {
 			
 		}
 		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
+		var font = LimeAssets.getFont (id, false);
 		
-		if (library != null) {
+		if (font != null) {
 			
-			if (library.exists (symbolName, FONT)) {
-				
-				if (library.isLocal (symbolName, FONT)) {
-					
-					var font = library.getFont (symbolName);
-					
-					if (useCache && cache.enabled) {
-						
-						cache.font.set (id, font);
-						
-					}
-					
-					return font;
-					
-				} else {
-					
-					trace ("[openfl.Assets] Font asset \"" + id + "\" exists, but only asynchronously");
-					
-				}
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no Font asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
+			return font;
 			
 		}
 		
 		#end
 		
-		return null;
+		return new Font ();
 		
 	}
 	
 	
-	private static function getLibrary (name:String):AssetLibrary {
+	private static function getLibrary (name:String):lime.Assets.AssetLibrary {
 		
 		if (name == null || name == "") {
 			
@@ -279,7 +168,9 @@ class Assets {
 			
 		}
 		
-		return libraries.get (name);
+		// TODO
+		
+		return cast LimeAssets.libraries.get (name);
 		
 	}
 	
@@ -292,19 +183,17 @@ class Assets {
 	 */
 	public static function getMovieClip (id:String):MovieClip {
 		
-		initialize ();
-		
 		#if (tools && !display)
 		
 		var libraryName = id.substring (0, id.indexOf (":"));
 		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
+		var library:AssetLibrary = cast getLibrary (libraryName);
 		
 		if (library != null) {
 			
-			if (library.exists (symbolName, MOVIE_CLIP)) {
+			if (library.exists (symbolName, cast AssetType.MOVIE_CLIP)) {
 				
-				if (library.isLocal (symbolName, MOVIE_CLIP)) {
+				if (library.isLocal (symbolName, cast AssetType.MOVIE_CLIP)) {
 					
 					return library.getMovieClip (symbolName);
 					
@@ -341,63 +230,24 @@ class Assets {
 	 */
 	public static function getMusic (id:String, useCache:Bool = true):Sound {
 		
-		initialize ();
+		#if flash
+		var buffer = LimeAssets.getAudioBuffer (id, useCache);
+		return (buffer != null) ? buffer.src : null;
+		#else
+		#if !html5
+		return Sound.fromAudioBuffer (LimeAssets.getAudioBuffer (id, useCache));
+		#else
+		var path = LimeAssets.getPath (id);
 		
-		#if (tools && !display)
-		
-		if (useCache && cache.enabled && cache.sound.exists (id)) {
+		if (path != null) {
 			
-			var sound = cache.sound.get (id);
-			
-			if (isValidSound (sound)) {
-				
-				return sound;
-				
-			}
+			return new Sound (new URLRequest (path));
 			
 		}
-		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, MUSIC)) {
-				
-				if (library.isLocal (symbolName, MUSIC)) {
-					
-					var sound = library.getMusic (symbolName);
-					
-					if (useCache && cache.enabled) {
-						
-						cache.sound.set (id, sound);
-						
-					}
-					
-					return sound;
-					
-				} else {
-					
-					trace ("[openfl.Assets] Sound asset \"" + id + "\" exists, but only asynchronously");
-					
-				}
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no Sound asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
-		#end
 		
 		return null;
+		#end
+		#end
 		
 	}
 	
@@ -410,35 +260,7 @@ class Assets {
 	 */
 	public static function getPath (id:String):String {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, null)) {
-				
-				return library.getPath (symbolName);
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
-		#end
-		
-		return null;
+		return LimeAssets.getPath (id);
 		
 	}
 	
@@ -450,8 +272,6 @@ class Assets {
 	 * @return		A new Sound object
 	 */
 	public static function getSound (id:String, useCache:Bool = true):Sound {
-		
-		initialize ();
 		
 		#if (tools && !display)
 		
@@ -467,43 +287,35 @@ class Assets {
 			
 		}
 		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
+		#if !html5
+		var buffer = LimeAssets.getAudioBuffer (id, false);
 		
-		if (library != null) {
+		if (buffer != null) {
 			
-			if (library.exists (symbolName, SOUND)) {
+			#if flash
+			var sound = buffer.src;
+			#else
+			var sound = Sound.fromAudioBuffer (buffer);
+			#end
+			
+			if (useCache && cache.enabled) {
 				
-				if (library.isLocal (symbolName, SOUND)) {
-					
-					var sound = library.getSound (symbolName);
-					
-					if (useCache && cache.enabled) {
-						
-						cache.sound.set (id, sound);
-						
-					}
-					
-					return sound;
-					
-				} else {
-					
-					trace ("[openfl.Assets] Sound asset \"" + id + "\" exists, but only asynchronously");
-					
-				}
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no Sound asset with an ID of \"" + id + "\"");
+				cache.sound.set (id, sound);
 				
 			}
 			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
+			return sound;
 			
 		}
+		#else
+		var path = LimeAssets.getPath (id);
+		
+		if (path != null) {
+			
+			return new Sound (new URLRequest (path));
+			
+		}
+		#end
 		
 		#end
 		
@@ -520,76 +332,19 @@ class Assets {
 	 */
 	public static function getText (id:String):String {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		var libraryName = id.substring (0, id.indexOf(":"));
-		var symbolName = id.substr (id.indexOf(":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, TEXT)) {
-				
-				if (library.isLocal (symbolName, TEXT)) {
-					
-					return library.getText (symbolName);
-					
-				} else {
-					
-					trace ("[openfl.Assets] String asset \"" + id + "\" exists, but only asynchronously");
-					
-				}
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no String asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
-		#end
-		
-		return null;
+		return LimeAssets.getText (id);
 		
 	}
 	
 	
 	public static function hasEventListener (type:String):Bool {
 		
-		initialize ();
-		
 		return dispatcher.hasEventListener (type);
 		
 	}
 	
 	
-	private static function initialize ():Void {
-		
-		if (!initialized) {
-			
-			#if (tools && !display)
-			
-			registerLibrary ("default", new DefaultAssetLibrary ());
-			
-			#end
-			
-			initialized = true;
-			
-		}
-		
-	}
-	
-	
 	public static function isLocal (id:String, type:AssetType = null, useCache:Bool = true):Bool {
-		
-		initialize ();
 		
 		#if (tools && !display)
 		
@@ -621,7 +376,7 @@ class Assets {
 		
 		if (library != null) {
 			
-			return library.isLocal (symbolName, type);
+			return library.isLocal (symbolName, cast type);
 			
 		}
 		
@@ -635,11 +390,7 @@ class Assets {
 	private static function isValidBitmapData (bitmapData:BitmapData):Bool {
 		
 		#if (tools && !display)
-		#if (cpp || neko)
-		
-		return (bitmapData.__handle != null);
-		
-		#elseif flash
+		#if flash
 		
 		try {
 			
@@ -651,9 +402,9 @@ class Assets {
 			
 		}
 		
-		#elseif openfl_html5
+		#else
 		
-		return (bitmapData.__sourceImage != null || bitmapData.__sourceCanvas != null);
+		return (bitmapData != null);
 		
 		#end
 		#end
@@ -668,7 +419,8 @@ class Assets {
 		#if (tools && !display)
 		#if (cpp || neko)
 		
-		return (sound.__handle != null && sound.__handle != 0);
+		return true;
+		//return (sound.__handle != null && sound.__handle != 0);
 		
 		#end
 		#end
@@ -680,30 +432,12 @@ class Assets {
 	
 	public static function list (type:AssetType = null):Array<String> {
 		
-		initialize ();
-		
-		var items = [];
-		
-		for (library in libraries) {
-			
-			var libraryItems = library.list (type);
-			
-			if (libraryItems != null) {
-				
-				items = items.concat (libraryItems);
-				
-			}
-			
-		}
-		
-		return items;
+		return LimeAssets.list (cast type);
 		
 	}
 	
 	
 	public static function loadBitmapData (id:String, handler:BitmapData -> Void, useCache:Bool = true):Void {
-		
-		initialize ();
 		
 		#if (tools && !display)
 		
@@ -720,53 +454,34 @@ class Assets {
 			
 		}
 		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
+		LimeAssets.loadImage (id, function (image) {
 			
-			if (library.exists (symbolName, IMAGE)) {
+			if (image != null) {
+				
+				#if flash
+				var bitmapData = image.src;
+				#else
+				var bitmapData = BitmapData.fromImage (image);
+				#end
 				
 				if (useCache && cache.enabled) {
 					
-					library.loadBitmapData (symbolName, function (bitmapData:BitmapData):Void {
-						
-						cache.bitmapData.set (id, bitmapData);
-						handler (bitmapData);
-						
-					});
-					
-				} else {
-					
-					library.loadBitmapData (symbolName, handler);
+					cache.bitmapData.set (id, bitmapData);
 					
 				}
 				
-				return;
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no BitmapData asset with an ID of \"" + id + "\"");
+				handler (bitmapData);
 				
 			}
 			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
+		}, false);
 		
 		#end
-		
-		handler (null);
 		
 	}
 	
 	
 	public static function loadBytes (id:String, handler:ByteArray -> Void):Void {
-		
-		initialize ();
 		
 		#if (tools && !display)
 		
@@ -776,7 +491,7 @@ class Assets {
 		
 		if (library != null) {
 			
-			if (library.exists (symbolName, BINARY)) {
+			if (library.exists (symbolName, cast AssetType.BINARY)) {
 				
 				library.loadBytes (symbolName, handler);
 				return;
@@ -802,8 +517,6 @@ class Assets {
 	
 	public static function loadFont (id:String, handler:Font -> Void, useCache:Bool = true):Void {
 		
-		initialize ();
-		
 		#if (tools && !display)
 		
 		if (useCache && cache.enabled && cache.font.exists (id)) {
@@ -819,7 +532,7 @@ class Assets {
 		
 		if (library != null) {
 			
-			if (library.exists (symbolName, FONT)) {
+			if (library.exists (symbolName, cast AssetType.FONT)) {
 				
 				if (useCache && cache.enabled) {
 					
@@ -857,111 +570,47 @@ class Assets {
 	}
 	
 	
-	public static function loadLibrary (name:String, handler:AssetLibrary -> Void):Void {
+	public static function loadLibrary (name:String, handler:LimeAssetLibrary -> Void):Void {
 		
-		initialize();
-		
-		#if (tools && !display)
-		
-		var data = getText ("libraries/" + name + ".dat");
-		
-		if (data != null && data != "") {
-			
-			var unserializer = new Unserializer (data);
-			unserializer.setResolver (cast { resolveEnum: resolveEnum, resolveClass: resolveClass });
-			
-			var library:AssetLibrary = unserializer.unserialize ();
-			libraries.set (name, library);
-			library.eventCallback = library_onEvent;
-			library.load (handler);
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + name + "\"");
-			
-		}
-		
-		#end
+		LimeAssets.loadLibrary (name, handler);
 		
 	}
 	
 	
 	public static function loadMusic (id:String, handler:Sound -> Void, useCache:Bool = true):Void {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		if (useCache && cache.enabled && cache.sound.exists (id)) {
+		#if !html5
+		LimeAssets.loadAudioBuffer (id, function (buffer) {
 			
-			var sound = cache.sound.get (id);
-			
-			if (isValidSound (sound)) {
+			if (buffer != null) {
 				
-				handler (sound);
-				return;
+				#if flash
+				handler ((buffer != null) ? buffer.src : null);
+				#else
+				handler (Sound.fromAudioBuffer (buffer));
+				#end
 				
 			}
 			
-		}
-		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, MUSIC)) {
-				
-				if (useCache && cache.enabled) {
-					
-					library.loadMusic (symbolName, function (sound:Sound):Void {
-						
-						cache.sound.set (id, sound);
-						handler (sound);
-						
-					});
-					
-				} else {
-					
-					library.loadMusic (symbolName, handler);
-					
-				}
-				
-				return;
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no Sound asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
+		}, useCache);
+		#else
+		handler (getMusic (id, useCache));
 		#end
-		
-		handler (null);
 		
 	}
 	
 	
 	public static function loadMovieClip (id:String, handler:MovieClip -> Void):Void {
 		
-		initialize ();
-		
 		#if (tools && !display)
 		
 		var libraryName = id.substring (0, id.indexOf (":"));
 		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
+		var library:AssetLibrary = cast getLibrary (libraryName);
 		
 		if (library != null) {
 			
-			if (library.exists (symbolName, MOVIE_CLIP)) {
+			if (library.exists (symbolName, cast AssetType.MOVIE_CLIP)) {
 				
 				library.loadMovieClip (symbolName, handler);
 				return;
@@ -987,125 +636,42 @@ class Assets {
 	
 	public static function loadSound (id:String, handler:Sound -> Void, useCache:Bool = true):Void {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		if (useCache && cache.enabled && cache.sound.exists (id)) {
+		#if !html5
+		LimeAssets.loadAudioBuffer (id, function (buffer) {
 			
-			var sound = cache.sound.get (id);
-			
-			if (isValidSound (sound)) {
+			if (buffer != null) {
 				
-				handler (sound);
-				return;
+				#if flash
+				handler ((buffer != null) ? buffer.src : null);
+				#else
+				handler (Sound.fromAudioBuffer (buffer));
+				#end
 				
 			}
 			
-		}
-		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, SOUND)) {
-				
-				if (useCache && cache.enabled) {
-					
-					library.loadSound (symbolName, function (sound:Sound):Void {
-						
-						cache.sound.set (id, sound);
-						handler (sound);
-						
-					});
-					
-				} else {
-					
-					library.loadSound (symbolName, handler);
-					
-				}
-				
-				return;
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no Sound asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
+		}, useCache);
+		#else
+		handler (getSound (id, useCache));
 		#end
-		
-		handler (null);
 		
 	}
 	
 	
 	public static function loadText (id:String, handler:String -> Void):Void {
 		
-		initialize ();
-		
-		#if (tools && !display)
-		
-		var libraryName = id.substring (0, id.indexOf (":"));
-		var symbolName = id.substr (id.indexOf (":") + 1);
-		var library = getLibrary (libraryName);
-		
-		if (library != null) {
-			
-			if (library.exists (symbolName, TEXT)) {
-				
-				library.loadText (symbolName, handler);
-				return;
-				
-			} else {
-				
-				trace ("[openfl.Assets] There is no String asset with an ID of \"" + id + "\"");
-				
-			}
-			
-		} else {
-			
-			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
-		}
-		
-		#end
-		
-		handler (null);
+		LimeAssets.loadText (id, handler);
 		
 	}
 	
 	
 	public static function registerLibrary (name:String, library:AssetLibrary):Void {
 		
-		if (libraries.exists (name)) {
-			
-			unloadLibrary (name);
-			
-		}
-		
-		if (library != null) {
-			
-			library.eventCallback = library_onEvent;
-			
-		}
-		
-		libraries.set (name, library);
+		LimeAssets.registerLibrary (name, library);
 		
 	}
 	
 	
 	public static function removeEventListener (type:String, listener:Dynamic, capture:Bool = false):Void {
-		
-		initialize ();
 		
 		dispatcher.removeEventListener (type, listener, capture);
 		
@@ -1140,22 +706,7 @@ class Assets {
 	
 	public static function unloadLibrary (name:String):Void {
 		
-		initialize();
-		
-		#if (tools && !display)
-		
-		var library = libraries.get (name);
-		
-		if (library != null) {
-			
-			cache.clear (name + ":");
-			library.eventCallback = null;
-			
-		}
-		
-		libraries.remove (name);
-		
-		#end
+		LimeAssets.unloadLibrary (name);
 		
 	}
 	
@@ -1182,43 +733,12 @@ class Assets {
 }
 
 
-class AssetLibrary {
-	
-	
-	public var eventCallback:Dynamic;
+@:dox(hide) class AssetLibrary extends LimeAssetLibrary {
 	
 	
 	public function new () {
 		
-		
-		
-	}
-	
-	
-	public function exists (id:String, type:AssetType):Bool {
-		
-		return false;
-		
-	}
-	
-	
-	public function getBitmapData (id:String):BitmapData {
-		
-		return null;
-		
-	}
-	
-	
-	public function getBytes (id:String):ByteArray {
-		
-		return null;
-		
-	}
-	
-	
-	public function getFont (id:String):Font {
-		
-		return null;
+		super ();
 		
 	}
 	
@@ -1237,83 +757,9 @@ class AssetLibrary {
 	}
 	
 	
-	public function getPath (id:String):String {
-		
-		return null;
-		
-	}
-	
-	
 	public function getSound (id:String):Sound {
 		
 		return null;
-		
-	}
-	
-	
-	public function getText (id:String):String {
-		
-		#if (tools && !display)
-		
-		var bytes = getBytes (id);
-		
-		if (bytes == null) {
-			
-			return null;
-			
-		} else {
-			
-			return bytes.readUTFBytes (bytes.length);
-			
-		}
-		
-		#else
-		
-		return null;
-		
-		#end
-		
-	}
-	
-	
-	public function isLocal (id:String, type:AssetType):Bool {
-		
-		return true;
-		
-	}
-	
-	
-	public function list (type:AssetType):Array<String> {
-		
-		return null;
-		
-	}
-	
-	
-	private function load (handler:AssetLibrary -> Void):Void {
-		
-		handler (this);
-		
-	}
-	
-	
-	public function loadBitmapData (id:String, handler:BitmapData -> Void):Void {
-		
-		handler (getBitmapData (id));
-		
-	}
-	
-	
-	public function loadBytes (id:String, handler:ByteArray -> Void):Void {
-		
-		handler (getBytes (id));
-		
-	}
-	
-	
-	public function loadFont (id:String, handler:Font -> Void):Void {
-		
-		handler (getFont (id));
 		
 	}
 	
@@ -1339,39 +785,10 @@ class AssetLibrary {
 	}
 	
 	
-	public function loadText (id:String, handler:String -> Void):Void {
-		
-		#if (tools && !display)
-		
-		var callback = function (bytes:ByteArray):Void {
-			
-			if (bytes == null) {
-				
-				handler (null);
-				
-			} else {
-				
-				handler (bytes.readUTFBytes (bytes.length));
-				
-			}
-			
-		}
-		
-		loadBytes (id, callback);
-		
-		#else
-		
-		handler (null);
-		
-		#end
-		
-	}
-	
-	
 }
 
 
-class AssetCache {
+@:dox(hide) class AssetCache {
 	
 	
 	public var bitmapData:Map<String, BitmapData>;
@@ -1443,33 +860,16 @@ class AssetCache {
 }
 
 
-class AssetData {
+@:dox(hide) @:enum abstract AssetType(String) {
 	
-	
-	public var id:String;
-	public var path:String;
-	public var type:AssetType;
-	
-	public function new () {
-		
-		
-		
-	}
-	
-	
-}
-
-
-enum AssetType {
-	
-	BINARY;
-	FONT;
-	IMAGE;
-	MOVIE_CLIP;
-	MUSIC;
-	SOUND;
-	TEMPLATE;
-	TEXT;
+	var BINARY = "BINARY";
+	var FONT = "FONT";
+	var IMAGE = "IMAGE";
+	var MOVIE_CLIP = "MOVIE_CLIP";
+	var MUSIC = "MUSIC";
+	var SOUND = "SOUND";
+	var TEMPLATE = "TEMPLATE";
+	var TEXT = "TEXT";
 	
 }
 
@@ -1516,7 +916,7 @@ class Assets {
 	
 	macro public static function embedBitmap ():Array<Field> {
 		
-		#if (html5 && !openfl_html5_dom)
+		#if html5
 		var fields = embedData (":bitmap", true);
 		#else
 		var fields = embedData (":bitmap");
@@ -1527,53 +927,22 @@ class Assets {
 			var constructor = macro { 
 				
 				#if html5
-				#if openfl_html5_dom
-				
-				super (width, height, transparent, fillRGBA);
-				
-				var currentType = Type.getClass (this);
-				
-				if (preload != null) {
-					
-					___textureBuffer.width = Std.int (preload.width);
-					___textureBuffer.height = Std.int (preload.height);
-					rect = new openfl.geom.Rectangle (0, 0, preload.width, preload.height);
-					setPixels(rect, preload.getPixels(rect));
-					__buildLease();
-					
-				} else {
-					
-					var byteArray = openfl.utils.ByteArray.fromBytes (haxe.Resource.getBytes(resourceName));
-					
-					if (onload != null && !Std.is (onload, Bool)) {
-						
-						__loadFromBytes(byteArray, null, onload);
-						
-					} else {
-						
-						__loadFromBytes(byteArray);
-						
-					}
-					
-				}
-				
-				#else
 				
 				super (0, 0, transparent, fillRGBA);
 				
 				if (preload != null) {
 					
-					__sourceImage = preload;
-					width = __sourceImage.width;
-					height = __sourceImage.height;
+					__image = preload;
+					width = __image.width;
+					height = __image.height;
 					
 				} else {
 					
-					__loadFromBase64 (haxe.Resource.getString(resourceName), resourceType, function (b) {
+					__loadFromBase64 (haxe.Resource.getString (resourceName), resourceType, function (b) {
 						
 						if (preload == null) {
 							
-							preload = b.__sourceImage;
+							preload = b.__image;
 							
 						}
 						
@@ -1587,7 +956,6 @@ class Assets {
 					
 				}
 				
-				#end
 				#else
 				
 				super (width, height, transparent, fillRGBA);
@@ -1603,11 +971,7 @@ class Assets {
 			
 			#if html5
 			args.push ({ name: "onload", opt: true, type: macro :Dynamic, value: null });
-			#if openfl_html5_dom
-			fields.push ({ kind: FVar(macro :openfl.display.BitmapData, null), name: "preload", doc: null, meta: [], access: [ APublic, AStatic ], pos: Context.currentPos() });
-			#else
-			fields.push ({ kind: FVar(macro :js.html.Image, null), name: "preload", doc: null, meta: [], access: [ APublic, AStatic ], pos: Context.currentPos() });
-			#end
+			fields.push ({ kind: FVar(macro :lime.graphics.Image, null), name: "preload", doc: null, meta: [], access: [ APublic, AStatic ], pos: Context.currentPos() });
 			#end
 			
 			fields.push ({ name: "new", access: [ APublic ], kind: FFun({ args: args, expr: constructor, params: [], ret: null }), pos: Context.currentPos() });
@@ -1699,11 +1063,7 @@ class Assets {
 				
 				super();
 				
-				#if openfl_html5_dom
-				nmeFromBytes (haxe.Resource.getBytes (resourceName));
-				#else
 				__fromBytes (haxe.Resource.getBytes (resourceName));
-				#end
 				
 			};
 			
@@ -1797,8 +1157,8 @@ class Assets {
 				
 				super();
 				
-				var byteArray = openfl.utils.ByteArray.fromBytes (haxe.Resource.getBytes(resourceName));
-				loadCompressedDataFromByteArray(byteArray, byteArray.length, forcePlayAsMusic);
+				var byteArray = openfl.utils.ByteArray.fromBytes (haxe.Resource.getBytes (resourceName));
+				loadCompressedDataFromByteArray (byteArray, byteArray.length, forcePlayAsMusic);
 				
 			};
 			
@@ -1817,4 +1177,13 @@ class Assets {
 }
 
 
+#end
+#else
+typedef Assets = openfl._v2.Assets;
+#if !macro
+typedef AssetLibrary = openfl._v2.Assets.AssetLibrary;
+typedef AssetCache = openfl._v2.Assets.AssetCache;
+typedef AssetData = openfl._v2.Assets.AssetData;
+typedef AssetType = openfl._v2.Assets.AssetType;
+#end
 #end

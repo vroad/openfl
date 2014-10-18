@@ -1,13 +1,7 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
-package openfl.display;
-#if display
+
+import openfl.geom.Rectangle;
 
 
 /**
@@ -1049,8 +1043,9 @@ package openfl.display;
  *                               <p><b>Note:</b> See the Multitouch class for
  *                               environment compatibility information.</p>
  */
-extern class InteractiveObject extends DisplayObject {
-
+class InteractiveObject extends DisplayObject {
+	
+	
 	/**
 	 * Specifies whether the object receives <code>doubleClick</code> events. The
 	 * default value is <code>false</code>, which means that by default an
@@ -1065,8 +1060,10 @@ extern class InteractiveObject extends DisplayObject {
 	 * <code>addEventListener()</code> method to add an event listener for the
 	 * <code>doubleClick</code> event.</p>
 	 */
-	var doubleClickEnabled : Bool;
-
+	public var doubleClickEnabled:Bool;
+	
+	public var focusRect:Dynamic;
+	
 	/**
 	 * Specifies whether this object receives mouse, or other user input,
 	 * messages. The default value is <code>true</code>, which means that by
@@ -1083,8 +1080,8 @@ extern class InteractiveObject extends DisplayObject {
 	 * <code>addEventListener()</code> method to create interactive
 	 * functionality.</p>
 	 */
-	var mouseEnabled : Bool;
-
+	public var mouseEnabled:Bool;
+	
 	/**
 	 * Specifies whether a virtual keyboard(an on-screen, software keyboard)
 	 * should display when this InteractiveObject instance receives focus.
@@ -1107,8 +1104,13 @@ extern class InteractiveObject extends DisplayObject {
 	 * <p><b>Note:</b> This property is not supported in AIR applications on
 	 * iOS.</p>
 	 */
-	var needsSoftKeyboard : Bool;
-
+	public var needsSoftKeyboard:Bool;
+	
+	public var softKeyboardInputAreaOfInterest:Rectangle;
+	public var tabEnabled:Bool;
+	public var tabIndex:Int;
+	
+	
 	/**
 	 * Calling the <code>new InteractiveObject()</code> constructor throws an
 	 * <code>ArgumentError</code> exception. You can, however, call constructors
@@ -1121,8 +1123,19 @@ extern class InteractiveObject extends DisplayObject {
 	 *   <li><code>new MovieClip()</code></li>
 	 * </ul>
 	 */
-	function new() : Void;
-
+	public function new () {
+		
+		super ();
+		
+		doubleClickEnabled = false;
+		mouseEnabled = true;
+		needsSoftKeyboard = false;
+		tabEnabled = true;
+		tabIndex = -1;
+		
+	}
+	
+	
 	/**
 	 * Raises a virtual keyboard.
 	 *
@@ -1139,8 +1152,34 @@ extern class InteractiveObject extends DisplayObject {
 	 *         was granted; <code>false</code> means that the soft keyboard was
 	 *         not raised.
 	 */
-	function requestSoftKeyboard() : Bool;
+	public function requestSoftKeyboard ():Bool {
+		
+		openfl.Lib.notImplemented ("InteractiveObject.requestSoftKeyboard");
+		
+		return false;
+		
+	}
+	
+	
+	@:noCompletion private override function __getInteractive (stack:Array<DisplayObject>):Void {
+		
+		stack.push (this);
+		
+		if (parent != null) {
+			
+			parent.__getInteractive (stack);
+			
+		}
+		
+	}
+	
+	
 }
 
 
+#else
+typedef InteractiveObject = openfl._v2.display.InteractiveObject;
+#end
+#else
+typedef InteractiveObject = flash.display.InteractiveObject;
 #end

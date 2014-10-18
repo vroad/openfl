@@ -1,12 +1,8 @@
 package openfl.gl;
-#if display
 
 
-extern class GLShader extends GLObject {
-	
-	function new(inVersion:Int, inId:Dynamic):Void;
-	
-}
-
-
+#if (!openfl_next && !flash && !js && !display)
+typedef GLShader = openfl._v2.gl.GLShader;
+#else
+typedef GLShader = lime.graphics.opengl.GLShader;
 #end

@@ -1,13 +1,4 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash
 
 
 /**
@@ -31,28 +22,31 @@ package openfl.display;
  * <code>openfl.filters.DisplacementMapFilter.componentY</code> properties</li>
  * </ul>
  */
-extern class BitmapDataChannel {
-
+class BitmapDataChannel {
+	
 	/**
 	 * The alpha channel.
 	 */
 	public static inline var ALPHA = 8;
-
+	
 	/**
 	 * The blue channel.
 	 */
 	public static inline var BLUE = 4;
-
+	
 	/**
 	 * The green channel.
 	 */
 	public static inline var GREEN = 2;
-
+	
 	/**
 	 * The red channel.
 	 */
 	public static inline var RED = 1;
+	
 }
 
 
+#else
+typedef BitmapDataChannel = flash.display.BitmapDataChannel;
 #end

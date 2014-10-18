@@ -1,14 +1,8 @@
 package openfl.gl;
-#if display
 
 
-extern class GLProgram extends GLObject {
-	
-	function new(inVersion:Int, inId:Dynamic):Void;
-	function attach(s:GLShader):Void;
-	function getShaders():Array<GLShader>;
-	
-}
-
-
+#if (!openfl_next && !flash && !js && !display)
+typedef GLProgram = openfl._v2.gl.GLProgram;
+#else
+typedef GLProgram = lime.graphics.opengl.GLProgram;
 #end

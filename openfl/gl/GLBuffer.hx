@@ -1,12 +1,8 @@
 package openfl.gl;
-#if display
 
 
-extern class GLBuffer extends GLObject {
-	
-	function new(inVersion:Int, inId:Dynamic):Void;
-	
-}
-
-
+#if (!openfl_next && !flash && !js && !display)
+typedef GLBuffer = openfl._v2.gl.GLBuffer;
+#else
+typedef GLBuffer = lime.graphics.opengl.GLBuffer;
 #end

@@ -1,13 +1,4 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
 
 /**
@@ -18,26 +9,32 @@ package openfl.display;
  * three types of joints: miter, round, and bevel, as the following example
  * shows:
  */
-@:fakeEnum(String) extern enum JointStyle {
-
-	/**
-	 * Specifies beveled joints in the <code>joints</code> parameter of the
-	 * <code>openfl.display.Graphics.lineStyle()</code> method.
-	 */
-	BEVEL;
-
+enum JointStyle {
+	
 	/**
 	 * Specifies mitered joints in the <code>joints</code> parameter of the
 	 * <code>openfl.display.Graphics.lineStyle()</code> method.
 	 */
 	MITER;
-
+	
 	/**
 	 * Specifies round joints in the <code>joints</code> parameter of the
 	 * <code>openfl.display.Graphics.lineStyle()</code> method.
 	 */
 	ROUND;
+	
+	/**
+	 * Specifies beveled joints in the <code>joints</code> parameter of the
+	 * <code>openfl.display.Graphics.lineStyle()</code> method.
+	 */
+	BEVEL;
+	
 }
 
 
+#else
+typedef JointStyle = openfl._v2.display.JointStyle;
+#end
+#else
+typedef JointStyle = flash.display.JointStyle;
 #end

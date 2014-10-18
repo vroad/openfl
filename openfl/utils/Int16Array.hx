@@ -1,12 +1,8 @@
 package openfl.utils;
-#if display
 
 
-class Int16Array extends ArrayBufferView implements ArrayAccess<Int> {
-	
-	
-	
-}
-
-
+#if (flash || openfl_next || js || display)
+typedef Int16Array = lime.utils.Int16Array;
+#else
+typedef Int16Array = openfl._v2.utils.Int16Array;
 #end

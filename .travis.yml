@@ -14,15 +14,15 @@ install:
   - sudo apt-get install mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev -y
   - mkdir ~/haxelib
   - haxelib setup ~/haxelib
-  - git clone https://github.com/openfl/lime ~/lime --depth 1
+  - git clone --recursive https://github.com/openfl/lime ~/lime --depth 1
   - haxelib dev lime ~/lime
-  - git clone https://github.com/openfl/lime-tools ~/lime-tools --depth 1
-  - haxelib dev lime-tools ~/lime-tools
-  - git clone https://github.com/haxenme/nme ~/nme --depth 1
+  - git clone --recursive https://github.com/haxenme/nme ~/nme --depth 1
   - haxelib dev nme ~/nme
-  - git clone https://github.com/haxenme/nme-dev ~/nme-dev --depth 1
+  - git clone --recursive https://github.com/haxenme/nme-dev ~/nme-dev --depth 1
   - haxelib dev nme-dev ~/nme-dev
-  - haxelib install hxcpp
+  #- haxelib install hxcpp
+  - git clone --recursive https://github.com/haxefoundation/hxcpp ~/hxcpp --depth 1
+  - haxelib dev hxcpp ~/hxcpp
   - haxelib install format
   - haxelib install svg
   - haxelib install dox
@@ -34,7 +34,13 @@ install:
   - haxelib dev openfl $(pwd)
   - cd ~/munit/tool
   - haxe build.hxml
-  - haxelib run lime rebuild linux -release -64
+  - cd ~/hxcpp/project
+  - haxelib run hxcpp Build.xml -Dlinux -DHXCPP_M64
+  - haxelib run hxcpp Build.xml -Dlinux -Dstatic_link -DHXCPP_M64
+  - haxelib run lime rebuild lime linux -release -64 -nocffi
+  - cd ~/nme-dev/project
+  - neko build.n linux
+  - haxelib run lime rebuild lime linux -release -64 -Dlegacy -nocffi
   - haxelib run lime rebuild tools
 
 before_script:

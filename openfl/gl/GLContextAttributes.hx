@@ -1,17 +1,8 @@
 package openfl.gl;
-#if display
 
 
-typedef GLContextAttributes = {
-	
-    alpha:Bool, 
-    depth:Bool,
-    stencil:Bool,
-    antialias:Bool,
-    premultipliedAlpha:Bool,
-    preserveDrawingBuffer:Bool,
-	
-};
-
-
+#if (!openfl_next && !flash && !js && !display)
+typedef GLContextAttributes = openfl._v2.gl.GLContextAttributes;
+#else
+typedef GLContextAttributes = lime.graphics.opengl.GLContextAttributes;
 #end

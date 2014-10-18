@@ -1,13 +1,7 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
-package openfl.display;
-#if display
+
+import openfl.display.IGraphicsData;
 
 
 /**
@@ -21,8 +15,9 @@ package openfl.display;
  * <code>Graphics.lineBitmapStyle()</code> method, or the
  * <code>Graphics.lineGradientStyle()</code> method. </p>
  */
-@:final extern class GraphicsStroke implements IGraphicsData/*  implements IGraphicsStroke*/ {
-
+class GraphicsStroke implements IGraphicsData implements IGraphicsStroke {
+	
+	
 	/**
 	 * Specifies the type of caps at the end of lines. Valid values are:
 	 * <code>CapsStyle.NONE</code>, <code>CapsStyle.ROUND</code>, and
@@ -35,14 +30,14 @@ package openfl.display;
 	 * applies), and a superimposed black line with a thickness of 1(for which
 	 * no <code>capsStyle</code> applies): </p>
 	 */
-	var caps : CapsStyle;
-
+	public var caps:CapsStyle;
+	
 	/**
 	 * Specifies the instance containing data for filling a stroke. An
 	 * IGraphicsFill instance can represent a series of fill commands.
 	 */
-	var fill : IGraphicsFill;
-
+	public var fill:IGraphicsFill;
+	
 	/**
 	 * Specifies the type of joint appearance used at angles. Valid values are:
 	 * <code>JointStyle.BEVEL</code>, <code>JointStyle.MITER</code>, and
@@ -59,8 +54,8 @@ package openfl.display;
 	 * <code>JointStyle.MITER</code>, you can use the <code>miterLimit</code>
 	 * parameter to limit the length of the miter.</p>
 	 */
-	var joints : JointStyle;
-
+	public var joints:JointStyle;
+	
 	/**
 	 * Indicates the limit at which a miter is cut off. Valid values range from 1
 	 * to 255(and values outside that range are rounded to 1 or 255). This value
@@ -81,8 +76,8 @@ package openfl.display;
 	 * maximum angle for which the miter is cut off. The following table lists
 	 * some examples:</p>
 	 */
-	var miterLimit : Float;
-
+	public var miterLimit:Float;
+	
 	/**
 	 * Specifies whether to hint strokes to full pixels. This affects both the
 	 * position of anchors of a curve and the line stroke size itself. With
@@ -95,8 +90,8 @@ package openfl.display;
 	 * method is set differently(the images are scaled by 200%, to emphasize the
 	 * difference):
 	 */
-	var pixelHinting : Bool;
-
+	public var pixelHinting:Bool;
+	
 	/**
 	 * Specifies the stroke thickness scaling. Valid values are:
 	 * <ul>
@@ -120,8 +115,8 @@ package openfl.display;
 	 * and horizontally:   </li>
 	 * </ul>
 	 */
-	var scaleMode : LineScaleMode;
-
+	public var scaleMode:LineScaleMode;
+	
 	/**
 	 * Indicates the thickness of the line in points; valid values are 0-255. If
 	 * a number is not specified, or if the parameter is undefined, a line is not
@@ -129,8 +124,11 @@ package openfl.display;
 	 * indicates hairline thickness; the maximum thickness is 255. If a value
 	 * greater than 255 is passed, the default is 255.
 	 */
-	var thickness : Float;
-
+	public var thickness:Float;
+	
+	@:noCompletion @:dox(hide) public var __graphicsDataType (default, null):GraphicsDataType;
+	
+	
 	/**
 	 * Creates a new GraphicsStroke object.
 	 * 
@@ -212,8 +210,26 @@ package openfl.display;
 	 *                     <code>miterLimit</code> parameter to limit the length
 	 *                     of the miter.</p>
 	 */
-	function new(thickness : Float = 0./*NaN*/, pixelHinting : Bool = false, ?scaleMode : LineScaleMode, ?caps : CapsStyle, ?joints : JointStyle, miterLimit : Float = 3, ?fill : IGraphicsFill) : Void;
+	public function new (thickness:Float = 0.0, pixelHinting:Bool = false, scaleMode:LineScaleMode = null, caps:CapsStyle = null, joints:JointStyle = null, miterLimit:Float = 3, fill:IGraphicsFill = null) {
+		
+		this.caps = caps != null ? caps : CapsStyle.NONE;
+		this.fill = fill;
+		this.joints = joints != null ? joints : JointStyle.ROUND;
+		this.miterLimit = miterLimit;
+		this.pixelHinting = pixelHinting;
+		this.scaleMode = scaleMode != null ? scaleMode : LineScaleMode.NORMAL;
+		this.thickness = thickness;
+		this.__graphicsDataType = STROKE;
+		
+	}
+	
+	
 }
 
 
+#else
+typedef GraphicsStroke = openfl._v2.display.GraphicsStroke;
+#end
+#else
+typedef GraphicsStroke = flash.display.GraphicsStroke;
 #end

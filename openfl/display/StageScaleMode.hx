@@ -1,25 +1,16 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash
 
 
-/**
- * The StageScaleMode class provides values for the
- * <code>Stage.scaleMode</code> property.
- */
-@:fakeEnum(String) extern enum StageScaleMode {
-	EXACT_FIT;
-	NO_BORDER;
-	NO_SCALE;
+enum StageScaleMode {
+	
 	SHOW_ALL;
+	NO_SCALE;
+	NO_BORDER;
+	EXACT_FIT;
+	
 }
 
 
+#else
+typedef StageScaleMode = flash.display.StageScaleMode;
 #end

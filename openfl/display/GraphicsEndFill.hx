@@ -1,13 +1,8 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
-package openfl.display;
-#if display
+
+import openfl.display.IGraphicsData;
+import openfl.display.IGraphicsFill;
 
 
 /**
@@ -17,14 +12,31 @@ package openfl.display;
  * <p> Drawing a GraphicsEndFill object is the equivalent of calling the
  * <code>Graphics.endFill()</code> method. </p>
  */
-extern class GraphicsEndFill implements IGraphicsData/*  implements IGraphicsFill*/ {
-
+class GraphicsEndFill implements IGraphicsData implements IGraphicsFill {
+	
+	
+	@:noCompletion public var __graphicsDataType (default,null):GraphicsDataType;
+	@:noCompletion public var __graphicsFillType (default, null):GraphicsFillType;
+	
+	
 	/**
 	 * Creates an object to use with the <code>Graphics.drawGraphicsData()</code>
 	 * method to end the fill, explicitly.
 	 */
-	function new() : Void;
+	public function new () {
+		
+		this.__graphicsDataType = END;
+		this.__graphicsFillType = END_FILL;
+		
+	}
+	
+	
 }
 
 
+#else
+typedef GraphicsEndFill = openfl._v2.display.GraphicsEndFill;
+#end
+#else
+typedef GraphicsEndFill = flash.display.GraphicsEndFill;
 #end

@@ -1,13 +1,15 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
-package openfl.display;
-#if display
+
+import openfl._internal.renderer.RenderSession;
+import openfl.display.Stage;
+import openfl.errors.RangeError;
+import openfl.events.Event;
+import openfl.geom.Matrix;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
+
+@:access(openfl.events.Event)
 
 
 /**
@@ -31,8 +33,9 @@ package openfl.display;
  * <p>For more information, see the "Display Programming" chapter of the
  * <i>ActionScript 3.0 Developer's Guide</i>.</p>
  */
-extern class DisplayObjectContainer extends InteractiveObject {
-
+class DisplayObjectContainer extends InteractiveObject {
+	
+	
 	/**
 	 * Determines whether or not the children of the object are mouse, or user
 	 * input device, enabled. If an object is enabled, a user can interact with
@@ -54,13 +57,13 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * <code>addEventListener()</code> method to create interactive
 	 * functionality.</p>
 	 */
-	var mouseChildren : Bool;
-
+	public var mouseChildren:Bool;
+	
 	/**
 	 * Returns the number of children of this object.
 	 */
-	var numChildren(default,null) : Int;
-
+	public var numChildren (get, null):Int;
+	
 	/**
 	 * Determines whether the children of the object are tab enabled. Enables or
 	 * disables tabbing for the children of the object. The default is
@@ -74,8 +77,12 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *                               throws an exception. The Stage object does
 	 *                               not implement this property.
 	 */
-	var tabChildren : Bool;
-
+	public var tabChildren:Bool;
+	
+	@:noCompletion private var __children:Array<DisplayObject>;
+	@:noCompletion private var __removedChildren:Array<DisplayObject>;
+	
+	
 	/**
 	 * Calling the <code>new DisplayObjectContainer()</code> constructor throws
 	 * an <code>ArgumentError</code> exception. You <i>can</i>, however, call
@@ -86,8 +93,18 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *   <li><code>new MovieClip()</code></li>
 	 * </ul>
 	 */
-	private function new() : Void;
-
+	public function new () {
+		
+		super ();
+		
+		mouseChildren = true;
+		
+		__children = new Array<DisplayObject> ();
+		__removedChildren = new Array<DisplayObject> ();
+		
+	}
+	
+	
 	/**
 	 * Adds a child DisplayObject instance to this DisplayObjectContainer
 	 * instance. The child is added to the front(top) of all other children in
@@ -118,8 +135,36 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @event added Dispatched when a display object is added to the display
 	 *              list.
 	 */
-	function addChild(child : DisplayObject) : DisplayObject;
-
+	public function addChild (child:DisplayObject):DisplayObject {
+		
+		if (child != null) {
+			
+			if (child.parent != null) {
+				
+				child.parent.removeChild (child);
+				
+			}
+			
+			__children.push (child);
+			child.parent = this;
+			
+			if (stage != null) {
+				
+				child.__setStageReference (stage);
+				
+			}
+			
+			child.__setTransformDirty ();
+			child.__setRenderDirty ();
+			child.dispatchEvent (new Event (Event.ADDED, true));
+			
+		}
+		
+		return child;
+		
+	}
+	
+	
 	/**
 	 * Adds a child DisplayObject instance to this DisplayObjectContainer
 	 * instance. The child is added at the index position specified. An index of
@@ -149,8 +194,47 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @event added Dispatched when a display object is added to the display
 	 *              list.
 	 */
-	function addChildAt(child : DisplayObject, index : Int) : DisplayObject;
-
+	public function addChildAt (child:DisplayObject, index:Int):DisplayObject {
+		
+		if (index > __children.length || index < 0) {
+			
+			throw "Invalid index position " + index;
+			
+		}
+		
+		if (child.parent == this) {
+			
+			__children.remove (child);
+			
+		} else {
+			
+			if (child.parent != null) {
+				
+				child.parent.removeChild (child);
+				
+			}
+			
+			child.parent = this;
+			
+			if (stage != null) {
+				
+				child.__setStageReference (stage);
+				
+			}
+			
+			child.__setTransformDirty ();
+			child.__setRenderDirty ();
+			child.dispatchEvent (new Event (Event.ADDED, true));
+			
+		}
+		
+		__children.insert (index, child);
+		
+		return child;
+		
+	}
+	
+	
 	/**
 	 * Indicates whether the security restrictions would cause any display
 	 * objects to be omitted from the list returned by calling the
@@ -172,8 +256,13 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @return <code>true</code> if the point contains child display objects with
 	 *         security restrictions.
 	 */
-	function areInaccessibleObjectsUnderPoint(point : openfl.geom.Point) : Bool;
-
+	public function areInaccessibleObjectsUnderPoint (point:Point):Bool {
+		
+		return false;
+		
+	}
+	
+	
 	/**
 	 * Determines whether the specified display object is a child of the
 	 * DisplayObjectContainer instance or the instance itself. The search
@@ -186,8 +275,27 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *         the DisplayObjectContainer or the container itself; otherwise
 	 *         <code>false</code>.
 	 */
-	function contains(child : DisplayObject) : Bool;
-
+	public function contains (child:DisplayObject):Bool {
+		
+		#if (haxe_ver > 3.100)
+		
+		return __children.indexOf (child) > -1;
+		
+		#else
+		
+		for (i in __children) {
+			
+			if (i == child) return true;
+			
+		}
+		
+		return false;
+		
+		#end
+		
+	}
+	
+	
 	/**
 	 * Returns the child display object instance that exists at the specified
 	 * index.
@@ -201,8 +309,19 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *                       situation by having the child movie call
 	 *                       <code>Security.allowDomain()</code>.
 	 */
-	function getChildAt(index : Int) : DisplayObject;
-
+	public function getChildAt (index:Int):DisplayObject {
+		
+		if (index >= 0 && index < __children.length) {
+			
+			return __children[index];
+			
+		}
+		
+		return null;
+		
+	}
+	
+	
 	/**
 	 * Returns the child display object that exists with the specified name. If
 	 * more that one child display object has the specified name, the method
@@ -221,8 +340,19 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *                       situation by having the child movie call the
 	 *                       <code>Security.allowDomain()</code> method.
 	 */
-	function getChildByName(name : String) : DisplayObject;
-
+	public function getChildByName (name:String):DisplayObject {
+		
+		for (child in __children) {
+			
+			if (child.name == name) return child;
+			
+		}
+		
+		return null;
+		
+	}
+	
+	
 	/**
 	 * Returns the index position of a <code>child</code> DisplayObject instance.
 	 * 
@@ -231,8 +361,19 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @throws ArgumentError Throws if the child parameter is not a child of this
 	 *                       object.
 	 */
-	function getChildIndex(child : DisplayObject) : Int;
-
+	public function getChildIndex (child:DisplayObject):Int {
+		
+		for (i in 0...__children.length) {
+			
+			if (__children[i] == child) return i;
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
 	/**
 	 * Returns an array of objects that lie under the specified point and are
 	 * children(or grandchildren, and so on) of this DisplayObjectContainer
@@ -252,8 +393,17 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *         children(or grandchildren, and so on) of this
 	 *         DisplayObjectContainer instance.
 	 */
-	function getObjectsUnderPoint(point : openfl.geom.Point) : Array<DisplayObject>;
-
+	public function getObjectsUnderPoint (point:Point):Array<DisplayObject> {
+		
+		point = localToGlobal (point);
+		var stack = new Array<DisplayObject> ();
+		__hitTest (point.x, point.y, false, stack, false);
+		stack.shift ();
+		return stack;
+		
+	}
+	
+	
 	/**
 	 * Removes the specified <code>child</code> DisplayObject instance from the
 	 * child list of the DisplayObjectContainer instance. The <code>parent</code>
@@ -273,8 +423,30 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @throws ArgumentError Throws if the child parameter is not a child of this
 	 *                       object.
 	 */
-	function removeChild(child : DisplayObject) : DisplayObject;
-
+	public function removeChild (child:DisplayObject):DisplayObject {
+		
+		if (child != null && child.parent == this) {
+			
+			if (stage != null) {
+				
+				child.__setStageReference (null);
+				
+			}
+			
+			child.parent = null;
+			__children.remove (child);
+			__removedChildren.push (child);
+			child.__setTransformDirty ();
+			child.__setRenderDirty ();
+			child.dispatchEvent (new Event (Event.REMOVED, true));
+			
+		}
+		
+		return child;
+		
+	}
+	
+	
 	/**
 	 * Removes a child DisplayObject from the specified <code>index</code>
 	 * position in the child list of the DisplayObjectContainer. The
@@ -297,10 +469,54 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 *                       can avoid this situation by having the child movie
 	 *                       call the <code>Security.allowDomain()</code> method.
 	 */
-	function removeChildAt(index : Int) : DisplayObject;
+	public function removeChildAt (index:Int):DisplayObject {
+		
+		if (index >= 0 && index < __children.length) {
+			
+			return removeChild (__children[index]);
+			
+		}
+		
+		return null;
+		
+	}
 	
-	function removeChildren(beginIndex : Int = 0, endIndex : Int = 2147483647) : Void;
-
+	
+	public function removeChildren (beginIndex:Int = 0, endIndex:Int = 0x7FFFFFFF):Void {
+		
+		if (endIndex == 0x7FFFFFFF) { 
+			
+			endIndex = __children.length - 1;
+			
+			if (endIndex < 0) {
+				
+				return;
+				
+			}
+			
+		}
+		
+		if (beginIndex > __children.length - 1) {
+			
+			return;
+			
+		} else if (endIndex < beginIndex || beginIndex < 0 || endIndex > __children.length) {
+			
+			throw new RangeError ("The supplied index is out of bounds.");
+			
+		}
+		
+		var numRemovals = endIndex - beginIndex;
+		while (numRemovals >= 0) {
+			
+			removeChildAt (beginIndex);
+			numRemovals--;
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Changes the position of an existing child in the display object container.
 	 * This affects the layering of child objects. For example, the following
@@ -329,8 +545,18 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @throws RangeError    Throws if the index does not exist in the child
 	 *                       list.
 	 */
-	function setChildIndex(child : DisplayObject, index : Int) : Void;
-
+	public function setChildIndex (child:DisplayObject, index:Int) {
+		
+		if (index >= 0 && index <= __children.length && child.parent == this) {
+			
+			__children.remove (child);
+			__children.insert (index, child);
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Swaps the z-order(front-to-back order) of the two specified child
 	 * objects. All other child objects in the display object container remain in
@@ -341,8 +567,44 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @throws ArgumentError Throws if either child parameter is not a child of
 	 *                       this object.
 	 */
-	function swapChildren(child1 : DisplayObject, child2 : DisplayObject) : Void;
-
+	public function swapChildren (child1:DisplayObject, child2:DisplayObject):Void {
+		
+		if (child1.parent == this && child2.parent == this) {
+			
+			#if (haxe_ver > 3.100)
+			
+			var index1 = __children.indexOf (child1);
+			var index2 = __children.indexOf (child2);
+			
+			#else
+			
+			var index1 = -1;
+			var index2 = -1;
+			
+			for (i in 0...__children.length) {
+				
+				if (__children[i] == child1) {
+					
+					index1 = i;
+					
+				} else if (__children[i] == child2) {
+					
+					index2 = i;
+					
+				}
+				
+			}
+			
+			#end
+			
+			__children[index1] = child2;
+			__children[index2] = child1;
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Swaps the z-order(front-to-back order) of the child objects at the two
 	 * specified index positions in the child list. All other child objects in
@@ -352,8 +614,313 @@ extern class DisplayObjectContainer extends InteractiveObject {
 	 * @param index2 The index position of the second child object.
 	 * @throws RangeError If either index does not exist in the child list.
 	 */
-	function swapChildrenAt(index1 : Int, index2 : Int) : Void;
+	public function swapChildrenAt (child1:Int, child2:Int):Void {
+		
+		var swap:DisplayObject = __children[child1];
+		__children[child1] = __children[child2];
+		__children[child2] = swap;
+		swap = null;
+		
+	}
+	
+	
+	@:noCompletion private override function __broadcast (event:Event, notifyChilden:Bool):Bool {
+		
+		if (event.target == null) {
+			
+			event.target = this;
+			
+		}
+		
+		if (notifyChilden) {
+			
+			for (child in __children) {
+				
+				child.__broadcast (event, true);
+				
+				if (event.__isCancelled) {
+					
+					return true;
+					
+				}
+				
+			}
+			
+		}
+		
+		return super.__broadcast (event, notifyChilden);
+		
+	}
+	
+	
+	@:noCompletion private override function __getBounds (rect:Rectangle, matrix:Matrix):Void {
+		
+		if (__children.length == 0) return;
+		
+		var matrixCache = null;
+		
+		if (matrix != null) {
+			
+			matrixCache = __worldTransform;
+			__worldTransform = matrix;
+			__updateChildren (true);
+			
+		}
+		
+		for (child in __children) {
+			
+			if (!child.__renderable) continue;
+			child.__getBounds (rect, null);
+			
+		}
+			
+		if (matrix != null) {
+			
+			__worldTransform = matrixCache;
+			__updateChildren (true);
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion private override function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
+		
+		if (!visible || (interactiveOnly && !mouseEnabled)) return false;
+		
+		var i = __children.length;
+		
+		if (interactiveOnly && (stack == null || !mouseChildren)) {
+			
+			while (--i >= 0) {
+				
+				if (__children[i].__hitTest (x, y, shapeFlag, null, interactiveOnly)) {
+					
+					if (stack != null) {
+						
+						stack.push (this);
+						
+					}
+					
+					return true;
+					
+				}
+				
+			}
+			
+		} else if (stack != null) {
+			
+			var length = stack.length;
+			
+			while (--i >= 0) {
+				
+				if (__children[i].__hitTest (x, y, shapeFlag, stack, interactiveOnly)) {
+					
+					stack.insert (length, this);
+					
+					return true;
+					
+				}
+				
+			}
+			
+		}
+		
+		return false;
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderCanvas (renderSession:RenderSession):Void {
+		
+		if (!__renderable || __worldAlpha <= 0) return;
+		
+		if (scrollRect != null) {
+			
+			//renderSession.maskManager.pushRect (scrollRect, __worldTransform);
+			
+		}
+		
+		if (__mask != null) {
+			
+			//renderSession.maskManager.pushMask (__mask);
+			
+		}
+		
+		for (child in __children) {
+			
+			child.__renderCanvas (renderSession);
+			
+		}
+		
+		__removedChildren = [];
+		
+		if (__mask != null) {
+			
+			//renderSession.maskManager.popMask ();
+			
+		}
+		
+		if (scrollRect != null) {
+			
+			//renderSession.maskManager.popMask ();
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderDOM (renderSession:RenderSession):Void {
+		
+		//if (!__renderable) return;
+		
+		//if (__mask != null) {
+			
+			//renderSession.maskManager.pushMask (__mask);
+			
+		//}
+		
+		// TODO: scrollRect
+		
+		for (child in __children) {
+			
+			child.__renderDOM (renderSession);
+			
+		}
+		
+		for (orphan in __removedChildren) {
+			
+			if (orphan.stage == null) {
+				
+				orphan.__renderDOM (renderSession);
+				
+			}
+			
+		}
+		
+		__removedChildren = [];
+		
+		//if (__mask != null) {
+			
+			//renderSession.maskManager.popMask ();
+			
+		//}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
+		
+		if (!__renderable || __worldAlpha <= 0) return;
+		
+		for (child in __children) {
+			
+			child.__renderGL (renderSession);
+			
+		}
+		
+		__removedChildren = [];
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderMask (renderSession:RenderSession):Void {
+		
+		var bounds = new Rectangle ();
+		__getLocalBounds (bounds);
+		
+		renderSession.context.rect (0, 0, bounds.width, bounds.height);	
+		
+	}
+	
+	
+	@:noCompletion private override function __setStageReference (stage:Stage):Void {
+		
+		if (this.stage != stage) {
+			
+			if (this.stage != null) {
+				
+				dispatchEvent (new Event (Event.REMOVED_FROM_STAGE, false, false));
+				
+			}
+			
+			this.stage = stage;
+			
+			if (stage != null) {
+				
+				dispatchEvent (new Event (Event.ADDED_TO_STAGE, false, false));
+				
+			}
+			
+			for (child in __children) {
+				
+				child.__setStageReference (stage);
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __update (transformOnly:Bool, updateChildren:Bool):Void {
+		
+		super.__update (transformOnly, updateChildren);
+		
+		if (!__renderable #if dom && !__worldAlphaChanged && !__worldClipChanged && !__worldTransformChanged && !__worldVisibleChanged #end) {
+			
+			return;
+			
+		}
+		
+		//if (!__renderable) return;
+		
+		if (updateChildren) {
+			
+			for (child in __children) {
+				
+				child.__update (transformOnly, true);
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __updateChildren (transformOnly:Bool):Void {
+		
+		super.__updateChildren (transformOnly);
+		
+		for (child in __children) {
+			
+			child.__update (transformOnly, true);
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	@:noCompletion private function get_numChildren ():Int {
+		
+		return __children.length;
+		
+	}
+	
+	
 }
 
 
+#else
+typedef DisplayObjectContainer = openfl._v2.display.DisplayObjectContainer;
+#end
+#else
+typedef DisplayObjectContainer = flash.display.DisplayObjectContainer;
 #end

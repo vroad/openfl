@@ -1,21 +1,12 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
 
 /**
  * The LineScaleMode class provides values for the <code>scaleMode</code>
  * parameter in the <code>Graphics.lineStyle()</code> method.
  */
-@:fakeEnum(String) extern enum LineScaleMode {
-
+enum LineScaleMode {
+	
 	/**
 	 * With this setting used as the <code>scaleMode</code> parameter of the
 	 * <code>lineStyle()</code> method, the thickness of the line scales
@@ -26,20 +17,20 @@ package openfl.display;
 	 * vertically and horizontally.
 	 */
 	HORIZONTAL;
-
+	
 	/**
 	 * With this setting used as the <code>scaleMode</code> parameter of the
 	 * <code>lineStyle()</code> method, the thickness of the line never scales.
 	 */
 	NONE;
-
+	
 	/**
 	 * With this setting used as the <code>scaleMode</code> parameter of the
 	 * <code>lineStyle()</code> method, the thickness of the line always scales
 	 * when the object is scaled(the default).
 	 */
 	NORMAL;
-
+	
 	/**
 	 * With this setting used as the <code>scaleMode</code> parameter of the
 	 * <code>lineStyle()</code> method, the thickness of the line scales
@@ -50,7 +41,13 @@ package openfl.display;
 	 * both vertically and horizontally.
 	 */
 	VERTICAL;
+	
 }
 
 
+#else
+typedef LineScaleMode = openfl._v2.display.LineScaleMode;
+#end
+#else
+typedef LineScaleMode = flash.display.LineScaleMode;
 #end
