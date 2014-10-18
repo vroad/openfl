@@ -11,6 +11,7 @@ import openfl.gl.GL;
 import openfl.Lib;
 
 #if js
+import js.html.webgl.ContextAttributes;
 import js.html.CanvasElement;
 import js.Browser;
 #end
@@ -42,13 +43,8 @@ class OpenGLView extends DirectRenderer {
 			__canvas.width = Lib.current.stage.stageWidth;
 			__canvas.height = Lib.current.stage.stageHeight;
 			
-			__context = cast __canvas.getContext ("webgl");
-			
-			if (__context == null) {
-				
-				__context = cast __canvas.getContext ("experimental-webgl");
-				
-			}
+			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha:false, antialias:false};
+			__context = cast __canvas.getContextWebGL (attributes);
 			
 			#if debug
 			__context = untyped WebGLDebugUtils.makeDebugContext (__context);
