@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension>
 	
-	<haxedef name="native" if="cpp || neko" />
+	<haxedef name="native" if="cpp || neko || nodejs" />
 	
 	<set name="openfl-next" value="1" if="next || openfl_next" />
 	<haxedef name="openfl-next" if="openfl-next" />
