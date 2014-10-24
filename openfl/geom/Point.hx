@@ -1,4 +1,4 @@
-package openfl.geom; #if !flash #if (display || openfl_next || js)
+package openfl.geom; #if !flash #if (display || openfl_next || html5)
 
 
 import lime.math.Vector2;

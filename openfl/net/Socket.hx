@@ -81,7 +81,7 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 		if( port < 0 || port > 65535 )
 			throw new SecurityError("Invalid socket port number specified.");
 		
-		#if js
+		#if html5
 		_stamp = haxe.Timer.stamp();
 		#else
 		var h : Host = null;
@@ -102,13 +102,13 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 		_output.endian = endian;
 		_input = new ByteArray();
 		_input.endian = endian;
-		#if js
+		#if html5
 		_inputBuffer = new ByteArray();
 		_inputBuffer.endian = endian;
 		#end
 		
-		#if js
-		_socket = untyped __js__("new WebSocket(\"ws://\" + host + \":\" + port)");
+		#if html5
+		_socket = untyped __html5__("new WebSocket(\"ws://\" + host + \":\" + port)");
 
 		_socket.onopen = onOpenHandler;
 		_socket.onmessage = onMessageHandler;
@@ -129,7 +129,7 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 	}
 	
 	@:noCompletion private function onFrame( _ ){
-		#if js
+		#if html5
 		if (_inputBuffer.bytesAvailable > 0)
 		{
 			var newInput = new ByteArray();
@@ -355,7 +355,7 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 	}
 	//public function writeObject( object:Dynamic ):Void {  _output.writeObject(object); }
 	
-	#if js
+	#if html5
 	@:noCompletion private function onOpenHandler (_):Void {
 		_connected = true;
 		dispatchEvent (new Event (Event.CONNECT));
@@ -385,7 +385,7 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 			throw new IOError("Operation attempted on invalid socket.");
 		if( _output.length > 0 ){
 			try {
-				#if js
+				#if html5
 				_socket.send( _output.__getBuffer() );
 				#else
 				_socket.output.write( _output );

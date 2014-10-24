@@ -22,7 +22,7 @@ class ApplicationMain {
 		preloader.onComplete = start;
 		preloader.create (config);
 		
-		#if js
+		#if html5
 		var urls = [];
 		var types = [];
 		
@@ -42,7 +42,7 @@ class ApplicationMain {
 		
 		var result = app.exec ();
 		
-		#if sys
+		#if (sys && !nodejs && !html5)
 		Sys.exit (result);
 		#end
 		
@@ -69,7 +69,7 @@ class ApplicationMain {
 			
 		}
 		
-		#if js
+		#if html5
 		#if munit
 		flash.Lib.embed (null, ::WIN_WIDTH::, ::WIN_HEIGHT::, "::WIN_FLASHBACKGROUND::");
 		#end

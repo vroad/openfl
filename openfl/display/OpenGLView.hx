@@ -1,4 +1,4 @@
-package openfl.display; #if (flash || openfl_next || js || display)
+package openfl.display; #if (flash || openfl_next || html5 || display)
 
 
 #if !flash
@@ -10,7 +10,7 @@ import openfl.geom.Rectangle;
 import openfl.gl.GL;
 import openfl.Lib;
 
-#if js
+#if html5
 import js.html.webgl.ContextAttributes;
 import js.html.CanvasElement;
 import js.Browser;
@@ -88,7 +88,7 @@ class OpenGLView extends DirectRenderer {
 	#if !flash
 	@:noCompletion public override function __renderDOM (renderSession:RenderSession):Void {
 		
-		#if js
+		#if html5
 		if (stage != null && __worldVisible && __renderable) {
 			
 			if (!__added) {
@@ -198,7 +198,7 @@ class OpenGLView extends DirectRenderer {
 		
 		return false;
 		
-		#elseif js
+		#elseif html5
 		
 		if (untyped (!window.WebGLRenderingContext)) {
 			

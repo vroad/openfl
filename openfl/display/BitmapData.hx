@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || js)
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
 
 import lime.graphics.opengl.GLBuffer;
@@ -20,7 +20,7 @@ import openfl.geom.Rectangle;
 import openfl.utils.ByteArray;
 import openfl.Vector;
 
-#if js
+#if html5
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.html.ImageData;
@@ -207,14 +207,14 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid) return;
 		
-		#if js
+		#if html5
 		ImageCanvasUtil.convertToCanvas (__image);
 		ImageCanvasUtil.createImageData (__image);
 		ImageCanvasUtil.convertToCanvas (sourceBitmapData.__image);
 		ImageCanvasUtil.createImageData (sourceBitmapData.__image);
 		#end
 		
-		#if js
+		#if html5
 		filter.__applyFilter (__image.buffer.__srcImageData, sourceBitmapData.__image.buffer.__srcImageData, sourceRect, destPoint);
 		#end
 		
@@ -490,7 +490,7 @@ class BitmapData implements IBitmapDrawable {
 				ImageCanvasUtil.convertToCanvas (__image);
 				ImageCanvasUtil.sync (__image);
 				
-				#if js
+				#if html5
 				var buffer = __image.buffer;
 				
 				var renderSession = new RenderSession ();
@@ -603,7 +603,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	#if js
+	#if html5
 	public static function fromCanvas (canvas:CanvasElement, transparent:Bool = true):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, transparent);
@@ -954,7 +954,7 @@ class BitmapData implements IBitmapDrawable {
 		var sw:Int = Std.int (sourceRect.width);
 		var sh:Int = Std.int (sourceRect.height);
 		
-		#if js
+		#if html5
 		memory.length = ((sw * sh) * 4);
 		#end
 		memory = getPixels (sourceRect);
@@ -1179,7 +1179,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setVector (rect:Rectangle, inputVector:Vector<UInt>) {
 		
 		var byteArray = new ByteArray ();
-		#if js
+		#if html5
 		byteArray.length = inputVector.length * 4;
 		#end
 		
@@ -1255,7 +1255,7 @@ class BitmapData implements IBitmapDrawable {
 			color = __flipPixel (color);
 			
 			var memory = new ByteArray ();
-			#if js
+			#if html5
 			memory.length  = width * height * 4;
 			#end
 			memory = getPixels (rect);
@@ -1334,7 +1334,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			var totalMemory = (canvasMemory + sourceMemory);
 			var memory = new ByteArray ();
-			#if js
+			#if html5
 			memory.length = totalMemory;
 			#end
 			memory.position = 0;
@@ -1467,7 +1467,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			if (rawAlpha != null) {
 				
-				#if js
+				#if html5
 				ImageCanvasUtil.convertToCanvas (__image);
 				ImageCanvasUtil.createImageData (__image);
 				#end
@@ -1526,7 +1526,7 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __renderCanvas (renderSession:RenderSession):Void {
 		
-		#if js
+		#if html5
 		if (!__isValid) return;
 		
 		ImageCanvasUtil.sync (__image);
@@ -1563,7 +1563,7 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion private function __sync ():Void {
 		
-		#if js
+		#if html5
 		ImageCanvasUtil.sync (__image);
 		#end
 		

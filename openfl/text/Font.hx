@@ -1,4 +1,4 @@
-package openfl.text; #if !flash #if (display || openfl_next || js)
+package openfl.text; #if !flash #if (display || openfl_next || html5)
 
 
 class Font {

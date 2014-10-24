@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || js)
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
 
 import openfl._internal.renderer.canvas.CanvasBitmap;
@@ -9,7 +9,7 @@ import openfl.geom.Matrix;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
-#if js
+#if html5
 import js.html.ImageElement;
 #end
 
@@ -83,7 +83,7 @@ class Bitmap extends DisplayObjectContainer {
 	 */
 	public var smoothing:Bool;
 	
-	#if js
+	#if html5
 	@:noCompletion private var __image:ImageElement;
 	#end
 	

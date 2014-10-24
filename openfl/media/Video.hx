@@ -8,7 +8,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.net.NetStream;
 
-#if js
+#if html5
 import js.html.MediaElement;
 import js.Browser;
 #end

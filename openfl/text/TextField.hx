@@ -1,4 +1,4 @@
-package openfl.text; #if !flash #if (display || openfl_next || js)
+package openfl.text; #if !flash #if (display || openfl_next || html5)
 
 
 import lime.graphics.opengl.GLTexture;
@@ -15,7 +15,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextFormatAlign;
 
-#if js
+#if html5
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.html.CSSStyleDeclaration;
@@ -78,7 +78,7 @@ class TextField extends InteractiveObject {
 	@:noCompletion private var __texture:GLTexture;
 	@:noCompletion private var __width:Float;
 	
-	#if js
+	#if html5
 	private var __div:DivElement;
 	#end
 	
@@ -283,7 +283,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function __measureText ():Array<Float> {
 		
-		#if js
+		#if html5
 		
 		if (__ranges == null) {
 			
@@ -316,7 +316,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function __measureTextWithDOM ():Void {
 	 	
-	 	#if js
+	 	#if html5
 	 	
 		var div:Element = __div;
 		
@@ -487,7 +487,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_htmlText (value:String):String {
 		
-		#if js
+		#if html5
 		
 		if (!__isHTML || __text != value) __dirty = true;
 		__ranges = null;
@@ -658,7 +658,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public function get_textWidth ():Float {
 		
-		#if js
+		#if html5
 		
 		if (__canvas != null) {
 			
@@ -695,7 +695,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public function get_textHeight ():Float {
 		
-		#if js
+		#if html5
 		
 		if (__canvas != null) {
 			

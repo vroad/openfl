@@ -1,10 +1,10 @@
-package openfl.ui; #if !flash #if (display || openfl_next || js)
+package openfl.ui; #if !flash #if (display || openfl_next || html5)
 
 
 import openfl.ui.MultitouchInputMode;
 import openfl.Lib;
 
-#if js
+#if html5
 import js.Browser;
 #end
 
@@ -58,8 +58,8 @@ class Multitouch {
 	
 	@:noCompletion private static function get_supportsTouchEvents ():Bool {
 		
-		#if js
-		if (untyped __js__ ("('ontouchstart' in document.documentElement) || (window.DocumentTouch && document instanceof DocumentTouch)")) {
+		#if html5
+		if (untyped __html5__ ("('ontouchstart' in document.documentElement) || (window.DocumentTouch && document instanceof DocumentTouch)")) {
 			
 			return true;
 			

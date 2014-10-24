@@ -1,4 +1,4 @@
-package openfl; #if (flash || openfl_next || js || display)
+package openfl; #if (flash || openfl_next || html5 || display)
 #if !macro
 
 
@@ -9,7 +9,7 @@ import openfl.display.MovieClip;
 import openfl.display.Stage;
 import openfl.net.URLRequest;
 
-#if js
+#if html5
 import js.html.HtmlElement;
 import js.Browser;
 #end
@@ -52,7 +52,7 @@ import js.Browser;
 	}
 	
 	
-	#if js
+	#if html5
 	@:keep @:expose("openfl.embed")
 	public static function embed (elementName:String, width:Null<Int> = null, height:Null<Int> = null, background:String = null) {
 		
@@ -99,7 +99,7 @@ import js.Browser;
 			
 		}
 		
-		#if js
+		#if html5
 		Browser.window.open (request.url, target);
 		#elseif flash
 		return flash.Lib.getURL (request, target);
@@ -123,7 +123,7 @@ import js.Browser;
 	
 	public static function preventDefaultTouchMove ():Void {
 		
-		#if js
+		#if html5
 		Browser.document.addEventListener ("touchmove", function (evt:js.html.Event):Void {
 			
 			evt.preventDefault ();

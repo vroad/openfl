@@ -1,4 +1,4 @@
-package openfl.net; #if !flash #if (display || openfl_next || js)
+package openfl.net; #if !flash #if (display || openfl_next || html5)
 
 
 import openfl.events.DataEvent;
@@ -45,12 +45,12 @@ class XMLSocket extends EventDispatcher {
 	
 	public function connectWithProto (host: String, port:Int, protocol:String):Void {
 		
-		#if js
+		#if html5
 		if (protocol == null) {
-            _socket = untyped __js__("new WebSocket(\"ws://\" + host + \":\" + port)");
+            _socket = untyped __html5__("new WebSocket(\"ws://\" + host + \":\" + port)");
         }
         else {
-            _socket = untyped __js__("new WebSocket(\"ws://\" + host + \":\" + port, protocol)");
+            _socket = untyped __html5__("new WebSocket(\"ws://\" + host + \":\" + port, protocol)");
         }
 		
 		connected = false;

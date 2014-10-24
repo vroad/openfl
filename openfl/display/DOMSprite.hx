@@ -6,7 +6,7 @@ import openfl._internal.renderer.RenderSession;
 import openfl.display.Sprite;
 import openfl.display.Stage;
 
-#if js
+#if html5
 import js.html.Element;
 #end
 

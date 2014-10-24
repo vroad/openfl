@@ -15,7 +15,7 @@ class GLTextField {
 		
 		if (!textField.__renderable || textField.__worldAlpha <= 0) return;
 		
-		#if js
+		#if html5
 		
 		var gl = renderSession.gl;
 		var changed = CanvasTextField.update (textField);

@@ -1,4 +1,4 @@
-package openfl.display; #if (flash || openfl_next || js || display)
+package openfl.display; #if (flash || openfl_next || html5 || display)
 
 
 import openfl.display.BitmapData;

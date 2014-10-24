@@ -7,7 +7,7 @@ import openfl.events.EventDispatcher;
 import openfl.events.NetStatusEvent;
 import openfl.media.SoundTransform;
 
-#if js
+#if html5
 import js.html.VideoElement;
 import js.Browser;
 #end

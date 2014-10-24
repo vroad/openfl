@@ -1,6 +1,6 @@
 -main ApplicationMain ::HAXE_FLAGS::
 -js ::NODE_FILE::
--cp ::BUILD_DIR::/node/haxe
+-cp ::BUILD_DIR::/nodejs/haxe
 --macro allowPackage("flash")
 -debug
 -D nodejs

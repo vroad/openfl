@@ -7,7 +7,7 @@ import openfl._internal.renderer.RenderSession;
 import openfl.display.DisplayObject;
 import openfl.display.Stage;
 
-#if js
+#if html5
 import js.html.Element;
 #end
 
@@ -31,7 +31,7 @@ class DOMRenderer extends AbstractRenderer {
 		renderSession.element = element;
 		renderSession.roundPixels = true;
 		
-		#if js
+		#if html5
 		var prefix = untyped __js__ ("(function () {
 		  var styles = window.getComputedStyle(document.documentElement, ''),
 			pre = (Array.prototype.slice
@@ -44,7 +44,7 @@ class DOMRenderer extends AbstractRenderer {
 			dom: dom,
 			lowercase: pre,
 			css: '-' + pre + '-',
-			js: pre[0].toUpperCase() + pre.substr(1)
+			html5: pre[0].toUpperCase() + pre.substr(1)
 		  };
 		})")();
 		
@@ -60,7 +60,7 @@ class DOMRenderer extends AbstractRenderer {
 	
 	public static function applyStyle (displayObject:DisplayObject, renderSession:RenderSession, setTransform:Bool, setAlpha:Bool, setClip:Bool):Void {
 		
-		#if js
+		#if html5
 		var style = displayObject.__style;
 		
 		if (setTransform && displayObject.__worldTransformChanged) {
@@ -109,7 +109,7 @@ class DOMRenderer extends AbstractRenderer {
 	}
 	
 	
-	#if js
+	#if html5
 	public static function initializeElement (displayObject:DisplayObject, element:Element, renderSession:RenderSession):Void {
 		
 		var style = displayObject.__style = element.style;

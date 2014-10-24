@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || js)
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
 
 import haxe.EnumFlags;
@@ -27,7 +27,7 @@ import openfl.geom.Rectangle;
 import openfl.ui.Keyboard;
 import openfl.ui.KeyLocation;
 
-#if js
+#if html5
 import js.html.CanvasElement;
 import js.html.DivElement;
 import js.html.Element;
@@ -75,7 +75,7 @@ class Stage extends Sprite {
 	@:noCompletion private var __transparent:Bool;
 	@:noCompletion private var __wasDirty:Bool;
 	
-	#if js
+	#if html5
 	//@:noCompletion private var __div:DivElement;
 	//@:noCompletion private var __element:HtmlElement;
 	#if stats
@@ -524,7 +524,7 @@ class Stage extends Sprite {
 	
 	
 	
-	#if js
+	#if html5
 	@:noCompletion private function canvas_onContextLost (event:js.html.webgl.ContextEvent):Void {
 		
 		//__glContextLost = true;
@@ -612,7 +612,7 @@ class Stage extends Sprite {
 		
 		/*switch(value) {
 			case NORMAL:
-				var fs_exit_function = untyped __js__("function() {
+				var fs_exit_function = untyped __html5__("function() {
 			    if (document.exitFullscreen) {
 			      document.exitFullscreen();
 			    } else if (document.msExitFullscreen) {
@@ -625,7 +625,7 @@ class Stage extends Sprite {
 				}");
 				fs_exit_function();
 			case FULL_SCREEN | FULL_SCREEN_INTERACTIVE:
-				var fsfunction = untyped __js__("function(elem) {
+				var fsfunction = untyped __html5__("function(elem) {
 					if (elem.requestFullscreen) elem.requestFullscreen();
 					else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
 					else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();

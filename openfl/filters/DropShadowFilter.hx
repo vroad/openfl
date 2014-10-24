@@ -1,4 +1,4 @@
-package openfl.filters; #if !flash #if (display || openfl_next || js)
+package openfl.filters; #if !flash #if (display || openfl_next || html5)
 
 
 class DropShadowFilter extends BitmapFilter {

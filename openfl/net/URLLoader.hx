@@ -1,4 +1,4 @@
-package openfl.net; #if !flash #if (display || openfl_next || js)
+package openfl.net; #if !flash #if (display || openfl_next || html5)
 
 
 import openfl.events.Event;
@@ -10,7 +10,7 @@ import openfl.errors.IOError;
 import openfl.events.SecurityErrorEvent;
 import openfl.utils.ByteArray;
 
-#if js
+#if html5
 import js.html.EventTarget;
 import js.html.XMLHttpRequest;
 import js.Browser;
@@ -60,18 +60,18 @@ class URLLoader extends EventDispatcher {
 	
 	public function load (request:URLRequest):Void {
 		
-		#if js
+		#if html5
 		requestUrl (request.url, request.method, request.data, request.formatRequestHeaders ());
 		#end
 		
 	}
 	
 	
-	#if js
+	#if html5
 	@:noCompletion private function registerEvents (subject:EventTarget):Void {
 		
 		var self = this;
-		if (untyped __js__("typeof XMLHttpRequestProgressEvent") != __js__('"undefined"')) {
+		if (untyped __html5__("typeof XMLHttpRequestProgressEvent") != __html5__('"undefined"')) {
 			
 			subject.addEventListener ("progress", onProgress, false);
 			
@@ -83,7 +83,7 @@ class URLLoader extends EventDispatcher {
 			
 			var s = try subject.status catch (e:Dynamic) null;
 			
-			if (s == untyped __js__("undefined")) {
+			if (s == untyped __html5__("undefined")) {
 				
 				s = null;
 				
@@ -241,7 +241,7 @@ class URLLoader extends EventDispatcher {
 	
 	@:noCompletion private function onData (_):Void {
 		
-		#if js
+		#if html5
 		var content:Dynamic = getData ();
 		
 		switch (dataFormat) {
@@ -317,7 +317,7 @@ class URLLoader extends EventDispatcher {
 	
 	@:noCompletion private function set_dataFormat (inputVal:URLLoaderDataFormat):URLLoaderDataFormat {
 		
-		#if js
+		#if html5
 		// prevent inadvertently using typed arrays when they are unsupported
 		// @todo move these sorts of tests somewhere common in the vein of Modernizr
 		

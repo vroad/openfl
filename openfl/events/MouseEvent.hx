@@ -1,4 +1,4 @@
-package openfl.events; #if !flash #if (display || openfl_next || js)
+package openfl.events; #if !flash #if (display || openfl_next || html5)
 
 
 import openfl.display.InteractiveObject;
@@ -82,7 +82,7 @@ class MouseEvent extends Event {
 			
 		}*/
 		
-		// source: http://unixpapa.com/js/mouse.html
+		// source: http://unixpapa.com/html5/mouse.html
 		if (type == MouseEvent.MOUSE_DOWN) {
 			
 			__buttonDown = true;

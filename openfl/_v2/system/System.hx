@@ -24,8 +24,8 @@ class System {
 		return neko.vm.Gc.run(true);
 		#elseif cpp
 		return cpp.vm.Gc.run(true);
-		#elseif js
-		return untyped __js_run_gc();
+		#elseif html5
+		return untyped __html5_run_gc();
 		#else
 		#error "System not supported on this target"
 		#end
@@ -49,8 +49,8 @@ class System {
 		return neko.vm.Gc.stats().heap;
 		#elseif cpp
 		return untyped __global__.__hxcpp_gc_used_bytes();
-		#elseif js
-		return untyped __js_get_heap_memory();
+		#elseif html5
+		return untyped __html5_get_heap_memory();
 		#else
 		#error "System not supported on this target"
 		#end
