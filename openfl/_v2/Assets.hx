@@ -2,7 +2,7 @@ package openfl._v2;
 #if !macro
 
 
-import haxe.html5on;
+import haxe.Json;
 import haxe.Unserializer;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
@@ -864,11 +864,11 @@ class Assets {
 		
 		#if (tools && !display)
 		
-		var data = getText ("libraries/" + name + ".html5on");
+		var data = getText ("libraries/" + name + ".Json");
 		
 		if (data != null && data != "") {
 			
-			var info = html5on.parse (data);
+			var info = Json.parse (data);
 			var library = Type.createInstance (Type.resolveClass (info.type), info.args);
 			libraries.set (name, library);
 			library.eventCallback = library_onEvent;
