@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl.utils ;
-
+#if !disable_gl_renderer
 
 import lime.graphics.opengl.GLBuffer;
 import lime.graphics.opengl.GLTexture;
@@ -437,3 +437,6 @@ class SpriteBatch {
 	
 	
 }
+#else
+class SpriteBatch {}
+#end

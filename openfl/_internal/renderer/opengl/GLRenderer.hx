@@ -1,4 +1,5 @@
 package openfl._internal.renderer.opengl;
+#if !disable_gl_renderer
 
 
 import lime.graphics.opengl.GL;
@@ -321,3 +322,4 @@ class GLRenderer extends AbstractRenderer {
 	
 	
 }
+#end

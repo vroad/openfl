@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl;
-
+#if !disable_gl_renderer
 
 import openfl._internal.renderer.RenderSession;
 import openfl.display.Bitmap;
@@ -113,3 +113,4 @@ class GLBitmap {
 	
 	
 }
+#end

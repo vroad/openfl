@@ -1,4 +1,5 @@
 package openfl._internal.renderer.opengl.utils;
+#if !disable_gl_renderer
 
 
 import lime.graphics.opengl.GLBuffer;
@@ -409,3 +410,6 @@ class FilterManager {
 	
 	
 }
+#else
+class FilterManager {}
+#end

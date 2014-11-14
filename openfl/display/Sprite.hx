@@ -117,7 +117,7 @@ class Sprite extends DisplayObjectContainer {
 		
 	}
 	
-	
+#if !disable_gl_renderer
 	@:noCompletion public override function __renderGL (renderSession:RenderSession):Void {
 		
 		if (!__renderable || __worldAlpha <= 0) return;
@@ -137,7 +137,7 @@ class Sprite extends DisplayObjectContainer {
 		super.__renderGL (renderSession);
 		
 	}
-	
+#end
 	
 	@:noCompletion public override function __renderMask (renderSession:RenderSession):Void {
 		

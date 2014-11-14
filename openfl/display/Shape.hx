@@ -67,7 +67,7 @@ class Shape extends DisplayObject {
 		
 	}
 	
-	
+#if !disable_gl_renderer
 	@:noCompletion public override function __renderGL (renderSession:RenderSession):Void {
 		
 		if (!__renderable || __worldAlpha <= 0) return;
@@ -79,7 +79,7 @@ class Shape extends DisplayObject {
 		}
 		
 	}
-	
+#end
 	
 	
 	

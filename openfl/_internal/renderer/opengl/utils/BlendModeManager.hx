@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl.utils;
-
+#if !disable_gl_renderer
 
 import lime.graphics.GLRenderContext;
 import openfl.display.BlendMode;
@@ -47,3 +47,6 @@ class BlendModeManager {
 	
 	
 }
+#else
+class BlendModeManager {}
+#end

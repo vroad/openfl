@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl.utils;
-
+#if !disable_gl_renderer
 
 import lime.graphics.opengl.GLBuffer;
 import lime.graphics.GLRenderContext;
@@ -1428,3 +1428,7 @@ enum GraphicType {
 	Ellipse;
 
 }
+#else
+class GLData{}
+class DrawPath{}
+#end

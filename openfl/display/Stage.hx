@@ -271,7 +271,7 @@ class Stage extends Sprite {
 		switch (context) {
 			
 			case OPENGL (gl):
-				
+#if !disable_gl_renderer				
 				if (__renderer == null) {
 					
 					__renderer = new GLRenderer (stageWidth, stageHeight, gl);
@@ -279,7 +279,7 @@ class Stage extends Sprite {
 				}
 				
 				__renderer.render (this);
-			
+#end			
 			case CANVAS (context):
 				
 				if (__renderer == null) {

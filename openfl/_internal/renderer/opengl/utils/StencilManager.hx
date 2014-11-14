@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl.utils;
-
+#if !disable_gl_renderer
 
 import lime.graphics.GLRenderContext;
 import lime.utils.Float32Array;
@@ -280,3 +280,6 @@ class StencilManager {
 	
 	
 }
+#else
+class StencilManager {}
+#end
