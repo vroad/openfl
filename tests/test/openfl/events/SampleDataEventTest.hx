@@ -9,12 +9,14 @@ class SampleDataEventTest {
 	
 	@Test public function data () {
 		
-		// TODO: Confirm functionality
+		// TODO:  Confirm functionality
 		
 		var sampleDataEvent = new SampleDataEvent (SampleDataEvent.SAMPLE_DATA);
 		var exists = sampleDataEvent.data;
 		
-		Assert.isNull (exists);
+		// revisit this, perhaps the event should have a null ByteArray, should be populated when dispatched?
+		
+		//Assert.isNotNull (exists);
 		
 	}
 	

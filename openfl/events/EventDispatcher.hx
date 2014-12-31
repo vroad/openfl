@@ -4,8 +4,9 @@ package openfl.events; #if !flash #if (display || openfl_next || html5)
 import openfl.events.EventPhase;
 import openfl.events.IEventDispatcher;
 
-
 @:access(openfl.events.Event)
+
+
 class EventDispatcher implements IEventDispatcher {
 	
 	
