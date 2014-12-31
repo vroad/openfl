@@ -659,21 +659,25 @@ class TextField extends InteractiveObject {
 	@:noCompletion public function get_textWidth ():Float {
 		
 		#if html5
+
+		if (__canvas == null)
+		{
+			__canvas = cast Browser.document.createElement("canvas");
+			__context = __canvas.getContext2d();
+		}
+			
+		var sizes = __measureText ();
+		var total:Float = 0;
+			
+		for (size in sizes) {
+			
+			total += size;
+			
+		}
 		
-		if (__canvas != null) {
+		return total;
 			
-			var sizes = __measureText ();
-			var total:Float = 0;
-			
-			for (size in sizes) {
-				
-				total += size;
-				
-			}
-			
-			return total;
-			
-		} else if (__div != null) {
+		/*} else if (__div != null) {
 			
 			return __div.clientWidth;
 			
@@ -682,7 +686,7 @@ class TextField extends InteractiveObject {
 			__measureTextWithDOM ();
 			return __measuredWidth;
 			
-		}
+		}*/
 		
 		#else
 		
@@ -697,13 +701,13 @@ class TextField extends InteractiveObject {
 		
 		#if html5
 		
-		if (__canvas != null) {
+		//if (__canvas != null) {
 			
-			// TODO: Make this more accurate
-			// return __textFormat.size * 1.185;
-			return __textFormat.size;
+		// TODO: Make this more accurate
+		// return __textFormat.size * 1.185;
+		return __textFormat.size;
 			
-		} else if (__div != null) {
+		/*} else if (__div != null) {
 			
 			return __div.clientHeight;
 			
@@ -715,7 +719,7 @@ class TextField extends InteractiveObject {
 			// return __measuredHeight + __textFormat.size * 0.185;
 			return __measuredHeight;
 			
-		}
+		}*/
 		
 		#else
 		
