@@ -81,13 +81,13 @@ class Sprite extends DisplayObjectContainer {
 		
 		if (super.__hitTest (x, y, shapeFlag, stack, interactiveOnly)) {
 			
-			return true;
+			return interactiveOnly;
 			
-		} else if (__graphics != null && __graphics.__hitTest (x, y, shapeFlag, __worldTransform)) {
+		} else if (__graphics != null && __graphics.__hitTest (x, y, shapeFlag, __getTransform ())) {
 			
 			if (stack != null) {
 				
-				stack.insert (length, this);
+				stack.push (this);
 				
 			}
 			

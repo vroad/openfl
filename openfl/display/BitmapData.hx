@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
 
 import lime.graphics.opengl.GLBuffer;
@@ -20,7 +20,7 @@ import openfl.geom.Rectangle;
 import openfl.utils.ByteArray;
 import openfl.Vector;
 
-#if html5
+#if js
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.html.ImageData;
@@ -161,7 +161,14 @@ class BitmapData implements IBitmapDrawable {
 			this.height = height;
 			rect = new Rectangle (0, 0, width, height);
 			
-			if (!transparent) {
+			if (transparent) {
+
+				if ((fillColor & 0xFF000000) == 0) {				
+					fillColor = 0;
+				}
+                
+			}
+			else {
 				
 				fillColor = (0xFF << 24) | (fillColor & 0xFFFFFF);
 				
@@ -207,14 +214,14 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid) return;
 		
-		#if html5
+		#if js
 		ImageCanvasUtil.convertToCanvas (__image);
 		ImageCanvasUtil.createImageData (__image);
 		ImageCanvasUtil.convertToCanvas (sourceBitmapData.__image);
 		ImageCanvasUtil.createImageData (sourceBitmapData.__image);
 		#end
 		
-		#if html5
+		#if js
 		filter.__applyFilter (__image.buffer.__srcImageData, sourceBitmapData.__image.buffer.__srcImageData, sourceRect, destPoint);
 		#end
 		
@@ -490,7 +497,7 @@ class BitmapData implements IBitmapDrawable {
 				ImageCanvasUtil.convertToCanvas (__image);
 				ImageCanvasUtil.sync (__image);
 				
-				#if html5
+				#if js
 				var buffer = __image.buffer;
 				
 				var renderSession = new RenderSession ();
@@ -603,7 +610,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	#if html5
+	#if js
 	public static function fromCanvas (canvas:CanvasElement, transparent:Bool = true):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, transparent);
@@ -911,6 +918,14 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
+	public function merge (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redMultiplier:UInt, greenMultiplier:UInt, blueMultiplier:UInt, alphaMultiplier:UInt):Void {
+		
+		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid || sourceRect == null || destPoint == null) return;
+		__image.merge (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier);
+		
+	}
+	
+	
 	/**
 	 * Fills an image with pixels representing random noise.
 	 * 
@@ -948,43 +963,47 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function paletteMap (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, ?redArray:Array<Int>, ?greenArray:Array<Int>, ?blueArray:Array<Int>, ?alphaArray:Array<Int>):Void {
+	public function paletteMap (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redArray:Array<Int> = null, greenArray:Array<Int> = null, blueArray:Array<Int> = null, alphaArray:Array<Int> = null):Void {
 		
-		var memory = new ByteArray ();
 		var sw:Int = Std.int (sourceRect.width);
 		var sh:Int = Std.int (sourceRect.height);
 		
-		#if html5
-		memory.length = ((sw * sh) * 4);
-		#end
-		memory = getPixels (sourceRect);
-		memory.position = 0;
-		Memory.select (memory);
+		var pixels = getPixels (sourceRect);
+		pixels.position = 0;
 		
-		var position:Int, pixelValue:Int, r:Int, g:Int, b:Int, color:Int;
+		var pixelValue:Int, r:Int, g:Int, b:Int, a:Int, color:Int, c1:Int, c2:Int, c3:Int, c4:Int;
 		
 		for (i in 0...(sh * sw)) {
 			
-			position = i * 4;
-			pixelValue = cast Memory.getI32 (position);
+			pixelValue = pixels.readUnsignedInt ();
 			
-			r = (pixelValue >> 8) & 0xFF;
-			g = (pixelValue >> 16) & 0xFF;
-			b = (pixelValue >> 24) & 0xFF;
+			c1 = (alphaArray == null) ? pixelValue & 0xFF000000 : alphaArray[(pixelValue >> 24) & 0xFF];
+			c2 = (redArray == null) ? pixelValue & 0x00FF0000 : redArray[(pixelValue >> 16) & 0xFF];
+			c3 = (greenArray == null) ? pixelValue & 0x0000FF00 : greenArray[(pixelValue >> 8) & 0xFF];
+			c4 = (blueArray == null) ? pixelValue & 0x000000FF : blueArray[(pixelValue) & 0xFF];
 			
-			color = __flipPixel ((0xff << 24) |
-				redArray[r] | 
-				greenArray[g] | 
-				blueArray[b]);
+			a = ((c1 >> 24) & 0xFF) + ((c2 >> 24) & 0xFF) + ((c3 >> 24) & 0xFF) + ((c4 >> 24) & 0xFF);
+			if (a > 0xFF) a == 0xFF;
 			
-			Memory.setI32 (position, color);
+			r = ((c1 >> 16) & 0xFF) + ((c2 >> 16) & 0xFF) + ((c3 >> 16) & 0xFF) + ((c4 >> 16) & 0xFF);
+			if (r > 0xFF) r == 0xFF;
+			
+			g = ((c1 >> 8) & 0xFF) + ((c2 >> 8) & 0xFF) + ((c3 >> 8) & 0xFF) + ((c4 >> 8) & 0xFF);
+			if (g > 0xFF) g == 0xFF;
+			
+			b = ((c1) & 0xFF) + ((c2) & 0xFF) + ((c3) & 0xFF) + ((c4) & 0xFF);
+			if (b > 0xFF) b == 0xFF;
+			
+			color = a << 24 | r << 16 | g << 8 | b;
+			
+			pixels.position = i * 4;
+			pixels.writeUnsignedInt (color);
 			
 		}
 		
-		memory.position = 0;
+		pixels.position = 0;
 		var destRect = new Rectangle (destPoint.x, destPoint.y, sw, sh);
-		setPixels (destRect, memory);
-		Memory.select (null);
+		setPixels (destRect, pixels);
 		
 	}
 	
@@ -1179,7 +1198,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setVector (rect:Rectangle, inputVector:Vector<UInt>) {
 		
 		var byteArray = new ByteArray ();
-		#if html5
+		#if js
 		byteArray.length = inputVector.length * 4;
 		#end
 		
@@ -1255,7 +1274,7 @@ class BitmapData implements IBitmapDrawable {
 			color = __flipPixel (color);
 			
 			var memory = new ByteArray ();
-			#if html5
+			#if js
 			memory.length  = width * height * 4;
 			#end
 			memory = getPixels (rect);
@@ -1334,7 +1353,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			var totalMemory = (canvasMemory + sourceMemory);
 			var memory = new ByteArray ();
-			#if html5
+			#if js
 			memory.length = totalMemory;
 			#end
 			memory.position = 0;
@@ -1467,7 +1486,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			if (rawAlpha != null) {
 				
-				#if html5
+				#if js
 				ImageCanvasUtil.convertToCanvas (__image);
 				ImageCanvasUtil.createImageData (__image);
 				#end
@@ -1526,7 +1545,7 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __renderCanvas (renderSession:RenderSession):Void {
 		
-		#if html5
+		#if js
 		if (!__isValid) return;
 		
 		ImageCanvasUtil.sync (__image);
@@ -1563,7 +1582,7 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion private function __sync ():Void {
 		
-		#if html5
+		#if js
 		ImageCanvasUtil.sync (__image);
 		#end
 		

@@ -182,9 +182,30 @@ class Matrix {
 	
 	public function createBox (scaleX:Float, scaleY:Float, rotation:Float = 0, tx:Float = 0, ty:Float = 0):Void {
 		
-		a = scaleX;
-		d = scaleY;
-		b = rotation;
+		//identity ();
+		//rotate (rotation);
+		//scale (scaleX, scaleY);
+		//translate (tx, ty);
+		
+		if (rotation != 0) {
+			
+			var cos = Math.cos (rotation);
+			var sin = Math.sin (rotation);
+			
+			a = cos * scaleX;
+			b = sin * scaleY;
+			c = -sin * scaleX;
+			d = cos * scaleY;
+			
+		} else {
+			
+			a = scaleX;
+			b = 0;
+			c = 0;
+			d = scaleY;
+			
+		}
+		
 		this.tx = tx;
 		this.ty = ty;
 		
@@ -220,16 +241,16 @@ class Matrix {
 	}
 	
 	
-	public function equals (matrix):Bool {
+	public function deltaTransformPoint (point:Point):Point {
 		
-		return (matrix != null && tx == matrix.tx && ty == matrix.ty && a == matrix.a && b == matrix.b && c == matrix.c && d == matrix.d);
+		return new Point (point.x * a + point.y * c, point.x * b + point.y * d);
 		
 	}
 	
 	
-	public function deltaTransformPoint (point:Point):Point {
+	public function equals (matrix):Bool {
 		
-		return new Point (point.x * a + point.y * c, point.x * b + point.y * d);
+		return (matrix != null && tx == matrix.tx && ty == matrix.ty && a == matrix.a && b == matrix.b && c == matrix.c && d == matrix.d);
 		
 	}
 	
