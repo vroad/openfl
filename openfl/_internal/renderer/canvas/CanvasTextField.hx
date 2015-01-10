@@ -74,7 +74,7 @@ class CanvasTextField {
 		context.textBaseline = "top";
 		context.fillStyle = "#" + StringTools.hex (format.color, 6);
 		
-		var lines = textField.text.split("\n");
+		var lines = text.split("\n");
 		var yOffset:Float = 0;
 		
 		for (line in lines) {
@@ -116,6 +116,7 @@ class CanvasTextField {
 				
 				textField.__canvas = null;
 				textField.__context = null;
+				textField.__dirty = false;
 				
 			} else {
 				
@@ -233,11 +234,10 @@ class CanvasTextField {
 					
 				}
 				
+				textField.__dirty = false;
 				return true;
 				
 			}
-			
-			textField.__dirty = false;
 			
 		}
 		

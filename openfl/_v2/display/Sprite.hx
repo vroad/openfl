@@ -1,4 +1,4 @@
-package openfl._v2.display;
+package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
 import openfl.geom.Rectangle;
@@ -16,6 +16,7 @@ class Sprite extends DisplayObjectContainer {
 		super (DisplayObjectContainer.lime_create_display_object_container (), __getType ());
 		
 		useHandCursor = true;
+		buttonMode = false;
 		
 	}
 	
@@ -52,3 +53,6 @@ class Sprite extends DisplayObjectContainer {
 	
 	
 }
+
+
+#end

@@ -1,4 +1,4 @@
-package openfl._v2.utils;
+package openfl._v2.utils; #if (!flash && !html5 && !openfl_next)
 
 
 import openfl.errors.Error;
@@ -31,6 +31,7 @@ class Timer extends EventDispatcher {
 		__delay = delay;
 		this.repeatCount = repeatCount;
 		currentCount = 0;
+		running = false;
 		
 	}
 	
@@ -132,3 +133,6 @@ class Timer extends EventDispatcher {
 	
 	
 }
+
+
+#end

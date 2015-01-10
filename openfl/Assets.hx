@@ -40,7 +40,7 @@ import openfl.utils.ByteArray;
 class Assets {
 	
 	
-	public static var cache = new AssetCache ();
+	public static var cache:IAssetCache = new AssetCache ();
 	
 	private static var dispatcher = new EventDispatcher ();
 	
@@ -58,7 +58,12 @@ class Assets {
 		
 	}
 	
-	
+	/**
+	 * Returns whether a specific asset exists
+	 * @param	id 		The ID or asset path for the file
+	 * @param	type	The type of assets AssetType.BINARY | AssetType.FONT | AssetType.IMAGE | AssetType.MOVIE_CLIP | AssetType.MUSIC | AssetType.SOUND | AssetType.TEMPLATE | AssetType.TEXT
+	 * @return	TRUE if an asset with a given id, and type exists FALSE otherwise
+	 */
 	public static function exists (id:String, type:AssetType = null):Bool {
 		
 		return LimeAssets.exists (id, cast type);
@@ -77,9 +82,9 @@ class Assets {
 		
 		#if (tools && !display)
 		
-		if (useCache && cache.enabled && cache.bitmapData.exists (id)) {
+		if (useCache && cache.enabled && cache.hasBitmapData (id)) {
 			
-			var bitmapData = cache.bitmapData.get (id);
+			var bitmapData = cache.getBitmapData (id);
 			
 			if (isValidBitmapData (bitmapData)) {
 				
@@ -101,7 +106,7 @@ class Assets {
 			
 			if (useCache && cache.enabled) {
 				
-				cache.bitmapData.set (id, bitmapData);
+				cache.setBitmapData (id, bitmapData);
 				
 			}
 			
@@ -139,9 +144,9 @@ class Assets {
 		
 		#if (tools && !display)
 		
-		if (useCache && cache.enabled && cache.font.exists (id)) {
+		if (useCache && cache.enabled && cache.hasFont (id)) {
 			
-			return cache.font.get (id);
+			return cache.getFont (id);
 			
 		}
 		
@@ -275,9 +280,9 @@ class Assets {
 		
 		#if (tools && !display)
 		
-		if (useCache && cache.enabled && cache.sound.exists (id)) {
+		if (useCache && cache.enabled && cache.hasSound (id)) {
 			
-			var sound = cache.sound.get (id);
+			var sound = cache.getSound (id);
 			
 			if (isValidSound (sound)) {
 				
@@ -300,7 +305,7 @@ class Assets {
 			
 			if (useCache && cache.enabled) {
 				
-				cache.sound.set (id, sound);
+				cache.setSound (id, sound);
 				
 			}
 			
@@ -343,7 +348,13 @@ class Assets {
 		
 	}
 	
-	
+	/**
+	 * Returns whether an asset with a given id and "AssetType" exists within the cache or Asset Library
+	 * @param	id 		The ID or asset path for the file
+	 * @param	type	The type of assets AssetType.BINARY | AssetType.FONT | AssetType.IMAGE | AssetType.MOVIE_CLIP | AssetType.MUSIC | AssetType.SOUND | AssetType.TEMPLATE | AssetType.TEXT
+	 * @param	useCache Whether or not to use the cache. if FALSE this function will search for the asset in any known library
+	 * @return	whether or not an asset with the given id exists within the asset cache or any asset library;
+	 */
 	public static function isLocal (id:String, type:AssetType = null, useCache:Bool = true):Bool {
 		
 		#if (tools && !display)
@@ -352,19 +363,19 @@ class Assets {
 			
 			if (type == AssetType.IMAGE || type == null) {
 				
-				if (cache.bitmapData.exists (id)) return true;
+				if (cache.hasBitmapData (id)) return true;
 				
 			}
 			
 			if (type == AssetType.FONT || type == null) {
 				
-				if (cache.font.exists (id)) return true;
+				if (cache.hasFont (id)) return true;
 				
 			}
 			
 			if (type == AssetType.SOUND || type == AssetType.MUSIC || type == null) {
 				
-				if (cache.sound.exists (id)) return true;
+				if (cache.hasSound (id)) return true;
 				
 			}
 			
@@ -429,21 +440,33 @@ class Assets {
 		
 	}
 	
-	
+	/**
+	 * Returns an array of embeded assets
+	 * @param	type	The type of assets to include AssetType.BINARY | AssetType.FONT | AssetType.IMAGE | AssetType.MOVIE_CLIP | AssetType.MUSIC | AssetType.SOUND | AssetType.TEMPLATE | AssetType.TEXT
+	 * @return an Array of embeded assets
+	 */
 	public static function list (type:AssetType = null):Array<String> {
 		
 		return LimeAssets.list (cast type);
 		
 	}
 	
-	
+	/**
+	 * Asynchronously loads an instance of an embeded bitmap
+	 * @usage 	Asset.loadBitmapData("MyReallyBigPic.jpg", function(_loadedBitmapData):Void{
+	 * 				var myReallyBigBitmap = new Bitmap(_loadedBitmapData);
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded BitmapData
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadBitmapData (id:String, handler:BitmapData -> Void, useCache:Bool = true):Void {
 		
 		#if (tools && !display)
 		
-		if (useCache && cache.enabled && cache.bitmapData.exists (id)) {
+		if (useCache && cache.enabled && cache.hasBitmapData (id)) {
 			
-			var bitmapData = cache.bitmapData.get (id);
+			var bitmapData = cache.getBitmapData (id);
 			
 			if (isValidBitmapData (bitmapData)) {
 				
@@ -466,7 +489,7 @@ class Assets {
 				
 				if (useCache && cache.enabled) {
 					
-					cache.bitmapData.set (id, bitmapData);
+					cache.setBitmapData (id, bitmapData);
 					
 				}
 				
@@ -480,7 +503,15 @@ class Assets {
 		
 	}
 	
-	
+		/**
+	 * Asynchronously loads an instance of an embedded binary file
+	 * @usage Asset.loadBytes("MyReallyBigBin.bin", function(_loadedByteArray):Void{
+	 * 				myParserFunction(_loadedByteArray)
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded ByteArray
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadBytes (id:String, handler:ByteArray -> Void):Void {
 		
 		#if (tools && !display)
@@ -505,7 +536,7 @@ class Assets {
 		} else {
 			
 			trace ("[openfl.Assets] There is no asset library named \"" + libraryName + "\"");
-			
+		
 		}
 		
 		#end
@@ -513,15 +544,22 @@ class Assets {
 		handler (null);
 		
 	}
-	
-	
+	/**
+	 * Asynchronously loads an instance of an embedded font
+	 * @usage Asset.loadFont("MyReallyLongSong.ttf", function(_loadedFont):Void{
+	 * 				myTextFortmat.font = _loadedFont.fontName;
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded font
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadFont (id:String, handler:Font -> Void, useCache:Bool = true):Void {
 		
 		#if (tools && !display)
 		
-		if (useCache && cache.enabled && cache.font.exists (id)) {
+		if (useCache && cache.enabled && cache.hasFont (id)) {
 			
-			handler (cache.font.get (id));
+			handler (cache.getFont (id));
 			return;
 			
 		}
@@ -538,7 +576,7 @@ class Assets {
 					
 					library.loadFont (symbolName, function (font:Font):Void {
 						
-						cache.font.set (id, font);
+						cache.setFont (id, font);
 						handler (font);
 						
 					});
@@ -569,14 +607,26 @@ class Assets {
 		
 	}
 	
-	
+	/**
+	 * Loads an Asset Library with a given Name
+	 * @param	name the name of the library to load
+	 * @param	handler the function to handle the loaded AssetLibrary
+	 */
 	public static function loadLibrary (name:String, handler:LimeAssetLibrary -> Void):Void {
 		
 		LimeAssets.loadLibrary (name, handler);
 		
 	}
 	
-	
+	/**
+	 * Asynchronously loads an instance of an embedded streaming sound
+	 * @usage Asset.loadMusic("MyReallyLongSong.ogg", function(_loadedSound):Void{
+	 * 				_loadedSound.play();
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded music
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadMusic (id:String, handler:Sound -> Void, useCache:Bool = true):Void {
 		
 		#if !html5
@@ -599,7 +649,15 @@ class Assets {
 		
 	}
 	
-	
+	/**
+	 * Asynchronously loads an instance of a MovieClip from a library
+	 * @usage Asset.loadMovieClip("libary:MovieClip", function(_loadedMovieClip):Void{
+	 * 				sprite.addChild(_loadedMovieClip);
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded movieclip
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadMovieClip (id:String, handler:MovieClip -> Void):Void {
 		
 		#if (tools && !display)
@@ -633,7 +691,16 @@ class Assets {
 		
 	}
 	
-	
+		
+	/**
+	 * Asynchronously loads an instance of a sound.
+	 * @usage Asset.loadSound("MyReallyShortSong.wav", function(_loadedSound):Void{
+	 * 				_loadedSound.play();
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded sound
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadSound (id:String, handler:Sound -> Void, useCache:Bool = true):Void {
 		
 		#if !html5
@@ -656,14 +723,27 @@ class Assets {
 		
 	}
 	
-	
+		
+	/**
+	 * Asynchronously loads an instance of an embedded text
+	 * @usage Asset.loadText("MyReallyLongText.txt", function(_loadedText):Void{
+	 * 				myTextField.text = _loadedText;
+	 * 			});
+	 * @param	id 		The ID or asset path for the file
+	 * @param	handler	a funtion to handle the loaded text
+	 * @param	useCache whether or not to add / retrieve the asset from the cache
+	 */
 	public static function loadText (id:String, handler:String -> Void):Void {
 		
 		LimeAssets.loadText (id, handler);
 		
 	}
 	
-	
+	/**
+	 * Registers an AssetLibrary
+	 * @param	name the name of the library
+	 * @param	library the AssetLibrary to register
+	 */
 	public static function registerLibrary (name:String, library:AssetLibrary):Void {
 		
 		LimeAssets.registerLibrary (name, library);
@@ -788,13 +868,16 @@ class Assets {
 }
 
 
-@:dox(hide) class AssetCache {
+@:dox(hide) class AssetCache implements IAssetCache {
 	
 	
-	public var bitmapData:Map<String, BitmapData>;
-	public var enabled:Bool = true;
-	public var font:Map<String, Font>;
-	public var sound:Map<String, Sound>;
+	public var enabled (get, set):Bool;
+	
+	/* deprecated */ @:dox(hide) public var bitmapData:Map<String, BitmapData>;
+	/* deprecated */ @:dox(hide) public var font:Map<String, Font>;
+	/* deprecated */ @:dox(hide) public var sound:Map<String, Sound>;
+	
+	private var __enabled = true;
 	
 	
 	public function new () {
@@ -856,6 +939,132 @@ class Assets {
 		
 	}
 	
+	
+	public function getBitmapData (id:String):BitmapData {
+		
+		return bitmapData.get (id);
+		
+	}
+	
+	
+	public function getFont (id:String):Font {
+		
+		return font.get (id);
+		
+	}
+	
+	
+	public function getSound (id:String):Sound {
+		
+		return sound.get (id);
+		
+	}
+	
+	
+	public function hasBitmapData (id:String):Bool {
+		
+		return bitmapData.exists (id);
+		
+	}
+	
+	
+	public function hasFont (id:String):Bool {
+		
+		return font.exists (id);
+		
+	}
+	
+	
+	public function hasSound (id:String):Bool {
+		
+		return sound.exists (id);
+		
+	}
+	
+	
+	public function removeBitmapData (id:String):Bool {
+		
+		return bitmapData.remove (id);
+		
+	}
+	
+	
+	public function removeFont (id:String):Bool {
+		
+		return font.remove (id);
+		
+	}
+	
+	
+	public function removeSound (id:String):Bool {
+		
+		return sound.remove (id);
+		
+	}
+	
+	
+	public function setBitmapData (id:String, bitmapData:BitmapData):Void {
+		
+		this.bitmapData.set (id, bitmapData);
+		
+	}
+	
+	
+	public function setFont (id:String, font:Font):Void {
+		
+		this.font.set (id, font);
+		
+	}
+	
+	
+	public function setSound (id:String, sound:Sound):Void {
+		
+		this.sound.set (id, sound);
+		
+	}
+	
+	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	private function get_enabled ():Bool {
+		
+		return __enabled;
+		
+	}
+	
+	
+	private function set_enabled (value:Bool):Bool {
+		
+		return __enabled = value;
+		
+	}
+	
+	
+}
+
+
+@:dox(hide) interface IAssetCache {
+	
+	public var enabled (get, set):Bool;
+	
+	public function clear (prefix:String = null):Void;
+	public function getBitmapData (id:String):BitmapData;
+	public function getFont (id:String):Font;
+	public function getSound (id:String):Sound;
+	public function hasBitmapData (id:String):Bool;
+	public function hasFont (id:String):Bool;
+	public function hasSound (id:String):Bool;
+	public function removeBitmapData (id:String):Bool;
+	public function removeFont (id:String):Bool;
+	public function removeSound (id:String):Bool;
+	public function setBitmapData (id:String, bitmapData:BitmapData):Void;
+	public function setFont (id:String, font:Font):Void;
+	public function setSound (id:String, sound:Sound):Void;
 	
 }
 
@@ -1183,6 +1392,7 @@ typedef Assets = openfl._v2.Assets;
 #if !macro
 typedef AssetLibrary = openfl._v2.Assets.AssetLibrary;
 typedef AssetCache = openfl._v2.Assets.AssetCache;
+typedef IAssetCache = openfl._v2.Assets.IAssetCache;
 typedef AssetData = openfl._v2.Assets.AssetData;
 typedef AssetType = openfl._v2.Assets.AssetType;
 #end

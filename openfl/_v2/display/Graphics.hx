@@ -1,4 +1,4 @@
-package openfl._v2.display;
+package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
 import openfl.display.GradientType;
@@ -17,6 +17,8 @@ class Graphics {
 	public static inline var TILE_RGB = 0x0004;
 	public static inline var TILE_ALPHA = 0x0008;
 	public static inline var TILE_TRANS_2x2 = 0x0010;
+	public static inline var TILE_RECT = 0x0020;
+	public static inline var TILE_ORIGIN = 0x0040;
 	private static inline var TILE_SMOOTH = 0x1000;
 	public static inline var TILE_BLEND_NORMAL = 0x00000000;
 	public static inline var TILE_BLEND_ADD = 0x00010000;
@@ -76,6 +78,13 @@ class Graphics {
 	public function copyFrom (sourceGraphics:Graphics):Void {
 		
 		openfl.Lib.notImplemented ("Graphics.copyFrom");
+		
+	}
+	
+	
+	public function cubicCurveTo (controlX1:Float, controlY1:Float, controlX2:Float, controlY2:Float, anchorX:Float, anchorY:Float):Void {
+		
+		openfl.Lib.notImplemented ("Graphics.cubicCurveTo");
 		
 	}
 	
@@ -169,7 +178,6 @@ class Graphics {
 		}
 		
 		lime_gfx_draw_tiles (__handle, sheet.__handle, data, flags, count);
-		
 	}
 	
 	
@@ -268,3 +276,6 @@ class Graphics {
 	
 	
 }
+
+
+#end

@@ -1,4 +1,4 @@
-package openfl._v2.display;
+package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
 import haxe.io.Bytes;
@@ -6,6 +6,7 @@ import haxe.CallStack;
 import haxe.Timer;
 import openfl.display.DisplayObjectContainer;
 import openfl.display.OpenGLView;
+import openfl.display.Stage3D;
 import openfl.display.StageAlign;
 import openfl.display.StageDisplayState;
 import openfl.display.StageScaleMode;
@@ -39,7 +40,10 @@ class Stage extends DisplayObjectContainer {
 	public static var OrientationLandscapeLeft = 4;
 	public static var OrientationFaceUp = 5;
 	public static var OrientationFaceDown = 6;
-	
+	public static var OrientationPortraitAny = 7;	// This and below for use with setFixedOrientation() on iOS
+	public static var OrientationLandscapeAny = 8;
+	public static var OrientationAny = 9;
+
 	public var allowsFullScreen:Bool;
 	public var autos3d (get, set):Bool;
 	public var active (default, null):Bool;
@@ -56,6 +60,7 @@ class Stage extends DisplayObjectContainer {
 	public var quality (get, set):StageQuality;
 	public var renderRequest:Void -> Void; 
 	public var scaleMode (get, set):StageScaleMode;
+	public var stage3Ds (default, null):Vector<Stage3D>;
 	public var stageFocusRect (get, set):Bool;
 	public var stageHeight (get, null):Int;
 	public var stageWidth (get, null):Int;
@@ -85,7 +90,7 @@ class Stage extends DisplayObjectContainer {
 	@:noCompletion private var __focusOverObjects:Array<InteractiveObject>;
 	@:noCompletion private var __framePeriod:Float;
 	@:noCompletion private var __invalid:Bool;
-	@:noCompletion private var __lastClickTime:Float;
+	@:noCompletion private var __lastClickTime:Int;
 	@:noCompletion private var __lastDown:Array<InteractiveObject>;
 	@:noCompletion private var __lastRender:Float;
 	@:noCompletion private var __mouseOverObjects:Array<InteractiveObject>;
@@ -114,11 +119,14 @@ class Stage extends DisplayObjectContainer {
 		__invalid = false;
 		__lastRender = 0;
 		__lastDown = [];
-		__lastClickTime = 0.0;
+		__lastClickTime = 0;
 		__nextRender = 0;
 		this.frameRate = 100;
 		__touchInfo = new Map <Int, TouchInfo> ();
 		__joyAxisData = new Map <Int, Array<Float>> ();
+		
+		stage3Ds = new Vector ();
+		stage3Ds.push (new Stage3D ());
 		
 		#if(cpp && (safeMode || debug))
  		untyped __global__.__hxcpp_set_critical_error_handler( function(message:String) { throw message; } );
@@ -924,15 +932,18 @@ class Stage extends DisplayObjectContainer {
 				
 				if (button == 0 && clickObject.doubleClickEnabled) {
 					
-					var now = Timer.stamp ();
-					if (now - __lastClickTime < 0.25) {
+					var now = Lib.getTimer ();
+					if (now - __lastClickTime < 500) {
 						
 						var mouseEvent = MouseEvent.__create (MouseEvent.DOUBLE_CLICK, event, local, clickObject);
 						clickObject.__fireEvent (mouseEvent);
+						__lastClickTime = 0;
+						
+					} else {
+						
+						__lastClickTime = now;
 						
 					}
-					
-					__lastClickTime = now;
 					
 				}
 				
@@ -1396,3 +1407,6 @@ class TouchInfo {
 	
 	
 }
+
+
+#end

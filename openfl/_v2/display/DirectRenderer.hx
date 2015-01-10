@@ -1,4 +1,4 @@
-package openfl._v2.display;
+package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
 import openfl.display.DisplayObject;
@@ -14,8 +14,16 @@ class DirectRenderer extends DisplayObject {
 		
 		super (lime_direct_renderer_create (), type);
 		
-		addEventListener (Event.ADDED_TO_STAGE, function(_) lime_direct_renderer_set (__handle, __onRender));
-		addEventListener (Event.REMOVED_FROM_STAGE, function(_) lime_direct_renderer_set (__handle, null));
+		addEventListener (Event.ADDED_TO_STAGE, __stage_onAddedToStage);
+		addEventListener (Event.REMOVED_FROM_STAGE, __stage_onRemovedFromStage);
+		
+	}
+	
+	
+	public function dispose ():Void {
+		
+		removeEventListener (Event.ADDED_TO_STAGE, __stage_onAddedToStage);
+		removeEventListener (Event.REMOVED_FROM_STAGE, __stage_onRemovedFromStage);
 		
 	}
 	
@@ -36,6 +44,27 @@ class DirectRenderer extends DisplayObject {
 	
 	
 	
+	// Event Handlers
+	
+	
+	
+	
+	@:noCompletion private function __stage_onAddedToStage (event:Event):Void {
+		
+		lime_direct_renderer_set (__handle, __onRender);
+		
+	}
+	
+	
+	@:noCompletion private function __stage_onRemovedFromStage (event:Event):Void {
+		
+		lime_direct_renderer_set (__handle, null);
+		
+	}
+	
+	
+	
+	
 	// Native Methods
 	
 	
@@ -46,3 +75,6 @@ class DirectRenderer extends DisplayObject {
 	
 	
 }
+
+
+#end

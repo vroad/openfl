@@ -398,7 +398,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		point = localToGlobal (point);
 		var stack = new Array<DisplayObject> ();
 		__hitTest (point.x, point.y, false, stack, false);
-		stack.shift ();
+		stack.reverse ();
 		return stack;
 		
 	}
@@ -690,41 +690,54 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		var i = __children.length;
 		
-		if (interactiveOnly && (stack == null || !mouseChildren)) {
+		if (interactiveOnly) {
 			
-			while (--i >= 0) {
+			if (stack == null || !mouseChildren) {
 				
-				if (__children[i].__hitTest (x, y, shapeFlag, null, interactiveOnly)) {
+				while (--i >= 0) {
 					
-					if (stack != null) {
+					if (__children[i].__hitTest (x, y, shapeFlag, null, true)) {
 						
-						stack.push (this);
+						if (stack != null) {
+							
+							stack.push (this);
+							
+						}
+						
+						return true;
 						
 					}
 					
-					return true;
+				}
+				
+			} else if (stack != null) {
+				
+				var length = stack.length;
+				
+				while (--i >= 0) {
+					
+					if (__children[i].__hitTest (x, y, shapeFlag, stack, interactiveOnly)) {
+						
+						stack.insert (length, this);
+						
+						return true;
+						
+					}
 					
 				}
 				
 			}
 			
-		} else if (stack != null) {
-			
-			var length = stack.length;
+		} else {
 			
 			while (--i >= 0) {
 				
-				if (__children[i].__hitTest (x, y, shapeFlag, stack, interactiveOnly)) {
-					
-					stack.insert (length, this);
-					
-					return true;
-					
-				}
+				__children[i].__hitTest (x, y, shapeFlag, stack, false);
 				
 			}
 			
 		}
+		
 		
 		return false;
 		
@@ -852,9 +865,13 @@ class DisplayObjectContainer extends InteractiveObject {
 				
 			}
 			
-			for (child in __children) {
+			if (__children != null) {
 				
-				child.__setStageReference (stage);
+				for (child in __children) {
+					
+					child.__setStageReference (stage);
+					
+				}
 				
 			}
 			

@@ -69,13 +69,17 @@ class AbstractShader {
 		
 		var shaderProgram = gl.createProgram ();
 		
-		gl.attachShader (shaderProgram, vertexShader);
-		gl.attachShader (shaderProgram, fragmentShader);
-		gl.linkProgram (shaderProgram);
-		
-		if (gl.getProgramParameter(shaderProgram, gl.LINK_STATUS) == 0) {
+		if (fragmentShader != null && vertexShader != null) {
 			
-			trace ("Could not initialize shaders");
+			gl.attachShader (shaderProgram, vertexShader);
+			gl.attachShader (shaderProgram, fragmentShader);
+			gl.linkProgram (shaderProgram);
+			
+			if (gl.getProgramParameter(shaderProgram, gl.LINK_STATUS) == 0) {
+				
+				trace ("Could not initialize shaders");
+				
+			}
 			
 		}
 		
@@ -84,28 +88,28 @@ class AbstractShader {
 	}
 	
 	
-	public static function CompileVertexShader (gl:Dynamic, shaderSrc) {
+	public static function CompileVertexShader (gl:GLRenderContext, shaderSrc) {
 		
 		return AbstractShader._CompileShader (gl, shaderSrc, gl.VERTEX_SHADER);
 		
 	}
 	
 	
-	public static function CompileFragmentShader (gl:Dynamic, shaderSrc) {
+	public static function CompileFragmentShader (gl:GLRenderContext, shaderSrc) {
 		
 		return AbstractShader._CompileShader (gl, shaderSrc, gl.FRAGMENT_SHADER);
 		
 	}
 	
 	
-	public static function _CompileShader (gl:Dynamic, shaderSrc, shaderType) {
+	public static function _CompileShader (gl:GLRenderContext, shaderSrc, shaderType) {
 		
 		var src = shaderSrc.join ("\n");
 		var shader = gl.createShader (shaderType);
 		gl.shaderSource (shader, src);
 		gl.compileShader (shader);
 		
-		if (!gl.getShaderParameter (shader, gl.COMPILE_STATUS)) {
+		if (gl.getShaderParameter (shader, gl.COMPILE_STATUS) == 0) {
 			
 			//trace ("Error compiling " + Type.getClassName (Type.getClass (this)));
 			trace (gl.getShaderInfoLog (shader));

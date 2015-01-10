@@ -61,6 +61,10 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
+		::if (assets != null)::
+		::foreach assets::::if (type == "font")::Font.registerFont (__ASSET__::flatName::);::end::
+		::end::::end::
+		
 		#if (windows || mac || linux)
 		
 		var useManifest = false;
@@ -153,7 +157,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 			
 			#else
 			
-			if (type == BINARY || type == null) {
+			if (type == BINARY || type == null || (assetType == BINARY && type == TEXT)) {
 				
 				return true;
 				
@@ -685,22 +689,36 @@ class DefaultAssetLibrary extends AssetLibrary {
 #if pixi
 #elseif flash
 
-::foreach assets::::if (embed)::::if (type == "image")::@:keep class __ASSET__::flatName:: extends flash.display.BitmapData { public function new () { super (0, 0, true, 0); } }::else::@:keep class __ASSET__::flatName:: extends ::flashClass:: { }::end::::end::
+::foreach assets::::if (embed)::::if (type == "image")::@:keep #if display private #end class __ASSET__::flatName:: extends flash.display.BitmapData { public function new () { super (0, 0, true, 0); } }::else::@:keep #if display private #end class __ASSET__::flatName:: extends ::flashClass:: { }::end::::end::
 ::end::
 
 #elseif html5
 
-::foreach assets::::if (type == "font")::@:keep class __ASSET__::flatName:: extends flash.text.Font { #if (!openfl_html5_dom) public function new () { super (); fontName = "::id::"; } #end }::end::
+::foreach assets::::if (type == "font")::@:keep #if display private #end class __ASSET__::flatName:: extends flash.text.Font { #if (!openfl_html5_dom) public function new () { super (); fontName = "::fontName::"; } #end }::end::
 ::end::
 
-#elseif (windows || mac || linux)
+#else
+
+#if (windows || mac || linux)
 
 ::if (assets != null)::
-::foreach assets::::if (embed)::::if (type == "image")::@:bitmap("::sourcePath::") class __ASSET__::flatName:: extends flash.display.BitmapData {}
-::elseif (type == "sound")::@:sound("::sourcePath::") class __ASSET__::flatName:: extends flash.media.Sound {}
-::elseif (type == "music")::@:sound("::sourcePath::") class __ASSET__::flatName:: extends flash.media.Sound {}
-::elseif (type == "font")::@:font("::sourcePath::") class __ASSET__::flatName:: extends flash.text.Font {}
-::else::@:file("::sourcePath::") class __ASSET__::flatName:: extends flash.utils.ByteArray {}
+::foreach assets::::if (embed)::::if (type == "image")::@:bitmap("::sourcePath::") @:keep #if display private #end class __ASSET__::flatName:: extends flash.display.BitmapData {}
+::elseif (type == "sound")::@:sound("::sourcePath::") @:keep #if display private #end class __ASSET__::flatName:: extends flash.media.Sound {}
+::elseif (type == "music")::@:sound("::sourcePath::") @:keep #if display private #end class __ASSET__::flatName:: extends flash.media.Sound {}
+::elseif (type == "font")::@:font("::sourcePath::") @:keep #if display private #end class __ASSET__::flatName:: extends flash.text.Font {}
+::else::@:file("::sourcePath::") @:keep #if display private #end class __ASSET__::flatName:: extends flash.utils.ByteArray {}
 ::end::::end::::end::::end::
+
+::if (assets != null)::
+::foreach assets::::if (!embed)::::if (type == "font")::@:keep class __ASSET__::flatName:: extends openfl.text.Font { public function new () { super (); __fontPath = "::targetPath::"; fontName = "::fontName::"; }}
+::end::::end::::end::::end::
+
+#else
+
+::if (assets != null)::
+::foreach assets::::if (type == "font")::class __ASSET__::flatName:: extends openfl.text.Font { public function new () { super (); __fontPath = "::targetPath::"; fontName = "::fontName::";  }}
+::end::::end::::end::
+
+#end
 
 #end

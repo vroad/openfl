@@ -4,6 +4,9 @@ import openfl.Assets;
 #if (!macro && !display && !waxe)
 
 
+@:access(openfl._v2.Assets)
+
+
 class ApplicationMain {
 	
 	
@@ -76,6 +79,12 @@ class ApplicationMain {
 					
 				} catch (e:Dynamic) {}
 				#end
+				
+				::if (libraries != null)::::foreach libraries::::if (preload)::
+				openfl.Assets.loadLibrary ("::name::", function (_) {});
+				::end::::end::::end::
+				
+				openfl.Assets.initialize ();
 				
 				var hasMain = false;
 				

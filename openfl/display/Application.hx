@@ -5,6 +5,8 @@ import lime.app.Application in LimeApplication;
 import lime.app.Config in LimeConfig;
 import lime.graphics.RenderContext;
 import lime.ui.KeyCode;
+import lime.ui.Mouse;
+import openfl.display.InteractiveObject;
 import openfl.display.Stage;
 import openfl.events.KeyboardEvent;
 import openfl.events.MouseEvent;
@@ -21,6 +23,7 @@ class Application extends LimeApplication {
 	
 	
 	private var stage:Stage;
+	private var __lastClickTime:Int;
 	
 	
 	public function new () {
@@ -337,59 +340,84 @@ class Application extends LimeApplication {
 	}
 	
 	
-	@:noCompletion private function onMouse (type:String, x:Float, y:Float):Void {
+	@:noCompletion private function onMouse (type:String, x:Float, y:Float, button:Int):Void {
 		
-		/*var rect;
-		
-		if (__canvas != null) {
-			
-			rect = __canvas.getBoundingClientRect ();
-			__mouseX = (event.clientX - rect.left) * (stageWidth / rect.width);
-			__mouseY = (event.clientY - rect.top) * (stageHeight / rect.height);
-			
-		} else {
-			
-			rect = __div.getBoundingClientRect ();
-			//__mouseX = (event.clientX - rect.left) * (__div.style.width / rect.width);
-			__mouseX = (event.clientX - rect.left);
-			//__mouseY = (event.clientY - rect.top) * (__div.style.height / rect.height);
-			__mouseY = (event.clientY - rect.top);
-			
-		}*/
+		if (button > 2) return;
 		
 		stage.__mouseX = x;
 		stage.__mouseY = y;
 		
-		var __stack = [];
+		var stack = [];
+		var target:InteractiveObject = null;
+		var targetPoint = new Point (x, y);
 		
-		if (stage.__hitTest (x, y, false, __stack, true)) {
+		if (stage.__hitTest (x, y, false, stack, true)) {
 			
-			var target = __stack[__stack.length - 1];
-			stage.__setCursor (untyped (target).buttonMode ? "pointer" : "default");
-			stage.__fireEvent (MouseEvent.__create (type, /*event,*/ target.globalToLocal (new Point (x, y)), cast target), __stack);
-			
-			if (type == MouseEvent.MOUSE_UP) {
-				
-				stage.__fireEvent (MouseEvent.__create (MouseEvent.CLICK, /*event,*/ target.globalToLocal (new Point (x, y)), cast target), __stack);
-				
-			}
+			target = cast stack[stack.length - 1];
 			
 		} else {
 			
-			stage.__setCursor (stage.buttonMode ? "pointer" : "default");
-			stage.__fireEvent (MouseEvent.__create (type, /*event,*/ new Point (x, y), stage), [ stage ]);
+			target = stage;
+			stack = [ stage ];
 			
-			if (type == MouseEvent.MOUSE_UP) {
+		}
+		
+		stage.__fireEvent (MouseEvent.__create (type, button, (target == stage ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+		
+		var clickType = switch (type) {
+			
+			case MouseEvent.MOUSE_UP: MouseEvent.CLICK;
+			case MouseEvent.MIDDLE_MOUSE_UP: MouseEvent.MIDDLE_CLICK;
+			case MouseEvent.RIGHT_MOUSE_UP: MouseEvent.RIGHT_CLICK;
+			default: null;
+			
+		}
+		
+		if (clickType != null) {
+			
+			stage.__fireEvent (MouseEvent.__create (clickType, button, (target == stage ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+			
+			if (type == MouseEvent.MOUSE_UP && cast (target, openfl.display.InteractiveObject).doubleClickEnabled) {
 				
-				stage.__fireEvent (MouseEvent.__create (MouseEvent.CLICK, /*event,*/ new Point (x, y), stage), [ stage ]);
+				var currentTime = Lib.getTimer ();
+				if (currentTime - __lastClickTime < 500) {
+					
+					stage.__fireEvent (MouseEvent.__create (MouseEvent.DOUBLE_CLICK, button, (target == stage ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+					__lastClickTime = 0;
+					
+				} else {
+					
+					__lastClickTime = currentTime;
+					
+				}
 				
 			}
 			
 		}
 		
+		if (Std.is (target, Sprite)) {
+			
+			var targetSprite:Sprite = cast target;
+			
+			if (targetSprite.buttonMode && targetSprite.useHandCursor) {
+				
+				Mouse.cursor = POINTER;
+				
+			} else {
+				
+				Mouse.cursor = ARROW;
+				
+			}
+			
+		} else {
+			
+			Mouse.cursor = ARROW;
+			
+		}
+		
 		if (stage.__dragObject != null) {
 			
-			stage.__drag (new Point (x, y));
+			stage.__drag (targetPoint);
 			
 		}
 		
@@ -398,21 +426,37 @@ class Application extends LimeApplication {
 	
 	public override function onMouseDown (x:Float, y:Float, button:Int):Void {
 		
-		onMouse (MouseEvent.MOUSE_DOWN, x, y);
+		var type = switch (button) {
+			
+			case 1: MouseEvent.MIDDLE_MOUSE_DOWN;
+			case 2: MouseEvent.RIGHT_MOUSE_DOWN;
+			default: MouseEvent.MOUSE_DOWN;
+			
+		}
+		
+		onMouse (type, x, y, button);
 		
 	}
 	
 	
 	public override function onMouseMove (x:Float, y:Float, button:Int):Void {
 		
-		onMouse (MouseEvent.MOUSE_MOVE, x, y);
+		onMouse (MouseEvent.MOUSE_MOVE, x, y, 0);
 		
 	}
 	
 	
 	public override function onMouseUp (x:Float, y:Float, button:Int):Void {
 		
-		onMouse (MouseEvent.MOUSE_UP, x, y);
+		var type = switch (button) {
+			
+			case 1: MouseEvent.MIDDLE_MOUSE_UP;
+			case 2: MouseEvent.RIGHT_MOUSE_UP;
+			default: MouseEvent.MOUSE_UP;
+			
+		}
+		
+		onMouse (type, x, y, button);
 		
 	}
 	
@@ -462,7 +506,7 @@ class Application extends LimeApplication {
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, /*cast event,*/ localPoint, cast target);
+			var mouseEvent = MouseEvent.__create (mouseType, 0, localPoint, cast target);
 			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
 			
 			stage.__fireEvent (touchEvent, __stack);
@@ -475,7 +519,7 @@ class Application extends LimeApplication {
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, /*cast event,*/ point, stage);
+			var mouseEvent = MouseEvent.__create (mouseType, 0, point, stage);
 			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
 			
 			stage.__fireEvent (touchEvent, [ stage ]);

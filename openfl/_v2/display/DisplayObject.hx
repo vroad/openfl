@@ -1,7 +1,6 @@
-package openfl._v2.display;
+package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
-import openfl.display.PixelSnapping;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import openfl.events.EventPhase;
@@ -14,13 +13,13 @@ import openfl.geom.Transform;
 import openfl.Lib;
 
 
-class DisplayObject extends EventDispatcher implements IBitmapDrawable {
+@:keep class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 
 	
 	public var alpha (get, set):Float;
 	public var blendMode (get, set):BlendMode;
 	public var cacheAsBitmap (get, set):Bool;
-	public var filters (get, set):Array<Dynamic>;
+	public var filters (get, set):Array<BitmapFilter>;
 	public var graphics (get, null):Graphics;
 	public var height (get, set):Float;
 	public var loaderInfo:LoaderInfo;
@@ -31,7 +30,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	public var opaqueBackground (get, set):Null <Int>;
 	public var parent (get, null):DisplayObjectContainer;
 	public var pedanticBitmapCaching (get, set):Bool;
-	public var pixelSnapping (get, set):PixelSnapping;
 	public var root (get, null):DisplayObject;
 	public var rotation (get, set):Float;
 	public var scale9Grid (get, set):Rectangle;
@@ -112,25 +110,14 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	}
 	
 	
-	public function hitTestObject (object:DisplayObject):Bool {
+	public function hitTestObject (obj:DisplayObject):Bool {
 		
-		if (object != null && object.parent != null && parent != null) {
+		if (obj != null && obj.parent != null && parent != null) {
 			
-			var currentMatrix = transform.concatenatedMatrix;
-			var targetMatrix = object.transform.concatenatedMatrix;
+			var currentBounds = getBounds (this);
+			var targetBounds = obj.getBounds (this);
 			
-			var xPoint = new Point (1, 0);
-			var yPoint = new Point (0, 1);
-			
-			var currentWidth = width * currentMatrix.deltaTransformPoint (xPoint).length;
-			var currentHeight = height * currentMatrix.deltaTransformPoint (yPoint).length;
-			var targetWidth = object.width * targetMatrix.deltaTransformPoint (xPoint).length;
-			var targetHeight = object.height * targetMatrix.deltaTransformPoint (yPoint).length;
-			
-			var currentRect = new Rectangle (currentMatrix.tx, currentMatrix.ty, currentWidth, currentHeight);
-			var targetRect = new Rectangle (targetMatrix.tx, targetMatrix.ty, targetWidth, targetHeight);
-			
-			return currentRect.intersects (targetRect);
+			return currentBounds.intersects (targetBounds);
 			
 		}
 		
@@ -524,35 +511,10 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	}
 	
 	
-	private function get_pixelSnapping ():PixelSnapping {
-		
-		var i:Int = lime_display_object_get_pixel_snapping (__handle);
-		return Type.createEnumIndex (PixelSnapping, i);
-		
-	}
-	
-	
-	private function set_pixelSnapping (value:PixelSnapping):PixelSnapping {
-		
-		if (value == null) {
-			
-			lime_display_object_set_pixel_snapping (__handle, 0);
-			
-		} else {
-			
-			lime_display_object_set_pixel_snapping (__handle, Type.enumIndex (value));
-			
-		}
-		
-		return value;
-		
-	}
-	
-	
-	private function get_filters ():Array<Dynamic> {
+	private function get_filters ():Array<BitmapFilter> {
 		
 		if (__filters == null) return [];
-		var result = new Array<Dynamic> ();
+		var result = new Array<BitmapFilter> ();
 		
 		for (filter in __filters) {
 			
@@ -565,7 +527,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	}
 	
 	
-	private function set_filters (value:Array<Dynamic>):Array<Dynamic> {
+	private function set_filters<T:BitmapFilter> (value:Array<T>):Array<BitmapFilter> {
 		
 		if (filters == null || value == null) {
 			
@@ -573,7 +535,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 			
 		} else {
 			
-			__filters = new Array<Dynamic> ();
+			__filters = new Array<BitmapFilter> ();
 			
 			for (filter in value) {
 				
@@ -809,8 +771,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	private static var lime_display_object_set_cache_as_bitmap = Lib.load ("lime", "lime_display_object_set_cache_as_bitmap", 2);
 	private static var lime_display_object_get_pedantic_bitmap_caching = Lib.load ("lime", "lime_display_object_get_pedantic_bitmap_caching", 1);
 	private static var lime_display_object_set_pedantic_bitmap_caching = Lib.load ("lime", "lime_display_object_set_pedantic_bitmap_caching", 2);
-	private static var lime_display_object_get_pixel_snapping = Lib.load ("lime", "lime_display_object_get_pixel_snapping", 1);
-	private static var lime_display_object_set_pixel_snapping = Lib.load ("lime", "lime_display_object_set_pixel_snapping", 2);
 	private static var lime_display_object_get_visible = Lib.load ("lime", "lime_display_object_get_visible", 1);
 	private static var lime_display_object_set_visible = Lib.load ("lime", "lime_display_object_set_visible", 2);
 	private static var lime_display_object_set_filters = Lib.load ("lime", "lime_display_object_set_filters", 2);
@@ -829,3 +789,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	
 }
+
+
+#end

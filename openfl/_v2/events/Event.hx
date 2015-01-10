@@ -1,7 +1,9 @@
-package openfl._v2.events;
+package openfl._v2.events; #if (!flash && !html5 && !openfl_next)
 
 
 import openfl.events.EventPhase;
+
+@:allow(openfl._v2.display.DisplayObjectContainer)
 
 
 class Event {
@@ -148,3 +150,6 @@ class Event {
 	
 	
 }
+
+
+#end

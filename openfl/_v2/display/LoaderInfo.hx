@@ -1,4 +1,4 @@
-package openfl._v2.display;
+package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
 import openfl.events.Event;
@@ -43,7 +43,6 @@ class LoaderInfo extends URLLoader {
 		frameRate = 0;
 		dataFormat = URLLoaderDataFormat.BINARY;
 		loaderURL = null;
-		addEventListener (Event.COMPLETE, this_onComplete);
 		
 	}
 	
@@ -53,6 +52,7 @@ class LoaderInfo extends URLLoader {
 		var loaderInfo = new LoaderInfo ();
 		loaderInfo.loader = loader;
 		loaderInfo.uncaughtErrorEvents = new UncaughtErrorEvents();
+		loaderInfo.addEventListener (Event.COMPLETE, loaderInfo.this_onComplete);
 		
 		if (loader == null) {
 			
@@ -102,6 +102,7 @@ class LoaderInfo extends URLLoader {
 	private function this_onComplete (event:Event):Void {
 		
 		url = __pendingURL;
+		removeEventListener (Event.COMPLETE, this_onComplete);
 		
 	}
 	
@@ -121,3 +122,6 @@ class LoaderInfo extends URLLoader {
 	
 	
 }
+
+
+#end

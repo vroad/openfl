@@ -22,7 +22,7 @@ class ByteArrayTest {
 		Assert.areEqual(1, ba.length);
 		Assert.areEqual(1, ba.position);
 		
-		#if js // array access might not be possible :(
+		#if (js || flash) // array access might not be possible :(
 		ba.position = 0;
 		Assert.areEqual(0xFF, ba.readUnsignedByte ());
 		#else
@@ -359,6 +359,26 @@ class ByteArrayTest {
 	}
 	
 	
+	@Test public function testEmptyArray () {
+		
+		var data = new ByteArray();
+
+		Assert.areEqual(0, data.length);
+
+		var testString : String;
+
+		// Verify that readUTFBytes correctly handles
+		// an empty ByteArray and doesn't crash
+		testString = data.readUTFBytes(data.length);
+		Assert.areEqual( 0, testString.length );
+
+		// Test toString as well just in case it gets changed
+		// to not just call readUTFBytes
+		testString = data.toString();
+		Assert.areEqual( 0, testString.length );
+	}
+	
+
 	@Test public function testReadWriteUnsigned () {
 		
 		var data = new ByteArray();
@@ -382,11 +402,11 @@ class ByteArrayTest {
 		
 	}
 	
-	static private function serializeByteArray(ba:ByteArray):String {
+	/*static private function serializeByteArray(ba:ByteArray):String {
 		var str:String = "";
 		for (n in 0 ... ba.length) str += ba[n] + ",";
 		return str.substr(0, str.length - 1);
-	}
+	}*/
 	
 	//#if (cpp || neko)
 	/*#if (cpp)

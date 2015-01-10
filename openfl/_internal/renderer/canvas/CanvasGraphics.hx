@@ -28,6 +28,9 @@ import js.Browser;
 class CanvasGraphics {
 	
 	
+	private static var SIN45 = 0.70710678118654752440084436210485;
+	private static var TAN22 = 0.4142135623730950488016887242097;
+	
 	private static var bounds:Rectangle;
 	private static var hasFill:Bool;
 	private static var hasStroke:Bool;
@@ -131,25 +134,32 @@ class CanvasGraphics {
 		#if js
 		if (ry == -1) ry = rx;
 		
-		var kappa = .5522848,
-		ox = rx * kappa, // control point offset horizontal
-		oy = ry * kappa, // control point offset vertical
-		xe = x + width, // x-end
-		ye = y + height, // y-end
-		cx1 = x + rx, // center x
-		cy1 = y + ry, // center y
-		cx2 = xe - rx, // center x
-		cy2 = ye - ry; // center y
+		rx *= 0.5;
+		ry *= 0.5;
 		
-		context.moveTo (x, cy1);
-		context.bezierCurveTo (x, cy1 - oy, cx1 - ox, y, cx1, y);
-		context.lineTo (cx2, y);
-		context.bezierCurveTo (cx2 + ox, y, xe, cy1 - oy, xe, cy1);
-		context.lineTo (xe, cy2);
-		context.bezierCurveTo (xe, cy2 + oy, cx2 + ox, ye, cx2, ye);
-		context.lineTo (cx1, ye);
-		context.bezierCurveTo (cx1 - ox, ye, x, cy2 + oy, x, cy2);
-		context.lineTo (x, cy1);
+		if (rx > width / 2) rx = width / 2;
+		if (ry > height / 2) ry = height / 2;
+		
+		var xe = x + width,
+		ye = y + height,
+		cx1 = -rx + (rx * SIN45),
+		cx2 = -rx + (rx * TAN22),
+		cy1 = -ry + (ry * SIN45),
+		cy2 = -ry + (ry * TAN22);
+		
+		context.moveTo (xe, ye - ry);
+		context.quadraticCurveTo (xe, ye + cy2, xe + cx1, ye + cy1);
+		context.quadraticCurveTo (xe + cx2, ye, xe - rx, ye);
+		context.lineTo (x + rx, ye);
+		context.quadraticCurveTo (x - cx2, ye, x - cx1, ye + cy1);
+		context.quadraticCurveTo (x, ye + cy2, x, ye - ry);
+		context.lineTo (x, y + ry);
+		context.quadraticCurveTo (x, y - cy2, x - cx1, y - cy1);
+		context.quadraticCurveTo (x - cx2, y, x + rx, y);
+		context.lineTo (xe - rx, y);
+		context.quadraticCurveTo (xe + cx2, y, xe + cx1, y - cy1);
+		context.quadraticCurveTo (xe, y - cy2, xe, y + ry);
+		context.lineTo (xe, ye - ry);
 		#end
 		
 	}
@@ -531,7 +541,7 @@ class CanvasGraphics {
 								if (canOptimizeMatrix && st >= 0 && sl >= 0 && sr <= bitmapFill.width && sb <= bitmapFill.height) {
 									
 									optimizationUsed = true;
-									context.drawImage (bitmapFill.__image.src, sl, st, sr - sl, sb - st, x, y, width, height);
+									context.drawImage (bitmapFill.__image.src, sl, st, sr - sl, sb - st, x - offsetX, y - offsetY, width, height);
 									
 								}
 								
@@ -549,7 +559,7 @@ class CanvasGraphics {
 							
 							beginPatternFill (bitmapFill, bitmapRepeat);
 							beginPath ();
-							drawRoundRect (x, y, width, height, rx, ry);
+							drawRoundRect (x - offsetX, y - offsetY, width, height, rx, ry);
 						
 						case DrawTiles (sheet, tileData, smooth, flags, count):
 							
@@ -560,6 +570,8 @@ class CanvasGraphics {
 							var useTransform = (flags & Graphics.TILE_TRANS_2x2) > 0;
 							var useRGB = (flags & Graphics.TILE_RGB) > 0;
 							var useAlpha = (flags & Graphics.TILE_ALPHA) > 0;
+							var useRect = (flags & Graphics.TILE_RECT) > 0;
+							var useOrigin = (flags & Graphics.TILE_ORIGIN) > 0;
 							
 							if (useTransform) { useScale = false; useRotation = false; }
 							
@@ -571,6 +583,7 @@ class CanvasGraphics {
 							
 							var numValues = 3;
 							
+							if (useRect) { numValues = useOrigin ? 8 : 6; }
 							if (useScale) { scaleIndex = numValues; numValues ++; }
 							if (useRotation) { rotationIndex = numValues; numValues ++; }
 							if (useTransform) { transformIndex = numValues; numValues += 4; }
@@ -592,15 +605,29 @@ class CanvasGraphics {
 							
 							while (index < totalCount) {
 								
-								var tileID = Std.int (tileData[index + 2]);
+								var tileID = (!useRect) ? Std.int (tileData[index + 2]) : -1;
 								
-								if (tileID != previousTileID) {
+								if (!useRect && tileID != previousTileID) {
 									
 									rect = sheet.__tileRects[tileID];
 									center = sheet.__centerPoints[tileID];
 									
 									previousTileID = tileID;
 									
+								}
+								else if (useRect)
+								{
+									rect = sheet.__rectTile;
+									rect.setTo(tileData[index + 2], tileData[index + 3], tileData[index + 4], tileData[index + 5]);
+									center = sheet.__point;
+									if (useOrigin)
+									{
+										center.setTo(tileData[index + 6], tileData[index + 7]);
+									}
+									else
+									{
+										center.setTo(0, 0);
+									}
 								}
 								
 								if (rect != null && rect.width > 0 && rect.height > 0 && center != null) {
@@ -666,7 +693,7 @@ class CanvasGraphics {
 								});
 								
 								context.miterLimit = (miterLimit == null ? 3 : miterLimit);
-								context.strokeStyle = (color == null ? "#000000" : "#" + StringTools.hex (color, 6));
+								context.strokeStyle = (color == null ? "#000000" : "#" + StringTools.hex (color & 0x00FFFFFF, 6));
 								
 								hasStroke = true;
 								
@@ -687,7 +714,7 @@ class CanvasGraphics {
 							positionX = x;
 							positionY = y;
 							
-						case DrawTriangles (vertices, indices, uvtData, culling):
+						case DrawTriangles (vertices, indices, uvtData, culling, _, _):
 							
 							closePath(false);
 							
@@ -936,13 +963,8 @@ class CanvasGraphics {
 		#end
 	}
 	
-	private static function isCCW(x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float) {
-		var vx1 = x2 - x1;
-		var vy1 = y2 - y1;
-		var vx2 = x3 - x1;
-		var vy2 = y3 - y1;
-		
-		return (vx1 * vy2 - vy1 * vx2) < 0;
+	private static inline function isCCW(x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float) {
+		return ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) < 0;
 	}
 	
 	private static function normalizeUvt(uvt:Vector<Float>, skipT:Bool = false):{max:Float, uvt:Vector<Float> } {
