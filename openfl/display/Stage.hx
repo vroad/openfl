@@ -582,7 +582,7 @@ class Stage extends Sprite {
 		
 		/*switch(value) {
 			case NORMAL:
-				var fs_exit_function = untyped __html5__("function() {
+				var fs_exit_function = untyped __js__("function() {
 			    if (document.exitFullscreen) {
 			      document.exitFullscreen();
 			    } else if (document.msExitFullscreen) {
@@ -595,7 +595,7 @@ class Stage extends Sprite {
 				}");
 				fs_exit_function();
 			case FULL_SCREEN | FULL_SCREEN_INTERACTIVE:
-				var fsfunction = untyped __html5__("function(elem) {
+				var fsfunction = untyped __js__("function(elem) {
 					if (elem.requestFullscreen) elem.requestFullscreen();
 					else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
 					else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();

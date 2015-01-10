@@ -113,7 +113,7 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 		#end
 		
 		#if html5
-		_socket = untyped __html5__("new WebSocket(\"ws://\" + host + \":\" + port)");
+		_socket = untyped __js__("new WebSocket(\"ws://\" + host + \":\" + port)");
 
 		_socket.onopen = onOpenHandler;
 		_socket.onmessage = onMessageHandler;

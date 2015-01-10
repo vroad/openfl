@@ -82,7 +82,7 @@ class MouseEvent extends Event {
 			
 		}*/
 		
-		// source: http://unixpapa.com/html5/mouse.html
+		// source: http://unixpapa.com/js/mouse.html
 		
 		switch (type) {
 			

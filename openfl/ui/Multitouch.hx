@@ -59,7 +59,7 @@ class Multitouch {
 	@:noCompletion private static function get_supportsTouchEvents ():Bool {
 		
 		#if html5
-		if (untyped __html5__ ("('ontouchstart' in document.documentElement) || (window.DocumentTouch && document instanceof DocumentTouch)")) {
+		if (untyped __js__ ("('ontouchstart' in document.documentElement) || (window.DocumentTouch && document instanceof DocumentTouch)")) {
 			
 			return true;
 			

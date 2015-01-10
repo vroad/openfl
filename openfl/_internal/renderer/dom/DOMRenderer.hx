@@ -44,7 +44,7 @@ class DOMRenderer extends AbstractRenderer {
 			dom: dom,
 			lowercase: pre,
 			css: '-' + pre + '-',
-			html5: pre[0].toUpperCase() + pre.substr(1)
+			js: pre[0].toUpperCase() + pre.substr(1)
 		  };
 		})")();
 		

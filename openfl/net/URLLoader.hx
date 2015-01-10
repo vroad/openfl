@@ -83,7 +83,7 @@ class URLLoader extends EventDispatcher {
 			
 			var s = try subject.status catch (e:Dynamic) null;
 			
-			if (s == untyped __html5__("undefined")) {
+			if (s == untyped __js__("undefined")) {
 				
 				s = null;
 				

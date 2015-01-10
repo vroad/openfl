@@ -864,7 +864,7 @@ class Assets {
 		
 		#if (tools && !display)
 		
-		var data = getText ("libraries/" + name + ".Json");
+		var data = getText ("libraries/" + name + ".json");
 		
 		if (data != null && data != "") {
 			

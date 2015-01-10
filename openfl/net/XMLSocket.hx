@@ -47,10 +47,10 @@ class XMLSocket extends EventDispatcher {
 		
 		#if html5
 		if (protocol == null) {
-            _socket = untyped __html5__("new WebSocket(\"ws://\" + host + \":\" + port)");
+            _socket = untyped __js__("new WebSocket(\"ws://\" + host + \":\" + port)");
         }
         else {
-            _socket = untyped __html5__("new WebSocket(\"ws://\" + host + \":\" + port, protocol)");
+            _socket = untyped __js__("new WebSocket(\"ws://\" + host + \":\" + port, protocol)");
         }
 		
 		connected = false;
