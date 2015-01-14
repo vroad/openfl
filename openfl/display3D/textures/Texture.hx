@@ -52,20 +52,31 @@ class Texture extends TextureBase {
 	
 	public function uploadFromBitmapData (bitmapData:BitmapData, miplevel:Int = 0):Void {
 		
-		//#if lime_legacy
-		//var p = bitmapData.getRGBAPixels ();
-		//#else
-		var p = bitmapData.getPixels (new Rectangle (0, 0, bitmapData.width, bitmapData.height));
-		//#end
+		var p = untyped bitmapData.__image.buffer.data;
 		
 		width = bitmapData.width;
 		height = bitmapData.height;
-		uploadFromByteArray (p, 0, miplevel);
+		uploadFromUInt8Array(p, miplevel);
 		
 	}
 	
 	
 	public function uploadFromByteArray (data:ByteArray, byteArrayOffset:Int, miplevel:Int = 0):Void {
+		
+		#if js
+		
+		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset) : null, miplevel);
+		
+		#else
+		
+		uploadFromUInt8Array(new UInt8Array(data), miplevel);
+		
+		#end
+		
+	}
+	
+	private function uploadFromUInt8Array(data:UInt8Array, miplevel:Int = 0)
+	{
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		 
@@ -79,28 +90,10 @@ class Texture extends TextureBase {
 			
 		}
 		
-		#if (js && html5)
-		var source = new UInt8Array (data.length);
-		data.position = byteArrayOffset;
-		
-		var i:Int = 0;
-		
-		while (data.position < data.length) {
-			
-			source[i] = data.readUnsignedByte ();
-			i++;
-			
-		}
-		#else
-		var source = new UInt8Array (data);
-		#end
-		
-		GL.texImage2D (GL.TEXTURE_2D, miplevel, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, source);
+		GL.texImage2D (GL.TEXTURE_2D, miplevel, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
 		
 	}
-	
-	
 }
 
 

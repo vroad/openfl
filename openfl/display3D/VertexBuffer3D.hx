@@ -41,7 +41,7 @@ class VertexBuffer3D {
 		var offset:Int = byteArrayOffset + startOffset * bytesPerVertex;
 		var float32Array:Float32Array;
 		
-		#if html5
+		#if js
 		float32Array = new Float32Array (length);
 		byteArray.position = offset;
 		
@@ -62,14 +62,12 @@ class VertexBuffer3D {
 	}
 	
 	
-	#if js
 	public function uploadFromFloat32Array (data:Float32Array, startVertex:Int, numVertices:Int):Void {
 		
 		GL.bindBuffer (GL.ARRAY_BUFFER, glBuffer);
 		GL.bufferData (GL.ARRAY_BUFFER, data, GL.STATIC_DRAW);
 		
 	}
-	#end
 	
 	
 	public function uploadFromVector (data:Array<Float>, startVertex:Int, numVertices:Int):Void {
@@ -82,7 +80,7 @@ class VertexBuffer3D {
 		var offset:Int = startVertex;
 		var float32Array:Float32Array;
 		
-		#if html5
+		#if js
 		float32Array = new Float32Array (length);
 		
 		for (i in startVertex...(startVertex + length)) {

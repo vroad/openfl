@@ -39,7 +39,7 @@ class IndexBuffer3D {
 		var offset:Int = byteArrayOffset + startOffset * bytesPerIndex;
 		var indices:Int16Array;
 		
-		#if html5
+		#if js
 		indices = new Int16Array (length);
 		byteArray.position = offset;
 		
@@ -62,10 +62,9 @@ class IndexBuffer3D {
 	
 	public function uploadFromVector (data:Vector<UInt>, startOffset:Int, count:Int):Void {
 		
-		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, glBuffer);
 		var indices:Int16Array;
 		
-		#if html5
+		#if js
 		indices = new Int16Array (count);
 		
 		for (i in startOffset...(startOffset + count)) {
@@ -77,11 +76,15 @@ class IndexBuffer3D {
 		indices = new Int16Array (data, startOffset, count);
 		#end
 		
-		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
+		uploadFromInt16Array(indices);
 		
 	}
-	
-	
+    
+	public function uploadFromInt16Array(data:Int16Array):Void 
+    {
+        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, glBuffer);
+        GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, GL.STATIC_DRAW);
+    }
 }
 
 

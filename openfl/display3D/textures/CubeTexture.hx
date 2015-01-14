@@ -49,31 +49,7 @@ class CubeTexture extends TextureBase {
 	
 	public function uploadFromBitmapData (data:BitmapData, side:Int, miplevel:Int = 0):Void {
 		
-		//#if html5
-		var p = data.getPixels (new Rectangle (0, 0, data.width, data.height));
-		//#else
-		//var p = data.getRGBAPixels();
-		//#end
-		
-		var source:UInt8Array = null;
-		
-		#if html5
-		source = new UInt8Array (p.length);
-		p.position = 0;
-		
-		var i:Int = 0;
-		
-		while (p.position < p.length) {
-			
-			source[i] = p.readUnsignedByte ();
-			i++;
-			
-		}
-		#else
-		//TODO byteArrayOffset ?
-		source = new UInt8Array (p);
-		#end
-		
+		var source:UInt8Array = untyped data.__image.buffer.data;
 		GL.bindTexture (GL.TEXTURE_CUBE_MAP, glTexture);
 		
 		switch (side) {

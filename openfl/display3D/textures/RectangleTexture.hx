@@ -45,21 +45,32 @@ class RectangleTexture extends TextureBase {
 	
 	public function uploadFromBitmapData (bitmapData:BitmapData, miplevel:Int = 0):Void {
 		
-		//#if lime_legacy
-		//var p = bitmapData.getRGBAPixels();
-		//#else
-		var p = bitmapData.getPixels (new Rectangle (0, 0, bitmapData.width, bitmapData.height));
-		//#end
+		var p = untyped bitmapData.__image.buffer.data;
 		
 		width = bitmapData.width;
 		height = bitmapData.height;
 		
-		uploadFromByteArray (p, 0);
+		uploadFromUInt8Array(p);
 		
 	}
 	
 	
 	public function uploadFromByteArray (data:ByteArray, byteArrayOffset:Int):Void {
+		
+		#if js
+		
+		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset) : null);
+		
+		#else
+		
+		uploadFromUInt8Array(new UInt8Array(data));
+		
+		#end
+		
+	}
+	
+	private function uploadFromUInt8Array(data:UInt8Array)
+	{
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
@@ -73,18 +84,6 @@ class RectangleTexture extends TextureBase {
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
 			
-			var source = new UInt8Array (data.length);
-			data.position = byteArrayOffset;
-			
-			var i:Int = 0;
-			
-			while (data.position < data.length) {
-				
-				source[i] = data.readUnsignedByte ();
-				i++;
-				
-			}
-			
 		#else
 			
 			if (optimizeForRenderToTexture) {
@@ -97,16 +96,13 @@ class RectangleTexture extends TextureBase {
 			 
 			}
 			
-			var source = new UInt8Array(data);
-			
 		#end
 		
 		// mipLevel always should be 0 in rectangle textures
-		GL.texImage2D (GL.TEXTURE_2D, 0, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, source);
+		GL.texImage2D (GL.TEXTURE_2D, 0, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
 		
 	}
-	
 	
 }
 
