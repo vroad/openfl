@@ -214,14 +214,14 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid) return;
 		
-		#if js
+		#if html5
 		ImageCanvasUtil.convertToCanvas (__image);
 		ImageCanvasUtil.createImageData (__image);
 		ImageCanvasUtil.convertToCanvas (sourceBitmapData.__image);
 		ImageCanvasUtil.createImageData (sourceBitmapData.__image);
 		#end
 		
-		#if js
+		#if html5
 		filter.__applyFilter (__image.buffer.__srcImageData, sourceBitmapData.__image.buffer.__srcImageData, sourceRect, destPoint);
 		#end
 		
