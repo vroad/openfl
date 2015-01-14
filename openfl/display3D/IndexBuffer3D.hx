@@ -40,17 +40,7 @@ class IndexBuffer3D {
 		var indices:Int16Array;
 		
 		#if js
-		indices = new Int16Array (length);
-		byteArray.position = offset;
-		
-		var i:Int = 0;
-		
-		while (byteArray.position < length + offset) {
-			
-			indices[i] = byteArray.readUnsignedByte ();
-			i++;
-			
-		}
+		indices = untyped __js__("new Int16Array(byteArray.byteView.buffer, offset, length)");
 		#else
 		indices = new Int16Array (byteArray, offset, length);
 		#end

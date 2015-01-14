@@ -42,17 +42,7 @@ class VertexBuffer3D {
 		var float32Array:Float32Array;
 		
 		#if js
-		float32Array = new Float32Array (length);
-		byteArray.position = offset;
-		
-		var i:Int = 0;
-		
-		while (byteArray.position < length + offset) {
-			
-			float32Array[i] = byteArray.readUnsignedByte ();
-			i++;
-			
-		}
+		float32Array = untyped __js__("new Float32Array(byteArray.byteView.buffer, offset, length)");
 		#else
 		float32Array = new Float32Array (byteArray, offset, length);
 		#end
