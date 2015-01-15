@@ -60,11 +60,9 @@ class ApplicationMain {
 				
 				#if windows
 				try {
-					#if !v8					
+					
 					var currentPath = haxe.io.Path.directory (Sys.executablePath ());
 					Sys.setCwd (currentPath);
-					#else
-					#end
 					
 				} catch (e:Dynamic) {}
 				#elseif linux

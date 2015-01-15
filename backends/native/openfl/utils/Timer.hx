@@ -53,10 +53,8 @@ class Timer extends EventDispatcher {
 		if (!running) {
 			
 			running = true;
-			#if !v8
 			__timer = new haxe.Timer (__delay);
 			__timer.run = timer_onTimer;
-			#end
 			
 		}
 		

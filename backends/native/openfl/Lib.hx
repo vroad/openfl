@@ -190,8 +190,6 @@ class Lib {
 			return cpp.Lib.load (__moduleNames.get (library), method, args);
 			#elseif neko
 			return neko.Lib.load (__moduleNames.get (library), method, args);
-			#elseif v8
-			return v8.Lib.load (__moduleNames.get (library), method, args);
 			#else
 			return null;
 			#end
@@ -261,16 +259,14 @@ class Lib {
 		#if cpp
 		var get_env = cpp.Lib.load ("std", "get_env", 1);
 		var debug = (get_env ("OPENFL_LOAD_DEBUG") != null);
-		#elseif v8
-		var debug = false;
 		#else
 		var debug = (Sys.getEnv ("OPENFL_LOAD_DEBUG") !=null);
 		#end
 		
 		if (debug) {
-			#if !v8
+			
 			Sys.println (message);
-			#end
+			
 		}
 		
 	}
@@ -316,14 +312,12 @@ class Lib {
 				
 			}
 			
-			#if ((mobile && !ios) || v8)
+			#if (mobile && !ios)
 			trace (message);
 			#else
 			Sys.stderr ().write (Bytes.ofString (message));
 			#end
-			#if !v8
 			Sys.exit (1);
-			#end
 			
 		}
 		
@@ -335,8 +329,6 @@ class Lib {
 		#if cpp
 		var sys_string = cpp.Lib.load ("std", "sys_string", 0);
 		return sys_string ();
-		#elseif v8
-		return "v8";
 		#else
 		return Sys.systemName ();
 		#end
@@ -352,8 +344,6 @@ class Lib {
 			var result = cpp.Lib.load (name, func, args);
 			#elseif (neko)
 			var result = neko.Lib.load (name, func, args);
-			#elseif v8
-			var result = v8.Lib.load (name, func, args);
 			#else
 			var result = null;
 			#end
