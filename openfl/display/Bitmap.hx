@@ -1,13 +1,19 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
-package openfl.display;
-#if display
+
+import openfl._internal.renderer.canvas.CanvasBitmap;
+import openfl._internal.renderer.dom.DOMBitmap;
+import openfl._internal.renderer.opengl.GLBitmap;
+import openfl._internal.renderer.RenderSession;
+import openfl.geom.Matrix;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
+
+#if html5
+import js.html.ImageElement;
+#end
+
+@:access(openfl.display.BitmapData)
 
 
 /**
@@ -44,14 +50,13 @@ package openfl.display;
  * <code>addEventListener()</code> method of the display object container that
  * contains the Bitmap object.</p>
  */
-extern class Bitmap extends DisplayObject {
+class Bitmap extends DisplayObjectContainer {
 	
 	
 	/**
 	 * The BitmapData object being referenced.
 	 */
-	var bitmapData:BitmapData;
-	
+	public var bitmapData:BitmapData;
 	
 	/**
 	 * Controls whether or not the Bitmap object is snapped to the nearest pixel.
@@ -69,21 +74,179 @@ extern class Bitmap extends DisplayObject {
 	 * as possible using the internal vector renderer.</li>
 	 * </ul>
 	 */
-	var pixelSnapping:PixelSnapping;
-	
+	public var pixelSnapping:PixelSnapping;
 	
 	/**
 	 * Controls whether or not the bitmap is smoothed when scaled. If
 	 * <code>true</code>, the bitmap is smoothed when scaled. If
 	 * <code>false</code>, the bitmap is not smoothed when scaled.
 	 */
-	var smoothing:Bool;
+	public var smoothing:Bool;
+	
+	#if html5
+	@:noCompletion private var __image:ImageElement;
+	#end
 	
 	
-	function new (?bitmapData:BitmapData, ?pixelSnapping:PixelSnapping, smoothing:Bool = false):Void;
+	public function new (bitmapData:BitmapData = null, pixelSnapping:PixelSnapping = null, smoothing:Bool = false) {
+		
+		super ();
+		
+		this.bitmapData = bitmapData;
+		this.pixelSnapping = pixelSnapping;
+		this.smoothing = smoothing;
+		
+		if (pixelSnapping == null) {
+			
+			this.pixelSnapping = PixelSnapping.AUTO;
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion private override function __getBounds (rect:Rectangle, matrix:Matrix):Void {
+		
+		if (bitmapData != null) {
+			
+			var bounds = new Rectangle (0, 0, bitmapData.width, bitmapData.height);
+			bounds = bounds.transform (__worldTransform);
+			
+			rect.__expand (bounds.x, bounds.y, bounds.width, bounds.height);
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion private override function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
+		
+		if (!visible || bitmapData == null) return false;
+		
+		var point = globalToLocal (new Point (x, y));
+		
+		if (point.x > 0 && point.y > 0 && point.x <= bitmapData.width && point.y <= bitmapData.height) {
+			
+			if (stack != null && !interactiveOnly) {
+				
+				stack.push (this);
+				
+			}
+			
+			return true;
+			
+		}
+		
+		return false;
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderCanvas (renderSession:RenderSession):Void {
+		
+		CanvasBitmap.render (this, renderSession);
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderDOM (renderSession:RenderSession):Void {
+		
+		DOMBitmap.render (this, renderSession);
+		
+	}
+	
+#if !disable_gl_renderer	
+	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {		
+		GLBitmap.render (this, renderSession);		
+	}
+#end	
+	
+	@:noCompletion @:dox(hide) public override function __renderMask (renderSession:RenderSession):Void {
+		
+		renderSession.context.rect (0, 0, width, height);
+		
+	}
+	
+	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	@:noCompletion private override function get_height ():Float {
+		
+		if (bitmapData != null) {
+			
+			return bitmapData.height * scaleY;
+			
+		}
+		
+		return 0;
+		
+	}
+	
+	
+	@:noCompletion private override function set_height (value:Float):Float {
+		
+		if (bitmapData != null) {
+			
+			if (value != bitmapData.height) {
+				
+				__setTransformDirty ();
+				scaleY = value / bitmapData.height;
+				
+			}
+			
+			return value;
+			
+		}
+		
+		return 0;
+		
+	}
+	
+	
+	@:noCompletion private override function get_width ():Float {
+		
+		if (bitmapData != null) {
+			
+			return bitmapData.width * scaleX;
+			
+		}
+		
+		return 0;
+		
+	}
+	
+	
+	@:noCompletion private override function set_width (value:Float):Float {
+		
+		if (bitmapData != null) {
+			
+			if (value != bitmapData.width) {
+				
+				__setTransformDirty ();
+				scaleX = value / bitmapData.width;
+				
+			}
+			
+			return value;
+			
+		}
+		
+		return 0;
+		
+	}
 	
 	
 }
 
 
+#else
+typedef Bitmap = openfl._v2.display.Bitmap;
+#end
+#else
+typedef Bitmap = flash.display.Bitmap;
 #end

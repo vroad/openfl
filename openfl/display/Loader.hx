@@ -1,13 +1,20 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
-package openfl.display;
-#if display
+
+import openfl.display.Bitmap;
+import openfl.display.BitmapData;
+import openfl.display.DisplayObject;
+import openfl.display.LoaderInfo;
+import openfl.display.Shape;
+import openfl.display.Sprite;
+import openfl.events.Event;
+import openfl.events.IOErrorEvent;
+import openfl.geom.Rectangle;
+import openfl.net.URLRequest;
+import openfl.system.LoaderContext;
+import openfl.utils.ByteArray;
+
+@:access(openfl.display.LoaderInfo)
 
 
 /**
@@ -73,8 +80,9 @@ package openfl.display;
  * of the Loader object) from drawing to portions of the Stage outside of that
  * mask, as shown in the following code:</p>
  */
-extern class Loader extends DisplayObjectContainer {
-
+class Loader extends Sprite {
+	
+	
 	/**
 	 * Contains the root display object of the SWF file or image(JPG, PNG, or
 	 * GIF) file that was loaded by using the <code>load()</code> or
@@ -92,8 +100,8 @@ extern class Loader extends DisplayObjectContainer {
 	 *                       call the <code>load()</code> or
 	 *                       <code>loadBytes()</code> method.
 	 */
-	var content(default,null) : DisplayObject;
-
+	public var content (default, null):DisplayObject;
+	
 	/**
 	 * Returns a LoaderInfo object corresponding to the object being loaded.
 	 * LoaderInfo objects are shared between the Loader object and the loaded
@@ -110,8 +118,12 @@ extern class Loader extends DisplayObjectContainer {
 	 * <code>Loader.uncaughtErrorEvents</code> property, not the
 	 * <code>Loader.contentLoaderInfo.uncaughtErrorEvents</code> property.</p>
 	 */
-	var contentLoaderInfo(default,null) : LoaderInfo;
-
+	public var contentLoaderInfo (default, null):LoaderInfo;
+	
+	private var mImage:BitmapData;
+	private var mShape:Shape;
+	
+	
 	/**
 	 * Creates a Loader object that you can use to load files, such as SWF, JPEG,
 	 * GIF, or PNG files. Call the <code>load()</code> method to load the asset
@@ -160,15 +172,27 @@ extern class Loader extends DisplayObjectContainer {
 	 * handler.</li>
 	 * </ul>
 	 */
-	function new() : Void;
-
+	public function new () {
+		
+		super ();
+		
+		contentLoaderInfo = LoaderInfo.create (this);
+		
+	}
+	
+	
 	/**
 	 * Cancels a <code>load()</code> method operation that is currently in
 	 * progress for the Loader instance.
 	 * 
 	 */
-	function close() : Void;
-
+	public function close ():Void {
+		
+		openfl.Lib.notImplemented ("Loader.close");
+		
+	}
+	
+	
 	/**
 	 * Loads a SWF, JPEG, progressive JPEG, unanimated GIF, or PNG file into an
 	 * object that is a child of this Loader object. If you load an animated GIF
@@ -330,8 +354,54 @@ extern class Loader extends DisplayObjectContainer {
 	 * @event unload        Dispatched by the <code>contentLoaderInfo</code>
 	 *                      object when a loaded object is removed.
 	 */
-	function load(request : openfl.net.URLRequest, ?context : openfl.system.LoaderContext) : Void;
-
+	public function load (request:URLRequest, context:LoaderContext = null):Void {
+		
+		var extension = "";
+		var parts = request.url.split (".");
+		
+		if (parts.length > 0) {
+			
+			extension = parts[parts.length - 1].toLowerCase ();
+			
+		}
+		
+		if (extension.indexOf ('?') != -1) {
+			
+			extension = extension.split ('?')[0];
+			
+		}
+		
+		var transparent = true;
+		
+		untyped { contentLoaderInfo.url = request.url; }
+		
+		if (request.contentType == null && request.contentType != "") {
+			
+			untyped {
+				
+				contentLoaderInfo.contentType = switch (extension) {
+					
+					case "swf": "application/x-shockwave-flash";
+					case "jpg", "jpeg": transparent = false; "image/jpeg";
+					case "png": "image/png";
+					case "gif": "image/gif";
+					default: "application/x-www-form-urlencoded"; /*throw "Unrecognized file " + request.url;*/
+					
+				}
+				
+			}
+			
+		} else {
+			
+			untyped { contentLoaderInfo.contentType = request.contentType; }
+			
+		}
+		
+		BitmapData.fromFile (request.url, BitmapData_onLoad, BitmapData_onError);
+		
+	}
+	
+	
 	/**
 	 * Loads from binary data stored in a ByteArray object.
 	 *
@@ -418,8 +488,13 @@ extern class Loader extends DisplayObjectContainer {
 	 * @event unload        Dispatched by the <code>contentLoaderInfo</code>
 	 *                      object when a loaded object is removed.
 	 */
-	function loadBytes(bytes : openfl.utils.ByteArray, ?context : openfl.system.LoaderContext) : Void;
-
+	public function loadBytes (buffer:ByteArray):Void {
+		
+		BitmapData.fromBytes (buffer, BitmapData_onLoad);
+		
+	}
+	
+	
 	/**
 	 * Removes a child of this Loader object that was loaded by using the
 	 * <code>load()</code> method. The <code>property</code> of the associated
@@ -443,8 +518,34 @@ extern class Loader extends DisplayObjectContainer {
 	 * closeAllStreams);</pre>
 	 * 
 	 */
-	function unload() : Void;
-
+	public function unload ():Void {
+		
+		if (numChildren > 0) {
+			
+			while (numChildren > 0) {
+				
+				removeChildAt (0);
+				
+			}
+			
+			content = null;
+			contentLoaderInfo.url = null;
+			contentLoaderInfo.contentType = null;
+			contentLoaderInfo.content = null;
+			contentLoaderInfo.bytesLoaded = 0;
+			contentLoaderInfo.bytesTotal = 0;
+			contentLoaderInfo.width = 0;
+			contentLoaderInfo.height = 0;
+			
+			var event = new Event (Event.UNLOAD);
+			event.currentTarget = this;
+			dispatchEvent (event);
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Attempts to unload child SWF file contents and stops the execution of
 	 * commands from loaded SWF files. This method attempts to unload SWF files
@@ -473,9 +574,50 @@ extern class Loader extends DisplayObjectContainer {
 	 *           file might persist in memory after running the
 	 *           <code>unloadAndStop()</code> command.
 	 */
-	function unloadAndStop(gc : Bool = true) : Void;
+	public function unloadAndStop (gc:Bool = true):Void {
+		
+		openfl.Lib.notImplemented ("Loader.unloadAndStop");
+		
+	}
+	
+	
+	
+	
+	// Event Handlers
+	
+	
+	
+	
+	@:noCompletion private function BitmapData_onLoad (bitmapData:BitmapData):Void {
+		
+		contentLoaderInfo.content = new Bitmap (bitmapData);
+		content = contentLoaderInfo.content;
+		addChild (contentLoaderInfo.content);
+		
+		var event = new Event (Event.COMPLETE);
+		event.target = contentLoaderInfo;
+		event.currentTarget = contentLoaderInfo;
+		contentLoaderInfo.dispatchEvent (event);
+		
+	}
+	
+	
+	@:noCompletion private function BitmapData_onError ():Void {
+		
+		var event = new IOErrorEvent (IOErrorEvent.IO_ERROR);
+		event.target = contentLoaderInfo;
+		event.currentTarget = contentLoaderInfo;
+		contentLoaderInfo.dispatchEvent (event);
+		
+	}
+	
 	
 }
 
 
+#else
+typedef Loader = openfl._v2.display.Loader;
+#end
+#else
+typedef Loader = flash.display.Loader;
 #end

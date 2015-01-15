@@ -1,13 +1,4 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash
 
 
 /**
@@ -16,18 +7,21 @@ package openfl.display;
  * <code>lineGradientStyle()</code> methods of the openfl.display.Graphics
  * class.
  */
-@:fakeEnum(String) extern enum GradientType {
-
-	/**
-	 * Value used to specify a linear gradient fill.
-	 */
-	LINEAR;
-
+enum GradientType {
+	
 	/**
 	 * Value used to specify a radial gradient fill.
 	 */
 	RADIAL;
+	
+	/**
+	 * Value used to specify a linear gradient fill.
+	 */
+	LINEAR;
+	
 }
 
 
+#else
+typedef GradientType = flash.display.GradientType;
 #end

@@ -1,13 +1,4 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash
 
 
 /**
@@ -20,10 +11,14 @@ package openfl.display;
  * <p> When paths intersect or overlap, the winding direction determines the
  * rules for filling the areas created by the intersection or overlap:</p>
  */
-@:fakeEnum(String) extern enum GraphicsPathWinding {
+@:fakeEnum(String) enum GraphicsPathWinding {
+	
 	EVEN_ODD;
 	NON_ZERO;
+	
 }
 
 
+#else
+typedef GraphicsPathWinding = flash.display.GraphicsPathWinding;
 #end

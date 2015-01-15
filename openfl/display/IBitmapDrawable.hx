@@ -1,17 +1,24 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
 
-extern interface IBitmapDrawable {
+import openfl._internal.renderer.RenderSession;
+import openfl.geom.Matrix;
+
+
+interface IBitmapDrawable {
+	
+	var __worldTransform:Matrix;
+	
+	function __renderCanvas (renderSession:RenderSession):Void;
+	function __renderMask (renderSession:RenderSession):Void;
+	function __updateChildren (transformOnly:Bool):Void;
+	
 }
 
 
+#else
+typedef IBitmapDrawable = openfl._v2.display.IBitmapDrawable;
+#end
+#else
+typedef IBitmapDrawable = flash.display.IBitmapDrawable;
 #end

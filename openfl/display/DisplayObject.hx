@@ -1,13 +1,29 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
-package openfl.display;
-#if display
+
+import openfl._internal.renderer.RenderSession;
+import openfl.display.Stage;
+import openfl.errors.TypeError;
+import openfl.events.Event;
+import openfl.events.EventPhase;
+import openfl.events.EventDispatcher;
+import openfl.filters.BitmapFilter;
+import openfl.geom.ColorTransform;
+import openfl.geom.Matrix;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
+import openfl.geom.Transform;
+import openfl.Lib;
+
+#if html5
+import js.html.CanvasElement;
+import js.html.CanvasRenderingContext2D;
+import js.html.CSSStyleDeclaration;
+import js.html.Element;
+#end
+
+@:access(openfl.events.Event)
+@:access(openfl.display.Stage)
 
 
 /**
@@ -139,16 +155,21 @@ package openfl.display;
  *                         display is not rendering. This is the case when the
  *                         content is either minimized or obscured. </p>
  */
-extern class DisplayObject extends openfl.events.EventDispatcher implements IBitmapDrawable {
-
+class DisplayObject extends EventDispatcher implements IBitmapDrawable {
+	
+	
+	@:noCompletion private static var __instanceCount = 0;
+	@:noCompletion private static var __worldRenderDirty = 0;
+	@:noCompletion private static var __worldTransformDirty = 0;
+	
 	/**
 	 * Indicates the alpha transparency value of the object specified. Valid
 	 * values are 0(fully transparent) to 1(fully opaque). The default value is
 	 * 1. Display objects with <code>alpha</code> set to 0 <i>are</i> active,
 	 * even though they are invisible.
 	 */
-	var alpha : Float;
-
+	public var alpha (get, set):Float;
+	
 	/**
 	 * A value from the BlendMode class that specifies which blend mode to use. A
 	 * bitmap can be drawn internally in two ways. If you have a blend mode
@@ -173,8 +194,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * the table show <code>blendMode</code> values applied to a circular display
 	 * object(2) superimposed on another display object(1).</p>
 	 */
-	var blendMode : BlendMode;
-
+	public var blendMode:BlendMode;
+	
 	/**
 	 * If set to <code>true</code>, NME will use the software renderer to cache
 	 * an internal bitmap representation of the display object. For native targets,
@@ -232,8 +253,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * performance increases when the movie clip is translated(when its <i>x</i>
 	 * and <i>y</i> position is changed).</p>
 	 */
-	var cacheAsBitmap : Bool;
-
+	public var cacheAsBitmap:Bool;
+	
 	/**
 	 * An indexed array that contains each filter object currently associated
 	 * with the display object. The openfl.filters package contains several
@@ -313,8 +334,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *                       See the <code>ShaderInput.input</code> property for
 	 *                       more information.
 	 */
-	var filters : Array<Dynamic>;
-
+	public var filters (get, set):Array<BitmapFilter>;
+	
 	/**
 	 * Indicates the height of the display object, in pixels. The height is
 	 * calculated based on the bounds of the content of the display object. When
@@ -325,8 +346,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * content(such as an empty sprite) has a height of 0, even if you try to
 	 * set <code>height</code> to a different value.</p>
 	 */
-	var height : Float;
-
+	public var height (get, set):Float;
+	
 	/**
 	 * Returns a LoaderInfo object containing information about loading the file
 	 * to which this display object belongs. The <code>loaderInfo</code> property
@@ -340,8 +361,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <code>this.root.loaderInfo.addEventListener(Event.COMPLETE,
 	 * func)</code>.</p>
 	 */
-	var loaderInfo(default,null) : LoaderInfo;
-
+	public var loaderInfo:LoaderInfo;
+	
 	/**
 	 * The calling display object is masked by the specified <code>mask</code>
 	 * object. To ensure that masking works when the Stage is scaled, the
@@ -373,8 +394,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * first object, and that object's <code>mask</code> property becomes
 	 * <code>null</code>.</p>
 	 */
-	var mask : DisplayObject;
-
+	public var mask (get, set):DisplayObject;
+	
 	/**
 	 * Indicates the x coordinate of the mouse or user input device position, in
 	 * pixels.
@@ -382,8 +403,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <p><b>Note</b>: For a DisplayObject that has been rotated, the returned x
 	 * coordinate will reflect the non-rotated object.</p>
 	 */
-	var mouseX(default,null) : Float;
-
+	public var mouseX (get, null):Float;
+	
 	/**
 	 * Indicates the y coordinate of the mouse or user input device position, in
 	 * pixels.
@@ -391,8 +412,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <p><b>Note</b>: For a DisplayObject that has been rotated, the returned y
 	 * coordinate will reflect the non-rotated object.</p>
 	 */
-	var mouseY(default,null) : Float;
-
+	public var mouseY (get, null):Float;
+	
 	/**
 	 * Indicates the instance name of the DisplayObject. The object can be
 	 * identified in the child list of its parent display object container by
@@ -403,8 +424,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *                               on an object that was placed on the timeline
 	 *                               in the Flash authoring tool.
 	 */
-	var name : String;
-
+	public var name (get, set):String;
+	
 	/**
 	 * Specifies whether the display object is opaque with a certain background
 	 * color. A transparent bitmap contains alpha channel data and is drawn
@@ -429,8 +450,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *
 	 * <p>The opaque background region does not respond to mouse events.</p>
 	 */
-	var opaqueBackground : Null<UInt>;
-
+	public var opaqueBackground:Null <Int>;
+	
 	/**
 	 * Indicates the DisplayObjectContainer object that contains this display
 	 * object. Use the <code>parent</code> property to specify a relative path to
@@ -445,8 +466,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *                       avoid this situation by having the parent movie call
 	 *                       the <code>Security.allowDomain()</code> method.
 	 */
-	var parent(default,null) : DisplayObjectContainer;
-
+	public var parent (default, null):DisplayObjectContainer;
+	
 	/**
 	 * For a display object in a loaded SWF file, the <code>root</code> property
 	 * is the top-most display object in the portion of the display list's tree
@@ -473,8 +494,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * as a child of a display object for which the <code>root</code> property is
 	 * set.</p>
 	 */
-	var root(default,null) : DisplayObject;
-
+	public var root (get, null):DisplayObject;
+	
 	/**
 	 * Indicates the rotation of the DisplayObject instance, in degrees, from its
 	 * original orientation. Values from 0 to 180 represent clockwise rotation;
@@ -483,8 +504,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * the range. For example, the statement <code>my_video.rotation = 450</code>
 	 * is the same as <code> my_video.rotation = 90</code>.
 	 */
-	var rotation : Float;
-
+	public var rotation (get, set):Float;
+	
 	/**
 	 * The current scaling grid that is in effect. If set to <code>null</code>,
 	 * the entire display object is scaled normally when any scale transformation
@@ -535,8 +556,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * 
 	 * @throws ArgumentError If you pass an invalid argument to the method.
 	 */
-	var scale9Grid : openfl.geom.Rectangle;
-
+	public var scale9Grid:Rectangle;
+	
 	/**
 	 * Indicates the horizontal scale(percentage) of the object as applied from
 	 * the registration point. The default registration point is(0,0). 1.0
@@ -545,8 +566,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <p>Scaling the local coordinate system changes the <code>x</code> and
 	 * <code>y</code> property values, which are defined in whole pixels. </p>
 	 */
-	var scaleX : Float;
-
+	public var scaleX (get, set):Float;
+	
 	/**
 	 * Indicates the vertical scale(percentage) of an object as applied from the
 	 * registration point of the object. The default registration point is(0,0).
@@ -555,8 +576,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <p>Scaling the local coordinate system changes the <code>x</code> and
 	 * <code>y</code> property values, which are defined in whole pixels. </p>
 	 */
-	var scaleY : Float;
-
+	public var scaleY (get, set):Float;
+	
 	/**
 	 * The scroll rectangle bounds of the display object. The display object is
 	 * cropped to the size defined by the rectangle, and it scrolls within the
@@ -579,8 +600,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * 90° and you scroll it left and right, the display object actually scrolls
 	 * up and down.</p>
 	 */
-	var scrollRect : openfl.geom.Rectangle;
-
+	public var scrollRect (get, set):Rectangle;
+	
 	/**
 	 * The Stage of the display object. A Flash runtime application has only one
 	 * Stage object. For example, you can create and load multiple display
@@ -591,8 +612,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <p>If a display object is not added to the display list, its
 	 * <code>stage</code> property is set to <code>null</code>.</p>
 	 */
-	var stage(default,null) : Stage;
-
+	public var stage (default, null):Stage;
+	
 	/**
 	 * An object with properties pertaining to a display object's matrix, color
 	 * transform, and pixel bounds. The specific properties  -  matrix,
@@ -631,15 +652,15 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * <p>Note that AIR for TV devices use hardware acceleration, if it is
 	 * available, for color transforms.</p>
 	 */
-	var transform : openfl.geom.Transform;
-
+	public var transform (get, set):Transform;
+	
 	/**
 	 * Whether or not the display object is visible. Display objects that are not
 	 * visible are disabled. For example, if <code>visible=false</code> for an
 	 * InteractiveObject instance, it cannot be clicked.
 	 */
-	var visible : Bool;
-
+	public var visible (get, set):Bool;
+	
 	/**
 	 * Indicates the width of the display object, in pixels. The width is
 	 * calculated based on the bounds of the content of the display object. When
@@ -650,8 +671,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * content(such as an empty sprite) has a width of 0, even if you try to set
 	 * <code>width</code> to a different value.</p>
 	 */
-	var width : Float;
-
+	public var width (get, set):Float;
+	
 	/**
 	 * Indicates the <i>x</i> coordinate of the DisplayObject instance relative
 	 * to the local coordinates of the parent DisplayObjectContainer. If the
@@ -662,8 +683,8 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * rotated 90° counterclockwise. The object's coordinates refer to the
 	 * registration point position.
 	 */
-	var x : Float;
-
+	public var x (get, set):Float;
+	
 	/**
 	 * Indicates the <i>y</i> coordinate of the DisplayObject instance relative
 	 * to the local coordinates of the parent DisplayObjectContainer. If the
@@ -674,31 +695,97 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * rotated 90° counterclockwise. The object's coordinates refer to the
 	 * registration point position.
 	 */
-	var y : Float;
-
-	/**
-	 * Indicates the z coordinate position along the z-axis of the DisplayObject
-	 * instance relative to the 3D parent container. The z property is used for
-	 * 3D coordinates, not screen or pixel coordinates.
-	 *
-	 * <p>When you set a <code>z</code> property for a display object to
-	 * something other than the default value of <code>0</code>, a corresponding
-	 * Matrix3D object is automatically created. for adjusting a display object's
-	 * position and orientation in three dimensions. When working with the
-	 * z-axis, the existing behavior of x and y properties changes from screen or
-	 * pixel coordinates to positions relative to the 3D parent container.</p>
-	 *
-	 * <p>For example, a child of the <code>_root</code> at position x = 100, y =
-	 * 100, z = 200 is not drawn at pixel location(100,100). The child is drawn
-	 * wherever the 3D projection calculation puts it. The calculation is:</p>
-	 *
-	 * <p><code>(x~~cameraFocalLength/cameraRelativeZPosition,
-	 * y~~cameraFocalLength/cameraRelativeZPosition)</code></p>
-	 */
-	//#if !display
-	//var z : Float;
-	//#end
-
+	public var y (get, set):Float;
+	
+	@:dox(hide) @:noCompletion public var __worldTransform:Matrix;
+	
+	@:noCompletion private var __alpha:Float;
+	@:noCompletion private var __filters:Array<BitmapFilter>;
+	@:noCompletion private var __graphics:Graphics;
+	@:noCompletion private var __interactive:Bool;
+	@:noCompletion private var __isMask:Bool;
+	@:noCompletion private var __mask:DisplayObject;
+	@:noCompletion private var __name:String;
+	@:noCompletion private var __renderable:Bool;
+	@:noCompletion private var __renderDirty:Bool;
+	@:noCompletion private var __rotation:Float;
+	@:noCompletion private var __rotationCache:Float;
+	@:noCompletion private var __rotationCosine:Float;
+	@:noCompletion private var __rotationSine:Float;
+	@:noCompletion private var __scaleX:Float;
+	@:noCompletion private var __scaleY:Float;
+	@:noCompletion private var __scrollRect:Rectangle;
+	@:noCompletion private var __transform:Transform;
+	@:noCompletion private var __transformDirty:Bool;
+	@:noCompletion private var __visible:Bool;
+	@:noCompletion private var __worldAlpha:Float;
+	@:noCompletion private var __worldAlphaChanged:Bool;
+	@:noCompletion private var __worldClip:Rectangle;
+	@:noCompletion private var __worldClipChanged:Bool;
+	@:noCompletion private var __worldTransformCache:Matrix;
+	@:noCompletion private var __worldTransformChanged:Bool;
+	@:noCompletion private var __worldVisible:Bool;
+	@:noCompletion private var __worldVisibleChanged:Bool;
+	@:noCompletion private var __worldZ:Int;
+	@:noCompletion private var __x:Float;
+	@:noCompletion private var __y:Float;
+	
+	#if html5
+	@:noCompletion private var __canvas:CanvasElement;
+	@:noCompletion private var __context:CanvasRenderingContext2D;
+	@:noCompletion private var __style:CSSStyleDeclaration;
+	#end
+	
+	
+	private function new () {
+		
+		super ();
+		
+		alpha = 1;
+		rotation = 0;
+		scaleX = 1;
+		scaleY = 1;
+		visible = true;
+		x = 0;
+		y = 0;
+		
+		__worldAlpha = 1;
+		__worldTransform = new Matrix ();
+		__rotationCache = 0;
+		__rotationSine = 0;
+		__rotationCosine = 1;
+		
+		#if dom
+		__worldVisible = true;
+		#end
+		
+		name = "instance" + (++__instanceCount);
+		
+	}
+	
+	
+	public override function dispatchEvent (event:Event):Bool {
+		
+		var result = super.dispatchEvent (event);
+		
+		if (event.__isCancelled) {
+			
+			return true;
+			
+		}
+		
+		if (event.bubbles && parent != null && parent != this) {
+			
+			event.eventPhase = EventPhase.BUBBLING_PHASE;
+			parent.dispatchEvent (event);
+			
+		}
+		
+		return result;
+		
+	}
+		
+		
 	/**
 	 * Returns a rectangle that defines the area of the display object relative
 	 * to the coordinate system of the <code>targetCoordinateSpace</code> object.
@@ -723,8 +810,25 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *         to the <code>targetCoordinateSpace</code> object's coordinate
 	 *         system.
 	 */
-	function getBounds(targetCoordinateSpace : DisplayObject) : openfl.geom.Rectangle;
-
+	public function getBounds (targetCoordinateSpace:DisplayObject):Rectangle {
+		
+		var matrix = __getTransform ();
+		
+		if (targetCoordinateSpace != null) {
+			
+			matrix = matrix.clone ();
+			matrix.concat (targetCoordinateSpace.__worldTransform.clone ().invert ());
+			
+		}
+		
+		var bounds = new Rectangle ();
+		__getBounds (bounds, matrix);
+		
+		return bounds;
+		
+	}
+	
+	
 	/**
 	 * Returns a rectangle that defines the boundary of the display object, based
 	 * on the coordinate system defined by the <code>targetCoordinateSpace</code>
@@ -743,8 +847,14 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *         to the <code>targetCoordinateSpace</code> object's coordinate
 	 *         system.
 	 */
-	function getRect(targetCoordinateSpace : DisplayObject) : openfl.geom.Rectangle;
-
+	public function getRect (targetCoordinateSpace:DisplayObject):Rectangle {
+		
+		// should not account for stroke widths, but is that possible?
+		return getBounds (targetCoordinateSpace);
+		
+	}
+	
+	
 	/**
 	 * Converts the <code>point</code> object from the Stage(global) coordinates
 	 * to the display object's(local) coordinates.
@@ -762,8 +872,13 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *              properties.
 	 * @return A Point object with coordinates relative to the display object.
 	 */
-	function globalToLocal(point : openfl.geom.Point) : openfl.geom.Point;
-
+	public function globalToLocal (pos:Point):Point {
+		
+		return __getTransform ().clone ().invert ().transformPoint (pos);
+		
+	}
+	
+	
 	/**
 	 * Evaluates the bounding box of the display object to see if it overlaps or
 	 * intersects with the bounding box of the <code>obj</code> display object.
@@ -772,8 +887,22 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * @return <code>true</code> if the bounding boxes of the display objects
 	 *         intersect; <code>false</code> if not.
 	 */
-	function hitTestObject(obj : DisplayObject) : Bool;
-
+	public function hitTestObject (obj:DisplayObject):Bool {
+		
+		if (obj != null && obj.parent != null && parent != null) {
+			
+			var currentBounds = getBounds (this);
+			var targetBounds = obj.getBounds (this);
+			
+			return currentBounds.intersects (targetBounds);
+			
+		}
+		
+		return false;
+		
+	}
+	
+	
 	/**
 	 * Evaluates the display object to see if it overlaps or intersects with the
 	 * point specified by the <code>x</code> and <code>y</code> parameters. The
@@ -790,8 +919,20 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 * @return <code>true</code> if the display object overlaps or intersects
 	 *         with the specified point; <code>false</code> otherwise.
 	 */
-	function hitTestPoint(x : Float, y : Float, shapeFlag : Bool = false) : Bool;
-
+	public function hitTestPoint (x:Float, y:Float, shapeFlag:Bool = false):Bool {
+		
+		if (parent != null) {
+			
+			var currentBounds = getBounds (this);
+			return currentBounds.containsPoint (new Point (x, y));
+			
+		}
+		
+		return false;
+		
+	}
+	
+	
 	/**
 	 * Converts the <code>point</code> object from the display object's(local)
 	 * coordinates to the Stage(global) coordinates.
@@ -815,8 +956,677 @@ extern class DisplayObject extends openfl.events.EventDispatcher implements IBit
 	 *              properties.
 	 * @return A Point object with coordinates relative to the Stage.
 	 */
-	function localToGlobal(point : openfl.geom.Point) : openfl.geom.Point;
+	public function localToGlobal (point:Point):Point {
+		
+		return __getTransform ().transformPoint (point);
+		
+	}
+	
+	
+	@:noCompletion private function __broadcast (event:Event, notifyChilden:Bool):Bool {
+		
+		if (__eventMap != null && hasEventListener (event.type)) {
+			
+			var result = super.dispatchEvent (event);
+			
+			if (event.__isCancelled) {
+				
+				return true;
+				
+			}
+			
+			return result;
+			
+		}
+		
+		return false;
+		
+	}
+	
+	
+	@:noCompletion private function __getBounds (rect:Rectangle, matrix:Matrix):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion private function __getInteractive (stack:Array<DisplayObject>):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion private inline function __getLocalBounds (rect:Rectangle):Void {
+		
+		__getTransform ();
+		__getBounds (rect, new Matrix ());
+		
+	}
+	
+	
+	@:noCompletion private function __getTransform ():Matrix {
+		
+		if (__worldTransformDirty > 0) {
+			
+			var list = [];
+			var current = this;
+			var transformDirty = __transformDirty;
+			
+			while (current.parent != null) {
+				
+				list.push (current);
+				current = current.parent;
+				
+				if (current.__transformDirty) {
+					
+					transformDirty = true;
+					
+				}
+				
+			}
+			
+			if (transformDirty) {
+				
+				var i = list.length;
+				while (--i >= 0) {
+					
+					list[i].__update (true, false);
+					
+				}
+				
+			}
+			
+		}
+		
+		return __worldTransform;
+		
+	}
+	
+	
+	@:noCompletion private function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
+		
+		return false;
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __renderCanvas (renderSession:RenderSession):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __renderDOM (renderSession:RenderSession):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __renderGL (renderSession:RenderSession):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __renderMask (renderSession:RenderSession):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion private function __setStageReference (stage:Stage):Void {
+		
+		if (this.stage != stage) {
+			
+			if (this.stage != null) {
+				
+				dispatchEvent (new Event (Event.REMOVED_FROM_STAGE, false, false));
+				
+			}
+			
+			this.stage = stage;
+			
+			if (stage != null) {
+				
+				dispatchEvent (new Event (Event.ADDED_TO_STAGE, false, false));
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion private inline function __setRenderDirty ():Void {
+		
+		if (!__renderDirty) {
+			
+			__renderDirty = true;
+			__worldRenderDirty++;
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion private inline function __setTransformDirty ():Void {
+		
+		if (!__transformDirty) {
+			
+			__transformDirty = true;
+			__worldTransformDirty++;
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __update (transformOnly:Bool, updateChildren:Bool):Void {
+		
+		__renderable = (visible && scaleX != 0 && scaleY != 0 && !__isMask);
+		//if (!__renderable && !__isMask) return;
+		
+		if (rotation != __rotationCache) {
+			
+			__rotationCache = rotation;
+			var radians = rotation * (Math.PI / 180);
+			__rotationSine = Math.sin (radians);
+			__rotationCosine = Math.cos (radians);
+			
+		}
+		
+		if (parent != null) {
+			
+			var parentTransform = parent.__worldTransform;
+			
+			var a00 = __rotationCosine * scaleX,
+			a01 = __rotationSine * scaleX,
+			a10 = -__rotationSine * scaleY,
+			a11 = __rotationCosine * scaleY,
+			b00 = parentTransform.a, b01 = parentTransform.b,
+			b10 = parentTransform.c, b11 = parentTransform.d;
+			
+			__worldTransform.a = a00 * b00 + a01 * b10;
+			__worldTransform.b = a00 * b01 + a01 * b11;
+			__worldTransform.c = a10 * b00 + a11 * b10;
+			__worldTransform.d = a10 * b01 + a11 * b11;
+			
+			if (scrollRect == null) {
+				
+				__worldTransform.tx = x * b00 + y * b10 + parentTransform.tx;
+				__worldTransform.ty = x * b01 + y * b11 + parentTransform.ty;
+				
+			} else {
+				
+				__worldTransform.tx = (x - scrollRect.x) * b00 + (y - scrollRect.y) * b10 + parentTransform.tx;
+				__worldTransform.ty = (x - scrollRect.x) * b01 + (y - scrollRect.y) * b11 + parentTransform.ty;
+				
+			}
+			
+		} else {
+			
+			__worldTransform.a = __rotationCosine * scaleX;
+			__worldTransform.c = -__rotationSine * scaleY;
+			__worldTransform.b = __rotationSine * scaleX;
+			__worldTransform.d = __rotationCosine * scaleY;
+			
+			if (scrollRect == null) {
+				
+				__worldTransform.tx = x;
+				__worldTransform.ty = y;
+				
+			} else {
+				
+				__worldTransform.tx = y - scrollRect.x;
+				__worldTransform.ty = y - scrollRect.y;
+				
+			}
+			
+		}
+		
+		if (updateChildren && __transformDirty) {
+			
+			__transformDirty = false;
+			__worldTransformDirty--;
+			
+		}
+		
+		if (!transformOnly) {
+			
+			#if dom
+			__worldTransformChanged = !__worldTransform.equals (__worldTransformCache);
+			__worldTransformCache = __worldTransform.clone ();
+			
+			var worldClip:Rectangle = null;
+			#end
+			
+			if (parent != null) {
+				
+				#if !dom
+				
+				__worldAlpha = alpha * parent.__worldAlpha;
+				
+				#else
+				
+				var worldVisible = (parent.__worldVisible && visible);
+				__worldVisibleChanged = (__worldVisible != worldVisible);
+				__worldVisible = worldVisible;
+				
+				var worldAlpha = alpha * parent.__worldAlpha;
+				__worldAlphaChanged = (__worldAlpha != worldAlpha);
+				__worldAlpha = worldAlpha;
+				
+				if (parent.__worldClip != null) {
+					
+					worldClip = parent.__worldClip.clone ();
+					
+				}
+				
+				if (scrollRect != null) {
+					
+					var bounds = scrollRect.clone ();
+					bounds = bounds.transform (__worldTransform);
+					
+					if (worldClip != null) {
+						
+						bounds.__contract (worldClip.x - scrollRect.x, worldClip.y - scrollRect.y, worldClip.width, worldClip.height);
+						
+					}
+					
+					worldClip = bounds;
+					
+				}
+				
+				#end
+				
+			} else {
+				
+				__worldAlpha = alpha;
+				
+				#if dom
+				
+				__worldVisibleChanged = (__worldVisible != visible);
+				__worldVisible = visible;
+				
+				__worldAlphaChanged = (__worldAlpha != alpha);
+				
+				if (scrollRect != null) {
+					
+					worldClip = scrollRect.clone ().transform (__worldTransform);
+					
+				}
+				
+				#end
+				
+			}
+			
+			#if dom
+			__worldClipChanged = ((worldClip == null && __worldClip != null) || (worldClip != null && !worldClip.equals (__worldClip)));
+			__worldClip = worldClip;
+			#end
+			
+			if (updateChildren && __renderDirty) {
+				
+				__renderDirty = false;
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __updateChildren (transformOnly:Bool):Void {
+		
+		__renderable = (visible && scaleX != 0 && scaleY != 0 && !__isMask);
+		if (!__renderable && !__isMask) return;
+		__worldAlpha = alpha;
+		
+		if (__transformDirty) {
+			
+			__transformDirty = false;
+			__worldTransformDirty--;
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	@:noCompletion private function get_alpha ():Float {
+		
+		return __alpha;
+		
+	}
+	
+	
+	@:noCompletion private function set_alpha (value:Float):Float {
+		
+		if (value != __alpha) __setRenderDirty ();
+		return __alpha = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_filters ():Array<BitmapFilter> {
+		
+		if (__filters == null) {
+			
+			return new Array ();
+			
+		} else {
+			
+			return __filters.copy ();
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion private function set_filters (value:Array<BitmapFilter>):Array<BitmapFilter> {
+		
+		// set
+		
+		return value;
+		
+	}
+	
+	
+	@:noCompletion private function get_height ():Float {
+		
+		var bounds = new Rectangle ();
+		__getLocalBounds (bounds);
+		
+		return bounds.height * scaleY;
+		
+	}
+	
+	
+	@:noCompletion private function set_height (value:Float):Float {
+		
+		var bounds = new Rectangle ();
+		__getLocalBounds (bounds);
+		
+		if (value != bounds.height) {
+			
+			scaleY = value / bounds.height;
+			
+		} else {
+			
+			scaleY = 1;
+			
+		}
+		
+		return value;
+		
+	}
+	
+	
+	@:noCompletion private function get_mask ():DisplayObject {
+		
+		return __mask;
+		
+	}
+	
+	
+	@:noCompletion private function set_mask (value:DisplayObject):DisplayObject {
+		
+		if (value != __mask) __setRenderDirty ();
+		if (__mask != null) __mask.__isMask = false;
+		if (value != null) value.__isMask = true;
+		return __mask = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_mouseX ():Float {
+		
+		if (stage != null) {
+			
+			return globalToLocal (new Point (stage.__mouseX, 0)).x;
+			
+		}
+		
+		return 0;
+		
+	}
+	
+	
+	@:noCompletion private function get_mouseY ():Float {
+		
+		if (stage != null) {
+			
+			return globalToLocal (new Point (0, stage.__mouseY)).y;
+			
+		}
+		
+		return 0;
+		
+	}
+	
+	
+	@:noCompletion private function get_name ():String {
+		
+		return __name;
+		
+	}
+	
+	
+	@:noCompletion private function set_name (value:String):String {
+		
+		return __name = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_root ():DisplayObject {
+		
+		if (stage != null) {
+			
+			return Lib.current;
+			
+		}
+		
+		return null;
+		
+	}
+	
+	
+	@:noCompletion private function get_rotation ():Float {
+		
+		return __rotation;
+		
+	}
+	
+	
+	@:noCompletion private function set_rotation (value:Float):Float {
+		
+		if (value != __rotation) __setTransformDirty ();
+		return __rotation = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_scaleX ():Float {
+		
+		return __scaleX;
+		
+	}
+	
+	
+	@:noCompletion private function set_scaleX (value:Float):Float {
+		
+		if (value != __scaleX) __setTransformDirty ();
+		return __scaleX = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_scaleY ():Float {
+		
+		return __scaleY;
+		
+	}
+	
+	
+	@:noCompletion private function set_scaleY (value:Float):Float {
+		
+		if (__scaleY != value) __setTransformDirty ();
+		return __scaleY = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_scrollRect ():Rectangle {
+		
+		return __scrollRect;
+		
+	}
+	
+	
+	@:noCompletion private function set_scrollRect (value:Rectangle):Rectangle {
+		
+		if (value != __scrollRect) {
+			
+			__setTransformDirty ();
+			#if dom __setRenderDirty (); #end
+			
+		}
+		
+		return __scrollRect = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_transform ():Transform {
+		
+		if (__transform == null) {
+			
+			__transform = new Transform (this);
+			
+		}
+		
+		return __transform;
+		
+	}
+	
+	
+	@:noCompletion private function set_transform (value:Transform):Transform {
+		
+		if (value == null) {
+			
+			throw new TypeError ("Parameter transform must be non-null.");
+			
+		}
+		
+		if (__transform == null) {
+			
+			__transform = new Transform (this);
+			
+		}
+		
+		__setTransformDirty ();
+		__transform.matrix = value.matrix.clone ();
+		__transform.colorTransform = new ColorTransform (value.colorTransform.redMultiplier, value.colorTransform.greenMultiplier, value.colorTransform.blueMultiplier, value.colorTransform.alphaMultiplier, value.colorTransform.redOffset, value.colorTransform.greenOffset, value.colorTransform.blueOffset, value.colorTransform.alphaOffset);
+		
+		return __transform;
+		
+	}
+	
+	
+	@:noCompletion private function get_visible ():Bool {
+		
+		return __visible;
+		
+	}
+	
+	
+	@:noCompletion private function set_visible (value:Bool):Bool {
+		
+		if (value != __visible) __setRenderDirty ();
+		return __visible = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_width ():Float {
+		
+		var bounds = new Rectangle ();
+		__getLocalBounds (bounds);
+		
+		return bounds.width * scaleX;
+		
+	}
+	
+	
+	@:noCompletion private function set_width (value:Float):Float {
+		
+		var bounds = new Rectangle ();
+		__getLocalBounds (bounds);
+		
+		if (value != bounds.width) {
+			
+			scaleX = value / bounds.width;
+			
+		} else {
+			
+			scaleX = 1;
+			
+		}
+		
+		return value;
+		
+	}
+	
+	
+	@:noCompletion private function get_x ():Float {
+		
+		return __x;
+		
+	}
+	
+	
+	@:noCompletion private function set_x (value:Float):Float {
+		
+		if (value != __x) __setTransformDirty ();
+		return __x = value;
+		
+	}
+	
+	
+	@:noCompletion private function get_y ():Float {
+		
+		return __y;
+		
+	}
+	
+	
+	@:noCompletion private function set_y (value:Float):Float {
+		
+		if (value != __y) __setTransformDirty ();
+		return __y = value;
+		
+	}
+	
+	
 }
 
 
+#else
+typedef DisplayObject = openfl._v2.display.DisplayObject;
+#end
+#else
+typedef DisplayObject = flash.display.DisplayObject;
 #end

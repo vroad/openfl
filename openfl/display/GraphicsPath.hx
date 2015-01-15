@@ -1,13 +1,8 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
-package openfl.display;
-#if display
+
+import openfl.display.IGraphicsData;
+import openfl.Vector;
 
 
 /**
@@ -26,33 +21,51 @@ package openfl.display;
  * <code>GraphicsPath.commands</code> and <code>GraphicsPath.data</code>
  * vector arrays.</p>
  */
-@:final extern class GraphicsPath implements IGraphicsData/*  implements IGraphicsPath*/ {
-
+class GraphicsPath implements IGraphicsData implements IGraphicsPath {
+	
+	
 	/**
 	 * The Vector of drawing commands as integers representing the path. Each
 	 * command can be one of the values defined by the GraphicsPathCommand class.
 	 */
-	var commands : openfl.Vector<Int>;
-
+	public var commands:Vector<Int>;
+	
 	/**
 	 * The Vector of Numbers containing the parameters used with the drawing
 	 * commands.
 	 */
-	var data : openfl.Vector<Float>;
-
+	public var data:Vector<Float>;
+	
 	/**
 	 * Specifies the winding rule using a value defined in the
 	 * GraphicsPathWinding class.
 	 */
-	var winding : GraphicsPathWinding;
-
+	public var winding:GraphicsPathWinding; /* note: currently ignored */
+	
+	@:noCompletion @:dox(hide) public var __graphicsDataType (default, null):GraphicsDataType;
+	
+	
 	/**
 	 * Creates a new GraphicsPath object.
 	 * 
 	 * @param winding Specifies the winding rule using a value defined in the
 	 *                GraphicsPathWinding class.
 	 */
-	function new(?commands : openfl.Vector<Int>, ?data : openfl.Vector<Float>, ?winding : GraphicsPathWinding) : Void;
+	public function new (commands:Vector<Int> = null, data:Vector<Float> = null, winding:GraphicsPathWinding = null) {
+		
+		if (winding == null) {
+			
+			winding = GraphicsPathWinding.EVEN_ODD;
+			
+		}
+		
+		this.commands = commands;
+		this.data = data;
+		this.winding = winding;
+		this.__graphicsDataType = PATH;
+		
+	}
+	
 	
 	/**
 	 * Adds a new "curveTo" command to the <code>commands</code> vector and new
@@ -71,8 +84,21 @@ package openfl.display;
 	 *                 anchor point relative to the registration point of the
 	 *                 parent display object.
 	 */
-	function curveTo(controlX : Float, controlY : Float, anchorX : Float, anchorY : Float) : Void;
-
+	public function curveTo (controlX:Float, controlY:Float, anchorX:Float, anchorY:Float):Void {
+		
+		if (this.commands != null && this.data != null) {
+			
+			this.commands.push (GraphicsPathCommand.CURVE_TO);
+			this.data.push (anchorX);
+			this.data.push (anchorY);
+			this.data.push (controlX);
+			this.data.push (controlY);
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Adds a new "lineTo" command to the <code>commands</code> vector and new
 	 * coordinates to the <code>data</code> vector.
@@ -80,8 +106,19 @@ package openfl.display;
 	 * @param x The x coordinate of the destination point for the line.
 	 * @param y The y coordinate of the destination point for the line.
 	 */
-	function lineTo(x : Float, y : Float) : Void;
-
+	public function lineTo (x:Float, y:Float):Void {
+		
+		if (this.commands != null && this.data != null) {
+			
+			this.commands.push (GraphicsPathCommand.LINE_TO);
+			this.data.push (x);
+			this.data.push (y);
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Adds a new "moveTo" command to the <code>commands</code> vector and new
 	 * coordinates to the <code>data</code> vector.
@@ -89,8 +126,19 @@ package openfl.display;
 	 * @param x The x coordinate of the destination point.
 	 * @param y The y coordinate of the destination point.
 	 */
-	function moveTo(x : Float, y : Float) : Void;
-
+	public function moveTo (x:Float, y:Float):Void {
+		
+		if (this.commands != null && this.data != null) {
+			
+			this.commands.push (GraphicsPathCommand.MOVE_TO);
+			this.data.push (x);
+			this.data.push (y);
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Adds a new "wideLineTo" command to the <code>commands</code> vector and
 	 * new coordinates to the <code>data</code> vector.
@@ -98,8 +146,19 @@ package openfl.display;
 	 * @param x The x-coordinate of the destination point for the line.
 	 * @param y The y-coordinate of the destination point for the line.
 	 */
-	function wideLineTo(x : Float, y : Float) : Void;
-
+	public function wideLineTo (x:Float, y:Float):Void {
+		
+		if (this.commands != null && this.data != null) {
+			
+			this.commands.push (GraphicsPathCommand.LINE_TO);
+			this.data.push (x);
+			this.data.push (y);
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Adds a new "wideMoveTo" command to the <code>commands</code> vector and
 	 * new coordinates to the <code>data</code> vector.
@@ -107,8 +166,25 @@ package openfl.display;
 	 * @param x The x-coordinate of the destination point.
 	 * @param y The y-coordinate of the destination point.
 	 */
-	function wideMoveTo(x : Float, y : Float) : Void;
+	public function wideMoveTo (x:Float, y:Float):Void {
+		
+		if (this.commands != null && this.data != null) {
+			
+			this.commands.push (GraphicsPathCommand.MOVE_TO);
+			this.data.push (x);
+			this.data.push (y);
+			
+		}
+		
+	}
+	
+	
 }
 
 
+#else
+typedef GraphicsPath = openfl._v2.display.GraphicsPath;
+#end
+#else
+typedef GraphicsPath = flash.display.GraphicsPath;
 #end

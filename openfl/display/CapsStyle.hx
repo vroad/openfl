@@ -1,13 +1,4 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
 
 /**
@@ -17,8 +8,14 @@ package openfl.display;
  * <code>openfl.display.Graphics.lineStyle()</code> method. You can specify the
  * following three types of caps:
  */
-@:fakeEnum(String) extern enum CapsStyle {
-
+enum CapsStyle {
+	
+	/**
+	 * Used to specify no caps in the <code>caps</code> parameter of the
+	 * <code>openfl.display.Graphics.lineStyle()</code> method.
+	 */
+	NONE;
+	
 	/**
 	 * Used to specify round caps in the <code>caps</code> parameter of the
 	 * <code>openfl.display.Graphics.lineStyle()</code> method.
@@ -26,17 +23,17 @@ package openfl.display;
 	ROUND;
 	
 	/**
-	 * Used to specify no caps in the <code>caps</code> parameter of the
-	 * <code>openfl.display.Graphics.lineStyle()</code> method.
-	 */
-	NONE;
-
-	/**
 	 * Used to specify square caps in the <code>caps</code> parameter of the
 	 * <code>openfl.display.Graphics.lineStyle()</code> method.
 	 */
 	SQUARE;
+	
 }
 
 
+#else
+typedef CapsStyle = openfl._v2.display.CapsStyle;
+#end
+#else
+typedef CapsStyle = flash.display.CapsStyle;
 #end

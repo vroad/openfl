@@ -1,12 +1,8 @@
 package openfl.gl;
-#if display
 
 
-extern class GLFramebuffer extends GLObject {
-	
-	function new(inVersion:Int, inId:Dynamic):Void;
-	
-}
-
-
+#if (!openfl_next && !flash && !html5 && !display)
+typedef GLFramebuffer = openfl._v2.gl.GLFramebuffer;
+#else
+typedef GLFramebuffer = lime.graphics.opengl.GLFramebuffer;
 #end

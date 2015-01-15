@@ -1,8 +1,8 @@
 package openfl.gl;
-#if display
 
 
-typedef GLUniformLocation = Dynamic;
-
-
+#if (!openfl_next && !flash && !html5 && !display)
+typedef GLUniformLocation = openfl._v2.gl.GLUniformLocation;
+#else
+typedef GLUniformLocation = lime.graphics.opengl.GLUniformLocation;
 #end

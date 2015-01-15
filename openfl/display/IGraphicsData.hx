@@ -1,17 +1,28 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
-
-package openfl.display;
-#if display
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
 
-extern interface IGraphicsData {
+interface IGraphicsData {
+	
+	var __graphicsDataType (default, null):GraphicsDataType;
+	
 }
 
 
+@:fakeEnum(Int) enum GraphicsDataType {
+	
+	STROKE;
+	SOLID;
+	GRADIENT;
+	PATH;
+	BITMAP;
+	END;
+	
+}
+
+
+#else
+typedef IGraphicsData = openfl._v2.display.IGraphicsData;
+#end
+#else
+typedef IGraphicsData = flash.display.IGraphicsData;
 #end

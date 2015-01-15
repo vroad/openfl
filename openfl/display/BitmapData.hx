@@ -1,13 +1,42 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || js)
 
-package openfl.display;
-#if display
+
+import lime.graphics.opengl.GLBuffer;
+import lime.graphics.opengl.GLTexture;
+import lime.graphics.GLRenderContext;
+import lime.graphics.Image;
+import lime.graphics.ImageBuffer;
+import lime.graphics.utils.ImageCanvasUtil;
+import lime.math.ColorMatrix;
+import lime.utils.Float32Array;
+import lime.utils.UInt8Array;
+import openfl._internal.renderer.RenderSession;
+import openfl.errors.IOError;
+import openfl.filters.BitmapFilter;
+import openfl.geom.ColorTransform;
+import openfl.geom.Matrix;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
+import openfl.utils.ByteArray;
+import openfl.Vector;
+
+#if js
+import js.html.CanvasElement;
+import js.html.CanvasRenderingContext2D;
+import js.html.ImageData;
+import js.html.ImageElement;
+import js.html.Uint8ClampedArray;
+import js.Browser;
+#end
+
+@:access(lime.graphics.Image)
+@:access(lime.graphics.ImageBuffer)
+@:access(lime.math.Rectangle)
+@:access(openfl.geom.ColorTransform)
+@:access(openfl.geom.Point)
+@:access(openfl.geom.Rectangle)
+
+@:autoBuild(openfl.Assets.embedBitmap())
 
 
 /**
@@ -67,19 +96,20 @@ package openfl.display;
  * it can only be 2,048 pixels high.) In Flash Player 9 and earlier, the limitation 
  * is 2,880 pixels in height and 2,880 in width.</p>
  */
-extern class BitmapData implements IBitmapDrawable {
+class BitmapData implements IBitmapDrawable {
+	
 	
 	/**
 	 * The height of the bitmap image in pixels.
 	 */
-	var height(default, null):Int;
+	public var height (default, null):Int;
 	
 	/**
 	 * The rectangle that defines the size and location of the bitmap image. The
 	 * top and left of the rectangle are 0; the width and height are equal to the
 	 * width and height in pixels of the BitmapData object.
 	 */
-	var rect(default, null):openfl.geom.Rectangle;
+	public var rect (default, null):Rectangle;
 	
 	/**
 	 * Defines whether the bitmap image supports per-pixel transparency. You can
@@ -89,12 +119,22 @@ extern class BitmapData implements IBitmapDrawable {
 	 * whether it supports per-pixel transparency by determining if the value of
 	 * the <code>transparent</code> property is <code>true</code>.
 	 */
-	var transparent(default, null):Bool;
+	public var transparent (default, null):Bool;
 	
 	/**
 	 * The width of the bitmap image in pixels.
 	 */
-	var width(default, null):Int;
+	public var width (default, null):Int;
+	
+	@:noCompletion @:dox(hide) public var __worldTransform:Matrix;
+	
+	@:noCompletion private var __buffer:GLBuffer;
+	@:noCompletion private var __image:Image;
+	@:noCompletion private var __isValid:Bool;
+	@:noCompletion private var __texture:GLTexture;
+	@:noCompletion private var __textureImage:Image;
+	@:noCompletion private var __uvData:TextureUvs;
+	
 	
 	/**
 	 * Creates a BitmapData object with a specified width and height. If you specify a value for 
@@ -111,7 +151,39 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param	transparent		Specifies whether the bitmap image supports per-pixel transparency. The default value is <code>true</code>(transparent). To create a fully transparent bitmap, set the value of the <code>transparent</code> parameter to <code>true</code> and the value of the <code>fillColor</code> parameter to 0x00000000(or to 0). Setting the <code>transparent</code> property to <code>false</code> can result in minor improvements in rendering performance.
 	 * @param	fillColor		A 32-bit ARGB color value that you use to fill the bitmap image area. The default value is 0xFFFFFFFF(solid white).
 	 */
-	function new(width:Int, height:Int, transparent:Bool = true, fillColor:UInt = 0xFFFFFFFF):Void;
+	public function new (width:Int, height:Int, transparent:Bool = true, fillColor:UInt = 0xFFFFFFFF) {
+		
+		this.transparent = transparent;
+		
+		if (width > 0 && height > 0) {
+			
+			this.width = width;
+			this.height = height;
+			rect = new Rectangle (0, 0, width, height);
+			
+			if (transparent) {
+
+				if ((fillColor & 0xFF000000) == 0) {				
+					fillColor = 0;
+				}
+                
+			}
+			else {
+				
+				fillColor = (0xFF << 24) | (fillColor & 0xFFFFFF);
+				
+			}
+			
+			__image = new Image (null, 0, 0, width, height, fillColor);
+			__image.transparent = transparent;
+			__isValid = true;
+			
+		}
+		
+		__createUVs ();
+		
+	}
+	
 	
 	/**
 	 * Takes a source image and a filter object and generates the filtered image. 
@@ -138,13 +210,44 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param	destPoint		The point within the destination image(the current BitmapData instance) that corresponds to the upper-left corner of the source rectangle. 
 	 * @param	filter		The filter object that you use to perform the filtering operation. 
 	 */
-	function applyFilter(sourceBitmapData:BitmapData, sourceRect:openfl.geom.Rectangle, destPoint:openfl.geom.Point, filter:openfl.filters.BitmapFilter):Void;
+	public function applyFilter (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, filter:BitmapFilter):Void {
+		
+		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid) return;
+		
+		#if html5
+		ImageCanvasUtil.convertToCanvas (__image);
+		ImageCanvasUtil.createImageData (__image);
+		ImageCanvasUtil.convertToCanvas (sourceBitmapData.__image);
+		ImageCanvasUtil.createImageData (sourceBitmapData.__image);
+		#end
+		
+		#if html5
+		filter.__applyFilter (__image.buffer.__srcImageData, sourceBitmapData.__image.buffer.__srcImageData, sourceRect, destPoint);
+		#end
+		
+		__image.dirty = true;
+		
+	}
+	
 	
 	/**
 	 * Returns a new BitmapData object that is a clone of the original instance with an exact copy of the contained bitmap. 
 	 * @return		A new BitmapData object that is identical to the original.
 	 */
-	function clone():BitmapData;
+	public function clone ():BitmapData {
+		
+		if (!__isValid) {
+			
+			return new BitmapData (width, height, transparent);
+			
+		} else {
+			
+			return BitmapData.fromImage (__image.clone (), transparent);
+			
+		}
+		
+	}
+	
 	
 	/**
 	 * Adjusts the color values in a specified area of a bitmap image by using a <code>ColorTransform</code>
@@ -153,9 +256,13 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param	rect		A Rectangle object that defines the area of the image in which the ColorTransform object is applied.
 	 * @param	colorTransform		A ColorTransform object that describes the color transformation values to apply.
 	 */
-	function colorTransform(rect:openfl.geom.Rectangle, colorTransform:openfl.geom.ColorTransform):Void;
+	public function colorTransform (rect:Rectangle, colorTransform:ColorTransform):Void {
+		
+		__image.colorTransform (rect.__toLimeRectangle (), colorTransform.__toLimeColorMatrix ());
+		
+	}
 	
-
+	
 	/**
 	 * Transfers data from one channel of another BitmapData object or the
 	 * current BitmapData object into a channel of the current BitmapData object.
@@ -199,8 +306,35 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                         <code>BitmapDataChannel.ALPHA</code>).
 	 * @throws TypeError The sourceBitmapData, sourceRect or destPoint are null.
 	 */
-	function copyChannel(sourceBitmapData : BitmapData, sourceRect : openfl.geom.Rectangle, destPoint : openfl.geom.Point, sourceChannel : UInt, destChannel : UInt) : Void;
-
+	public function copyChannel (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, sourceChannel:Int, destChannel:Int):Void {
+		
+		if (!__isValid) return;
+		
+		var sourceChannel = switch (sourceChannel) {
+			
+			case 1: ImageChannel.RED;
+			case 2: ImageChannel.GREEN;
+			case 4: ImageChannel.BLUE;
+			case 8: ImageChannel.ALPHA;
+			default: return;
+			
+		}
+		
+		var destChannel = switch (destChannel) {
+			
+			case 1: ImageChannel.RED;
+			case 2: ImageChannel.GREEN;
+			case 4: ImageChannel.BLUE;
+			case 8: ImageChannel.ALPHA;
+			default: return;
+			
+		}
+		
+		__image.copyChannel (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), sourceChannel, destChannel);
+		
+	}
+	
+	
 	/**
 	 * Provides a fast routine to perform pixel manipulation between images with
 	 * no stretching, rotation, or color effects. This method copies a
@@ -240,7 +374,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                         channel, set the value to <code>false</code>.
 	 * @throws TypeError The sourceBitmapData, sourceRect, destPoint are null.
 	 */
-	function copyPixels(sourceBitmapData : BitmapData, sourceRect : openfl.geom.Rectangle, destPoint : openfl.geom.Point, ?alphaBitmapData : BitmapData, ?alphaPoint : openfl.geom.Point, mergeAlpha : Bool = false) : Void;
+	public function copyPixels (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, alphaBitmapData:BitmapData = null, alphaPoint:Point = null, mergeAlpha:Bool = false):Void {
+		
+		if (!__isValid || sourceBitmapData == null) return;
+		
+		__image.copyPixels (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), alphaBitmapData != null ? alphaBitmapData.__image : null, alphaPoint != null ? alphaPoint.__toLimeVector2 () : null, mergeAlpha);
+		
+	}
+	
 	
 	/**
 	 * Frees memory that is used to store the BitmapData object.
@@ -261,8 +402,18 @@ extern class BitmapData implements IBitmapDrawable {
 	 * collected by the garbage collector.</p>
 	 * 
 	 */
-	function dispose() : Void;
-
+	public function dispose ():Void {
+		
+		__image = null;
+		
+		width = 0;
+		height = 0;
+		rect = null;
+		__isValid = false;
+		
+	}
+	
+	
 	/**
 	 * Draws the <code>source</code> display object onto the bitmap image, using
 	 * the NME software renderer. You can specify <code>matrix</code>,
@@ -335,7 +486,58 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                       restriction does not apply to AIR content in the
 	 *                       application security sandbox.
 	 */
-	function draw(source : IBitmapDrawable, ?matrix : openfl.geom.Matrix, ?colorTransform : openfl.geom.ColorTransform, ?blendMode : BlendMode, ?clipRect : openfl.geom.Rectangle, smoothing : Bool = false) : Void;
+	public function draw (source:IBitmapDrawable, matrix:Matrix = null, colorTransform:ColorTransform = null, blendMode:BlendMode = null, clipRect:Rectangle = null, smoothing:Bool = false):Void {
+		
+		if (!__isValid) return;
+		
+		switch (__image.type) {
+			
+			case CANVAS:
+				
+				ImageCanvasUtil.convertToCanvas (__image);
+				ImageCanvasUtil.sync (__image);
+				
+				#if js
+				var buffer = __image.buffer;
+				
+				var renderSession = new RenderSession ();
+				renderSession.context = buffer.__srcContext;
+				renderSession.roundPixels = true;
+				
+				if (!smoothing) {
+					
+					untyped (buffer.__srcContext).mozImageSmoothingEnabled = false;
+					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = false;
+					buffer.__srcContext.imageSmoothingEnabled = false;
+					
+				}
+				
+				var matrixCache = source.__worldTransform;
+				source.__worldTransform = matrix != null ? matrix : new Matrix ();
+				source.__updateChildren (false);
+				source.__renderCanvas (renderSession);
+				source.__worldTransform = matrixCache;
+				source.__updateChildren (true);
+				
+				if (!smoothing) {
+					
+					untyped (buffer.__srcContext).mozImageSmoothingEnabled = true;
+					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = true;
+					buffer.__srcContext.imageSmoothingEnabled = true;
+					
+				}
+				
+				buffer.__srcContext.setTransform (1, 0, 0, 1, 0, 0);
+				#end
+				
+			default:
+				
+				// TODO
+			
+		}
+		
+	}
+	
 	
 	/**
 	 * Encodes the current image as a JPG or PNG format ByteArray.
@@ -346,7 +548,13 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param quality The encoding quality, when encoding with the JPG format.
 	 * @return  A ByteArray in the specified encoding format
 	 */
-	function encode(rect : openfl.geom.Rectangle, compressor : openfl.utils.Object, ?byteArray : openfl.utils.ByteArray) : openfl.utils.ByteArray;
+	public function encode (rect:Rectangle, compressor:Dynamic, byteArray:ByteArray = null):ByteArray {
+		
+		openfl.Lib.notImplemented ("BitmapData.encode");
+		return null;
+		
+	}
+	
 	
 	/**
 	 * Fills a rectangular area of pixels with a specified ARGB color.
@@ -357,8 +565,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 *              0xFF336699.
 	 * @throws TypeError The rect is null.
 	 */
-	function fillRect(rect : openfl.geom.Rectangle, color : UInt) : Void;
-
+	public function fillRect (rect:Rectangle, color:Int):Void {
+		
+		if (!__isValid || rect == null) return;
+		__image.fillRect (rect.__toLimeRectangle (), color);
+		
+	}
+	
+	
 	/**
 	 * Performs a flood fill operation on an image starting at an(<i>x</i>,
 	 * <i>y</i>) coordinate and filling with a certain color. The
@@ -370,8 +584,63 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param y     The <i>y</i> coordinate of the image.
 	 * @param color The ARGB color to use as a fill.
 	 */
-	function floodFill(x : Int, y : Int, color : UInt) : Void;
-
+	public function floodFill (x:Int, y:Int, color:Int):Void {
+		
+		if (!__isValid) return;
+		__image.floodFill (x, y, color);
+		
+	}
+	
+	
+	public static function fromBase64 (base64:String, type:String, onload:BitmapData -> Void = null):BitmapData {
+		
+		var bitmapData = new BitmapData (0, 0, true);
+		bitmapData.__loadFromBase64 (base64, type, onload);
+		return bitmapData;
+		
+	}
+	
+	
+	public static function fromBytes (bytes:ByteArray, rawAlpha:ByteArray = null, onload:BitmapData -> Void = null):BitmapData {
+		
+		var bitmapData = new BitmapData (0, 0, true);
+		bitmapData.__loadFromBytes (bytes, rawAlpha, onload);
+		return bitmapData;
+		
+	}
+	
+	
+	#if js
+	public static function fromCanvas (canvas:CanvasElement, transparent:Bool = true):BitmapData {
+		
+		var bitmapData = new BitmapData (0, 0, transparent);
+		bitmapData.__loadFromImage (Image.fromCanvas (canvas));
+		bitmapData.__image.transparent = transparent;
+		return bitmapData;
+		
+	}
+	#end
+	
+	
+	public static function fromFile (path:String, onload:BitmapData -> Void = null, onerror:Void -> Void = null):BitmapData {
+		
+		var bitmapData = new BitmapData (0, 0, true);
+		bitmapData.__loadFromFile (path, onload, onerror);
+		return bitmapData;
+		
+	}
+	
+	
+	public static function fromImage (image:Image, transparent:Bool = true):BitmapData {
+		
+		var bitmapData = new BitmapData (0, 0, transparent);
+		bitmapData.__loadFromImage (image);
+		bitmapData.__image.transparent = transparent;
+		return bitmapData;
+		
+	}
+	
+	
 	/**
 	 * Determines the destination rectangle that the <code>applyFilter()</code>
 	 * method call affects, given a BitmapData object, a source rectangle, and a
@@ -399,8 +668,38 @@ extern class BitmapData implements IBitmapDrawable {
 	 *         <code>sourceRect</code> parameter, and a filter.
 	 * @throws TypeError The sourceRect or filter are null.
 	 */
-	function generateFilterRect(sourceRect : openfl.geom.Rectangle, filter : openfl.filters.BitmapFilter) : openfl.geom.Rectangle;
-
+	public function generateFilterRect (sourceRect:Rectangle, filter:BitmapFilter):Rectangle {
+		
+		return sourceRect.clone ();
+		
+	}
+	
+	
+	public function getBuffer (gl:GLRenderContext):GLBuffer {
+		
+		if (__buffer == null) {
+			
+			var data = [
+				
+				width, height, 0, 1, 1, 
+				0, height, 0, 0, 1, 
+				width, 0, 0, 1, 0, 
+				0, 0, 0, 0, 0
+				
+			];
+			
+			__buffer = gl.createBuffer ();
+			gl.bindBuffer (gl.ARRAY_BUFFER, __buffer);
+			gl.bufferData (gl.ARRAY_BUFFER, new Float32Array (cast data), gl.STATIC_DRAW);
+			gl.bindBuffer (gl.ARRAY_BUFFER, null);
+			
+		}
+		
+		return __buffer;
+		
+	}
+	
+	
 	/**
 	 * Determines a rectangular region that either fully encloses all pixels of a
 	 * specified color within the bitmap image(if the <code>findColor</code>
@@ -435,8 +734,13 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                  color doesn't exist in an image.
 	 * @return The region of the image that is the specified color.
 	 */
-	function getColorBoundsRect(mask : UInt, color : UInt, findColor : Bool = true) : openfl.geom.Rectangle;
-
+	public function getColorBoundsRect (mask:Int, color:Int, findColor:Bool = true):Rectangle {
+		
+		return __image.rect.__toFlashRectangle ();
+		
+	}
+	
+	
 	/**
 	 * Returns an integer that represents an RGB pixel value from a BitmapData
 	 * object at a specific point(<i>x</i>, <i>y</i>). The
@@ -460,8 +764,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 *         <i>y</i>) coordinates are outside the bounds of the image, the
 	 *         method returns 0.
 	 */
-	function getPixel(x : Int, y : Int) : UInt;
-
+	public function getPixel (x:Int, y:Int):Int {
+		
+		if (!__isValid) return 0;
+		return __image.getPixel (x, y);
+		
+	}
+	
+	
 	/**
 	 * Returns an ARGB color value that contains alpha channel data and RGB data.
 	 * This method is similar to the <code>getPixel()</code> method, which
@@ -484,8 +794,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 *         <i>y</i>) coordinates are outside the bounds of the image, 0 is
 	 *         returned.
 	 */
-	function getPixel32(x : Int, y : Int) : UInt;
-
+	public function getPixel32 (x:Int, y:Int):Int {
+		
+		if (!__isValid) return 0;
+		return __image.getPixel32 (x, y);
+		
+	}
+	
+	
 	/**
 	 * Generates a byte array from a rectangular region of pixel data. Writes an
 	 * unsigned integer(a 32-bit unmultiplied pixel value) for each pixel into
@@ -495,8 +811,45 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @return A ByteArray representing the pixels in the given Rectangle.
 	 * @throws TypeError The rect is null.
 	 */
-	function getPixels(rect : openfl.geom.Rectangle) : openfl.utils.ByteArray;
-
+	public function getPixels (rect:Rectangle):ByteArray {
+		
+		if (!__isValid) return null;
+		if (rect == null) rect = this.rect;
+		return __image.getPixels (rect.__toLimeRectangle ());
+		
+	}
+	
+	
+	public function getTexture (gl:GLRenderContext):GLTexture {
+		
+		if (__texture == null) {
+			
+			__texture = gl.createTexture ();
+			gl.bindTexture (gl.TEXTURE_2D, __texture);
+			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			__image.dirty = true;
+			
+		}
+		
+		if (__image.dirty) {
+			
+			gl.bindTexture (gl.TEXTURE_2D, __texture);
+			var textureImage = __image.clone ();
+			textureImage.premultiplied = true;
+			gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, textureImage.data);
+			gl.bindTexture (gl.TEXTURE_2D, null);
+			__image.dirty = false;
+			
+		}
+		
+		return __texture;
+		
+	}
+	
+	
 	/**
 	 * Generates a vector array from a rectangular region of pixel data. Returns
 	 * a Vector object of unsigned integers(a 32-bit unmultiplied pixel value)
@@ -506,7 +859,49 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @return A Vector representing the given Rectangle.
 	 * @throws TypeError The rect is null.
 	 */
-	function getVector(rect : openfl.geom.Rectangle) : openfl.Vector<UInt>;
+	public function getVector (rect:Rectangle) {
+		
+		var pixels = getPixels (rect);
+		var result = new Vector<UInt> ();
+		
+		for (i in 0...Std.int (pixels.length / 4)) {
+			
+			result.push (pixels.readUnsignedInt ());
+			
+		}
+		
+		return result;
+		
+	}
+	
+	
+	public function histogram (hRect:Rectangle = null) {
+		
+		var rect = hRect != null ? hRect : new Rectangle (0, 0, width, height);
+		var pixels = getPixels (rect);
+		var result = [for (i in 0...4) [for (j in 0...256) 0]];
+		
+		for (i in 0...pixels.length) {
+			
+			++result[i % 4][pixels.readUnsignedByte ()];
+			
+		}
+		
+		return result;
+		
+	}
+	
+	
+	public function hitTest (firstPoint:Point, firstAlphaThreshold:Int, secondObject:Dynamic, secondBitmapDataPoint:Point = null, secondAlphaThreshold:Int = 1):Bool {
+		
+		if (!__isValid) return false;
+		
+		openfl.Lib.notImplemented ("BitmapData.hitTest");
+		
+		return false;
+		
+	}
+	
 	
 	/**
 	 * Locks an image so that any objects that reference the BitmapData object,
@@ -516,7 +911,20 @@ extern class BitmapData implements IBitmapDrawable {
 	 * <code>setPixel()</code> or <code>setPixel32()</code> method.
 	 * 
 	 */
-	function lock() : Void;
+	public function lock ():Void {
+		
+		
+		
+	}
+	
+	
+	public function merge (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redMultiplier:UInt, greenMultiplier:UInt, blueMultiplier:UInt, alphaMultiplier:UInt):Void {
+		
+		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid || sourceRect == null || destPoint == null) return;
+		__image.merge (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier);
+		
+	}
+	
 	
 	/**
 	 * Fills an image with pixels representing random noise.
@@ -546,7 +954,59 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                       selection is not affected by setting this parameter
 	 *                       to <code>true</code>.
 	 */
-	function noise(randomSeed : Int, low : UInt = 0, high : UInt = 255, channelOptions : UInt = 7, grayScale : Bool = false) : Void;
+	public function noise (randomSeed:Int, low:Int = 0, high:Int = 255, channelOptions:Int = 7, grayScale:Bool = false):Void {
+		
+		if (!__isValid) return;
+		
+		openfl.Lib.notImplemented ("BitmapData.noise");
+		
+	}
+	
+	
+	public function paletteMap (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redArray:Array<Int> = null, greenArray:Array<Int> = null, blueArray:Array<Int> = null, alphaArray:Array<Int> = null):Void {
+		
+		var sw:Int = Std.int (sourceRect.width);
+		var sh:Int = Std.int (sourceRect.height);
+		
+		var pixels = getPixels (sourceRect);
+		pixels.position = 0;
+		
+		var pixelValue:Int, r:Int, g:Int, b:Int, a:Int, color:Int, c1:Int, c2:Int, c3:Int, c4:Int;
+		
+		for (i in 0...(sh * sw)) {
+			
+			pixelValue = pixels.readUnsignedInt ();
+			
+			c1 = (alphaArray == null) ? pixelValue & 0xFF000000 : alphaArray[(pixelValue >> 24) & 0xFF];
+			c2 = (redArray == null) ? pixelValue & 0x00FF0000 : redArray[(pixelValue >> 16) & 0xFF];
+			c3 = (greenArray == null) ? pixelValue & 0x0000FF00 : greenArray[(pixelValue >> 8) & 0xFF];
+			c4 = (blueArray == null) ? pixelValue & 0x000000FF : blueArray[(pixelValue) & 0xFF];
+			
+			a = ((c1 >> 24) & 0xFF) + ((c2 >> 24) & 0xFF) + ((c3 >> 24) & 0xFF) + ((c4 >> 24) & 0xFF);
+			if (a > 0xFF) a == 0xFF;
+			
+			r = ((c1 >> 16) & 0xFF) + ((c2 >> 16) & 0xFF) + ((c3 >> 16) & 0xFF) + ((c4 >> 16) & 0xFF);
+			if (r > 0xFF) r == 0xFF;
+			
+			g = ((c1 >> 8) & 0xFF) + ((c2 >> 8) & 0xFF) + ((c3 >> 8) & 0xFF) + ((c4 >> 8) & 0xFF);
+			if (g > 0xFF) g == 0xFF;
+			
+			b = ((c1) & 0xFF) + ((c2) & 0xFF) + ((c3) & 0xFF) + ((c4) & 0xFF);
+			if (b > 0xFF) b == 0xFF;
+			
+			color = a << 24 | r << 16 | g << 8 | b;
+			
+			pixels.position = i * 4;
+			pixels.writeUnsignedInt (color);
+			
+		}
+		
+		pixels.position = 0;
+		var destRect = new Rectangle (destPoint.x, destPoint.y, sw, sh);
+		setPixels (destRect, pixels);
+		
+	}
+	
 	
 	/**
 	 * Generates a Perlin noise image.
@@ -614,7 +1074,12 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                       values. The alpha channel value is not affected if
 	 *                       this value is set to <code>true</code>.
 	 */
-	function perlinNoise(baseX : Float, baseY : Float, numOctaves : UInt, randomSeed : Int, stitch : Bool, fractalNoise : Bool, channelOptions : UInt = 7, grayScale : Bool = false, ?offsets : Array<openfl.geom.Point>) : Void;
+	public function perlinNoise (baseX:Float, baseY:Float, numOctaves:UInt, randomSeed:Int, stitch:Bool, fractalNoise:Bool, channelOptions:UInt = 7, grayScale:Bool = false, offsets:Array<Point> = null):Void {
+		
+		openfl.Lib.notImplemented ("BitmapData.perlinNoise");
+		
+	}
+	
 	
 	/**
 	 * Scrolls an image by a certain(<i>x</i>, <i>y</i>) pixel amount. Edge
@@ -623,8 +1088,13 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param x The amount by which to scroll horizontally.
 	 * @param y The amount by which to scroll vertically.
 	 */
-	function scroll(x : Int, y : Int) : Void;
-
+	public function scroll (x:Int, y:Int):Void {
+		
+		openfl.Lib.notImplemented ("BitmapData.scroll");
+		
+	}
+	
+	
 	/**
 	 * Sets a single pixel of a BitmapData object. The current alpha channel
 	 * value of the image pixel is preserved during this operation. The value of
@@ -642,8 +1112,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @param y     The <i>y</i> position of the pixel whose value changes.
 	 * @param color The resulting RGB color for the pixel.
 	 */
-	function setPixel(x : Int, y : Int, color : UInt) : Void;
-
+	public function setPixel (x:Int, y:Int, color:Int):Void {
+		
+		if (!__isValid) return;
+		__image.setPixel (x, y, color);
+		
+	}
+	
+	
 	/**
 	 * Sets the color and alpha transparency values of a single pixel of a
 	 * BitmapData object. This method is similar to the <code>setPixel()</code>
@@ -675,8 +1151,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 *              opaque(not transparent), the alpha transparency portion of
 	 *              this color value is ignored.
 	 */
-	function setPixel32(x : Int, y : Int, color : UInt) : Void;
-
+	public function setPixel32 (x:Int, y:Int, color:Int):Void {
+		
+		if (!__isValid) return;
+		__image.setPixel32 (x, y, color);
+		
+	}
+	
+	
 	/**
 	 * Converts a byte array into a rectangular region of pixel data. For each
 	 * pixel, the <code>ByteArray.readUnsignedInt()</code> method is called and
@@ -696,8 +1178,14 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                   before throwing the exception.
 	 * @throws TypeError The rect or inputByteArray are null.
 	 */
-	function setPixels(rect : openfl.geom.Rectangle, inputByteArray : openfl.utils.ByteArray) : Void;
-
+	public function setPixels (rect:Rectangle, byteArray:ByteArray):Void {
+		
+		if (!__isValid || rect == null) return;
+		__image.setPixels (rect.__toLimeRectangle (), byteArray);
+		
+	}
+	
+	
 	/**
 	 * Converts a Vector into a rectangular region of pixel data. For each pixel,
 	 * a Vector element is read and written into the BitmapData pixel. The data
@@ -707,8 +1195,25 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @throws RangeError The vector array is not large enough to read all the
 	 *                    pixel data.
 	 */
-	function setVector(rect : openfl.geom.Rectangle, inputVector : openfl.Vector<UInt>) : Void;
-
+	public function setVector (rect:Rectangle, inputVector:Vector<UInt>) {
+		
+		var byteArray = new ByteArray ();
+		#if js
+		byteArray.length = inputVector.length * 4;
+		#end
+		
+		for (color in inputVector) {
+			
+			byteArray.writeUnsignedInt (color);
+			
+		}
+		
+		byteArray.position = 0;
+		setPixels (rect, byteArray);
+		
+	}
+	
+	
 	/**
 	 * Tests pixel values in an image against a specified threshold and sets
 	 * pixels that pass the test to new color values. Using the
@@ -759,8 +1264,161 @@ extern class BitmapData implements IBitmapDrawable {
 	 * @throws TypeError     The sourceBitmapData, sourceRect destPoint or
 	 *                       operation are null.
 	 */
-	function threshold(sourceBitmapData : BitmapData, sourceRect : openfl.geom.Rectangle, destPoint : openfl.geom.Point, operation : String, threshold : UInt, color : UInt = 0, mask : UInt = 0xFFFFFFFF, copySource : Bool = false) : UInt;
-
+	public function threshold (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, operation:String, threshold:Int, color:Int = 0x00000000, mask:Int = 0xFFFFFFFF, copySource:Bool = false):Int {
+		
+		if (sourceBitmapData == this && sourceRect.equals(rect) && destPoint.x == 0 && destPoint.y == 0) {
+			
+			var hits = 0;
+			
+			threshold = __flipPixel (threshold);
+			color = __flipPixel (color);
+			
+			var memory = new ByteArray ();
+			#if js
+			memory.length  = width * height * 4;
+			#end
+			memory = getPixels (rect);
+			memory.position = 0;
+			Memory.select (memory);
+			
+			var thresholdMask:Int = cast threshold & mask;
+			
+			var width_yy:Int, position:Int, pixelMask:Int, pixelValue, i, test;
+			
+			for (yy in 0...height) {
+				
+				width_yy = width * yy;
+				
+				for (xx in 0...width) {
+					
+					position = (width_yy + xx) * 4;
+					pixelValue = Memory.getI32 (position);
+					pixelMask = cast pixelValue & mask;
+					
+					i = __ucompare (pixelMask, thresholdMask);
+					test = false;
+					
+					if (operation == "==") { test = (i == 0); }
+					else if (operation == "<") { test = (i == -1);}
+					else if (operation == ">") { test = (i == 1); }
+					else if (operation == "!=") { test = (i != 0); }
+					else if (operation == "<=") { test = (i == 0 || i == -1); }
+					else if (operation == ">=") { test = (i == 0 || i == 1); }
+					
+					if (test) {
+						
+						Memory.setI32 (position, color);
+						hits++;
+						
+					}
+					
+				}
+				
+			}
+			
+			memory.position = 0;
+			setPixels (rect, memory);
+			Memory.select (null);
+			return hits;
+			
+		} else {
+			
+			var sx = Std.int (sourceRect.x);
+			var sy = Std.int (sourceRect.y);
+			var sw = Std.int (sourceBitmapData.width);
+			var sh = Std.int (sourceBitmapData.height);
+			
+			var dx = Std.int (destPoint.x);
+			var dy = Std.int (destPoint.y);
+			
+			var bw:Int = width - sw - dx;
+			var bh:Int = height - sh - dy;
+			
+			var dw:Int = (bw < 0) ? sw + (width - sw - dx) : sw;
+			var dh:Int = (bw < 0) ? sh + (height - sh - dy) : sh;
+			
+			var hits = 0;
+			
+			threshold = __flipPixel (threshold);
+			color = __flipPixel (color);
+			
+			var canvasMemory = (sw * sh) * 4;
+			var sourceMemory = 0;
+			
+			if (copySource) {
+				
+				sourceMemory = (sw * sh) * 4;
+				
+			}
+			
+			var totalMemory = (canvasMemory + sourceMemory);
+			var memory = new ByteArray ();
+			#if js
+			memory.length = totalMemory;
+			#end
+			memory.position = 0;
+			var bitmapData = sourceBitmapData.clone ();
+			var pixels = bitmapData.getPixels (sourceRect);
+			memory.writeBytes (pixels);
+			memory.position = canvasMemory;
+			
+			if (copySource) {
+				
+				memory.writeBytes (pixels);
+				
+			}
+			
+			memory.position = 0;
+			Memory.select (memory);
+			
+			var thresholdMask:Int = cast threshold & mask;
+			
+			var position:Int, pixelMask:Int, pixelValue, i, test;
+			
+			for (yy in 0...dh) {
+				
+				for (xx in 0...dw) {
+					
+					position = ((xx + sx) + (yy + sy) * sw) * 4;
+					pixelValue = Memory.getI32 (position);
+					pixelMask = cast pixelValue & mask;
+					
+					i = __ucompare (pixelMask, thresholdMask);
+					test = false;
+					
+					if (operation == "==") { test = (i == 0); }
+					else if (operation == "<") { test = (i == -1);}
+					else if (operation == ">") { test = (i == 1); }
+					else if (operation == "!=") { test = (i != 0); }
+					else if (operation == "<=") { test = (i == 0 || i == -1); }
+					else if (operation == ">=") { test = (i == 0 || i == 1); }
+					
+					if (test) {
+						
+						Memory.setI32 (position, color);
+						hits++;
+						
+					} else if (copySource) {
+						
+						Memory.setI32 (position, Memory.getI32 (canvasMemory + position));
+						
+					}
+					
+				}
+				
+			}
+			
+			memory.position = 0;	
+			bitmapData.setPixels (sourceRect, memory);
+			copyPixels (bitmapData, bitmapData.rect, destPoint);
+			Memory.select (null);
+			return hits;
+			
+		}
+		
+	}
+	
+	
 	/**
 	 * Unlocks an image so that any objects that reference the BitmapData object,
 	 * such as Bitmap objects, are updated when this BitmapData object changes.
@@ -773,8 +1431,252 @@ extern class BitmapData implements IBitmapDrawable {
 	 *                   entire area of the BitmapData object is considered
 	 *                   changed.
 	 */
-	function unlock(?changeRect : openfl.geom.Rectangle) : Void;
+	public function unlock (changeRect:Rectangle = null):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion private function __createUVs ():Void {
+		
+		if (__uvData == null) __uvData = new TextureUvs();
+		
+		__uvData.x0 = 0;
+		__uvData.y0 = 0;
+		__uvData.x1 = 1;
+		__uvData.y1 = 0;
+		__uvData.x2 = 1;
+		__uvData.y2 = 1;
+		__uvData.x3 = 0;
+		__uvData.y3 = 1;
+		
+	}
+	
+	
+	@:noCompletion private static inline function __flipPixel (pixel:Int):Int {
+		
+		return (pixel & 0xFF) << 24 | (pixel >>  8 & 0xFF) << 16 | (pixel >> 16 & 0xFF) <<  8 | (pixel >> 24 & 0xFF);
+		
+	}
+	
+	
+	@:noCompletion private inline function __loadFromBase64 (base64:String, type:String, ?onload:BitmapData -> Void):Void {
+		
+		Image.fromBase64 (base64, type, function (image) {
+			
+			__loadFromImage (image);
+			
+			if (onload != null) {
+				
+				onload (this);
+				
+			}
+			
+		});
+		
+	}
+	
+	
+	@:noCompletion private inline function __loadFromBytes (bytes:ByteArray, rawAlpha:ByteArray = null, ?onload:BitmapData -> Void):Void {
+		
+		Image.fromBytes (bytes, function (image) {
+			
+			__loadFromImage (image);
+			
+			if (rawAlpha != null) {
+				
+				#if js
+				ImageCanvasUtil.convertToCanvas (__image);
+				ImageCanvasUtil.createImageData (__image);
+				#end
+				
+				var data = __image.buffer.data;
+				
+				for (i in 0...rawAlpha.length) {
+					
+					data[i * 4 + 3] = rawAlpha.readUnsignedByte ();
+					
+				}
+				
+				__image.dirty = true;
+				
+			}
+			
+			if (onload != null) {
+				
+				onload (this);
+				
+			}
+			
+		});
+		
+	}
+	
+	
+	@:noCompletion private function __loadFromFile (path:String, onload:BitmapData -> Void, onerror:Void -> Void):Void {
+		
+		Image.fromFile (path, function (image) {
+			
+			__loadFromImage (image);
+			
+			if (onload != null) {
+				
+				onload (this);
+				
+			}
+			
+		}, onerror);
+		
+	}
+	
+	
+	@:noCompletion private function __loadFromImage (image:Image):Void {
+		
+		__image = image;
+		
+		width = image.width;
+		height = image.height;
+		rect = new Rectangle (0, 0, image.width, image.height);
+		__isValid = true;
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __renderCanvas (renderSession:RenderSession):Void {
+		
+		#if js
+		if (!__isValid) return;
+		
+		ImageCanvasUtil.sync (__image);
+		
+		var context = renderSession.context;
+		
+		if (__worldTransform == null) __worldTransform = new Matrix ();
+		
+		context.globalAlpha = 1;
+		var transform = __worldTransform;
+		
+		if (renderSession.roundPixels) {
+			
+			context.setTransform (transform.a, transform.b, transform.c, transform.d, Std.int (transform.tx), Std.int (transform.ty));
+			
+		} else {
+			
+			context.setTransform (transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+			
+		}
+		
+		context.drawImage (__image.buffer.src, 0, 0);
+		#end
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __renderMask (renderSession:RenderSession):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion private function __sync ():Void {
+		
+		#if js
+		ImageCanvasUtil.sync (__image);
+		#end
+		
+	}
+	
+	
+	@:noCompletion private static function __ucompare (n1:Int, n2:Int) : Int {
+		
+		var tmp1 : Int;
+		var tmp2 : Int;
+		
+		tmp1 = (n1 >> 24) & 0x000000FF;
+		tmp2 = (n2 >> 24) & 0x000000FF;
+		
+		if (tmp1 != tmp2) {
+			
+			return (tmp1 > tmp2 ? 1 : -1);
+			
+		} else {
+			
+			tmp1 = (n1 >> 16) & 0x000000FF;
+			tmp2 = (n2 >> 16) & 0x000000FF;
+			
+			if (tmp1 != tmp2) {
+				
+				return (tmp1 > tmp2 ? 1 : -1);
+				
+			} else {
+				
+				tmp1 = (n1 >> 8) & 0x000000FF;
+				tmp2 = (n2 >> 8) & 0x000000FF;
+				
+				if (tmp1 != tmp2) {
+					
+					return (tmp1 > tmp2 ? 1 : -1);
+					
+				} else {
+					
+					tmp1 = n1 & 0x000000FF;
+					tmp2 = n2 & 0x000000FF;
+					
+					if (tmp1 != tmp2) {
+						
+						return (tmp1 > tmp2 ? 1 : -1);
+						
+					} else {
+						
+						return 0;
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __updateChildren (transformOnly:Bool):Void {
+		
+		
+		
+	}
+	
+	
 }
 
 
+@:noCompletion @:dox(hide) class TextureUvs {
+	
+	
+	public var x0:Float = 0;
+	public var x1:Float = 0;
+	public var x2:Float = 0;
+	public var x3:Float = 0;
+	public var y0:Float = 0;
+	public var y1:Float = 0;
+	public var y2:Float = 0;
+	public var y3:Float = 0;
+	
+	
+	public function new () {
+		
+	}
+	
+	
+}
+
+
+#else
+typedef BitmapData = openfl._v2.display.BitmapData;
+#end
+#else
+typedef BitmapData = flash.display.BitmapData;
 #end

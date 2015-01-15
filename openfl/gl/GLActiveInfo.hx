@@ -1,14 +1,8 @@
 package openfl.gl;
-#if display
 
 
-typedef GLActiveInfo = {
-	
-    size : Int,
-    type : Int,
-    name : String,
-	
-};
-
-
+#if (!openfl_next && !flash && !html5 && !display)
+typedef GLActiveInfo = openfl._v2.gl.GLActiveInfo;
+#else
+typedef GLActiveInfo = lime.graphics.opengl.GLActiveInfo;
 #end

@@ -1,12 +1,8 @@
 package openfl.utils;
-#if display
-import openfl.geom.Matrix3D;
 
 
-extern class Float32Array extends ArrayBufferView implements ArrayAccess<Float> {
-	public function new (bufferOrArray:Dynamic, start:Int = 0, length:Null<Int> = null);
-	public static function fromMatrix (matrix:Matrix3D):Float32Array;
-}
-
-
+#if (flash || openfl_next || html5 || display)
+typedef Float32Array = lime.utils.Float32Array;
+#else
+typedef Float32Array = openfl._v2.utils.Float32Array;
 #end

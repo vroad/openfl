@@ -1,13 +1,8 @@
-/*
- 
- This class provides code completion and inline documentation, but it does 
- not contain runtime support. It should be overridden by a compatible
- implementation in an OpenFL backend, depending upon the target platform.
- 
-*/
+package openfl.display; #if !flash #if (display || openfl_next || html5)
 
-package openfl.display;
-#if display
+
+import openfl.display.IGraphicsData;
+import openfl.display.IGraphicsFill;
 
 
 /**
@@ -18,21 +13,26 @@ package openfl.display;
  * GraphicsSolidFill object is the equivalent of calling the
  * <code>Graphics.beginFill()</code> method. </p>
  */
-@:final extern class GraphicsSolidFill implements IGraphicsData  implements IGraphicsFill {
-
+class GraphicsSolidFill implements IGraphicsData implements IGraphicsFill {
+	
+	
 	/**
 	 * Indicates the alpha transparency value of the fill. Valid values are 0
 	 * (fully transparent) to 1(fully opaque). The default value is 1. Display
 	 * objects with alpha set to 0 are active, even though they are invisible.
 	 */
-	var alpha : Float;
-
+	public var alpha:Float;
+	
 	/**
 	 * The color of the fill. Valid values are in the hexadecimal format
 	 * 0xRRGGBB. The default value is 0xFF0000(or the uint 0).
 	 */
-	var color : UInt;
-
+	public var color:UInt;
+	
+	@:noCompletion @:dox(hide) public var __graphicsDataType (default, null):GraphicsDataType;
+	@:noCompletion @:dox(hide) public var __graphicsFillType (default, null):GraphicsFillType;
+	
+	
 	/**
 	 * Creates a new GraphicsSolidFill object.
 	 * 
@@ -41,8 +41,22 @@ package openfl.display;
 	 * @param alpha The alpha transparency value. Valid values are 0(fully
 	 *              transparent) to 1(fully opaque).
 	 */
-	function new(color : UInt = 0, alpha : Float = 1) : Void;
+	public function new (color:UInt = 0, alpha:Float = 1) {
+		
+		this.alpha = alpha;
+		this.color = color;
+		this.__graphicsDataType = SOLID;
+		this.__graphicsFillType = SOLID_FILL;
+		
+	}
+	
+	
 }
 
 
+#else
+typedef GraphicsSolidFill = openfl._v2.display.GraphicsSolidFill;
+#end
+#else
+typedef GraphicsSolidFill = flash.display.GraphicsSolidFill;
 #end

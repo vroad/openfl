@@ -25,6 +25,7 @@ class FPS extends TextField {
 		
 		currentFPS = 0;
 		selectable = false;
+		mouseEnabled = false;
 		defaultTextFormat = new TextFormat ("_sans", 12, color);
 		text = "FPS: ";
 		
@@ -43,7 +44,7 @@ class FPS extends TextField {
 	
 	
 	
-	private function this_onEnterFrame (event:Event):Void {
+	@:noCompletion private function this_onEnterFrame (event:Event):Void {
 		
 		var currentTime = Timer.stamp ();
 		times.push (currentTime);
@@ -57,7 +58,7 @@ class FPS extends TextField {
 		var currentCount = times.length;
 		currentFPS = Math.round ((currentCount + cacheCount) / 2);
 		
-		if (currentCount != cacheCount && visible) {
+		if (currentCount != cacheCount /*&& visible*/) {
 			
 			text = "FPS: " + currentFPS;
 			
