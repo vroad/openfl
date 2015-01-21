@@ -17,12 +17,12 @@ class OpenFLStage3D {
     static private var stage3Ds:Array<Stage3D> = []; 
     #end
     
-    static public function requestAGLSLContext3D(stage3D : Stage3D,?context3DRenderMode:String =  "auto"):Void 
+    static public function requestContext3D(stage3D : Stage3D,?context3DRenderMode:String =  "auto"):Void 
     {
         #if !flash
         
         if (OpenGLView.isSupported) {
-            stage3D.context3D = new AGLSLContext3D();   
+            stage3D.context3D = new Context3D();   
             stage3D.dispatchEvent(new Event(Event.CONTEXT3D_CREATE));
         } else
             stage3D.dispatchEvent(new ErrorEvent(ErrorEvent.ERROR));  

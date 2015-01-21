@@ -102,7 +102,7 @@ class ApplicationMain {
 		}
 		
 		#if html5
-		#if munit
+		#if (munit || utest)
 		flash.Lib.embed (null, ::WIN_WIDTH::, ::WIN_HEIGHT::, "::WIN_FLASHBACKGROUND::");
 		#end
 		#else

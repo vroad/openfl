@@ -27,11 +27,7 @@ class Stage3D extends EventDispatcher {
 		
 		if (OpenGLView.isSupported) {
 			
-			#if flash
 			context3D = new Context3D ();
-			#else
-			context3D = new AGLSLContext3D();
-			#end
 			dispatchEvent (new Event (Event.CONTEXT3D_CREATE));
 			
 		} else {

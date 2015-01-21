@@ -52,11 +52,22 @@ class Texture extends TextureBase {
 	
 	public function uploadFromBitmapData (bitmapData:BitmapData, miplevel:Int = 0):Void {
 		
-		var p = untyped bitmapData.__image.buffer.data;
+		// TODO: Support upload from UInt8Array directly
 		
 		width = bitmapData.width;
 		height = bitmapData.height;
-		uploadFromUInt8Array(p, miplevel);
+		
+		#if lime_legacy
+		
+		var p = BitmapData.getRGBAPixels (bitmapData);
+		uploadFromByteArray(p);
+		
+		#else
+		
+		var p = @:privateAccess (bitmapData.__image).data;
+		uploadFromUInt8Array(p);
+		
+		#end
 		
 	}
 	
@@ -98,5 +109,5 @@ class Texture extends TextureBase {
 
 
 #else
-typedef Texture = openfl.display3D.textures.Texture;
+typedef Texture = flash.display3D.textures.Texture;
 #end
