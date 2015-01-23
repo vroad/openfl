@@ -105,7 +105,13 @@ class AGLSLParser {
 			i++;
 			
 		}
-		
+
+		// declrare functions
+		if (desc.header.type == "fragment")
+		{
+			header += "vec4 texture2DYFlip(in sampler2D s, in vec2 coord) {return texture2D(s, vec2(coord.x, 1.0 - coord.y));}\n";
+		}
+
 		// extra gl fluff: setup position and depth adjust temps
 		if (desc.header.type == "vertex") {
 			

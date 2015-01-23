@@ -94,6 +94,10 @@ class Context3D {
 		stage.addChildAt(ogl, 0);
 		//#end
 		
+		#if html5
+		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, 1);
+		#end
+		
 	}
 	
 	
