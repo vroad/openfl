@@ -252,7 +252,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		return null;
 		
-		#elseif (flash || js)
+		#elseif (flash || html5)
 		
 		return cast (Type.createInstance (className.get (id), []), Font);
 		
@@ -262,7 +262,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 			var fontClass = className.get(id);
 			Font.registerFont(fontClass);
 			return cast (Type.createInstance (fontClass, []), Font);
-		} else return new Font (path.get (id));
+		} else return Font.fromFile (path.get (id));
 		
 		#end
 		
