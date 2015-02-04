@@ -1,9 +1,9 @@
-package openfl.system; #if !flash #if (display || openfl_next || html5)
+package openfl.system; #if !flash #if !lime_legacy
 
 
 import openfl.Lib;
 
-#if html5
+#if js
 import js.html.Element;
 import js.Browser;
 #end
@@ -409,7 +409,7 @@ class Capabilities {
 	@:noCompletion private static function get_pixelAspectRatio ():Float { return 1; }
 	@:noCompletion private static function get_screenDPI ():Float {
 		
-		#if html5
+		#if js
 		
 		if (screenDPI > 0) return screenDPI;
 		
@@ -438,7 +438,7 @@ class Capabilities {
 	
 	@:noCompletion private static function get_screenResolutionX ():Float { 
 		
-		#if html5
+		#if js
 		
 		return Browser.window.screen.width;
 		
@@ -453,7 +453,7 @@ class Capabilities {
 	
 	@:noCompletion private static function get_screenResolutionY ():Float {
 		
-		#if html5
+		#if js
 		
 		return Browser.window.screen.height;
 		
@@ -468,7 +468,7 @@ class Capabilities {
 	
 	@:noCompletion private static function get_language ():String {
 		
-		#if html5
+		#if js
 		
 		return untyped navigator.language;
 		

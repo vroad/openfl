@@ -1,4 +1,4 @@
-package openfl.external; #if !flash #if (display || openfl_next || html5)
+package openfl.external; #if !flash #if !lime_legacy
 
 
 import openfl.Lib;
@@ -166,7 +166,7 @@ class ExternalInterface {
 	 */
 	public static function addCallback (functionName:String, closure:Dynamic):Void {
 		
-		#if html5
+		#if js
 		if (Lib.application.window.backend.element != null) {
 			
 			untyped Lib.application.window.backend.element[functionName] = closure;
@@ -250,7 +250,7 @@ class ExternalInterface {
 	 */
 	public static function call (functionName:String, ?p1:Dynamic, ?p2:Dynamic, ?p3:Dynamic, ?p4:Dynamic, ?p5:Dynamic):Dynamic {
 		
-		#if html5
+		#if js
 		var callResponse:Dynamic = null;
 		
 		var thisArg = functionName.split('.').slice(0, -1).join('.');

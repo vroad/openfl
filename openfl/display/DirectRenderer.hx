@@ -1,4 +1,4 @@
-package openfl.display; #if (flash || openfl_next || html5 || display) 
+package openfl.display; #if !lime_legacy
 
 
 import openfl.display.DisplayObject;

@@ -1,7 +1,7 @@
 package openfl.gl;
 
 
-#if (!openfl_next && !flash && !html5 && !display)
+#if lime_legacy
 typedef GLContextAttributes = openfl._v2.gl.GLContextAttributes;
 #else
 typedef GLContextAttributes = lime.graphics.opengl.GLContextAttributes;

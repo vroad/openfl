@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 import openfl._internal.renderer.canvas.CanvasBitmap;
@@ -9,7 +9,7 @@ import openfl.geom.Matrix;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
-#if html5
+#if js
 import js.html.ImageElement;
 #end
 
@@ -85,7 +85,7 @@ class Bitmap extends DisplayObjectContainer {
 	 */
 	public var smoothing:Bool;
 	
-	#if html5
+	#if js
 	@:noCompletion private var __image:ImageElement;
 	#end
 	
@@ -157,11 +157,13 @@ class Bitmap extends DisplayObjectContainer {
 		
 	}
 	
-#if !disable_gl_renderer	
-	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {		
-		GLBitmap.render (this, renderSession);		
+	
+	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
+		
+		GLBitmap.render (this, renderSession);
+		
 	}
-#end	
+	
 	
 	@:noCompletion @:dox(hide) public override function __renderMask (renderSession:RenderSession):Void {
 		

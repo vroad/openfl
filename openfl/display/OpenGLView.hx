@@ -1,4 +1,4 @@
-package openfl.display; #if (flash || openfl_next || html5 || display)
+package openfl.display; #if !lime_legacy
 
 
 #if !flash
@@ -10,8 +10,7 @@ import openfl.geom.Rectangle;
 import openfl.gl.GL;
 import openfl.Lib;
 
-#if html5
-import js.html.webgl.ContextAttributes;
+#if js
 import js.html.CanvasElement;
 import js.Browser;
 #end
@@ -43,8 +42,13 @@ class OpenGLView extends DirectRenderer {
 			__canvas.width = Lib.current.stage.stageWidth;
 			__canvas.height = Lib.current.stage.stageHeight;
 			
-			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha:false, antialias:false};
-			__context = cast __canvas.getContextWebGL (attributes);
+			__context = cast __canvas.getContext ("webgl");
+			
+			if (__context == null) {
+				
+				__context = cast __canvas.getContext ("experimental-webgl");
+				
+			}
 			
 			#if debug
 			__context = untyped WebGLDebugUtils.makeDebugContext (__context);
@@ -88,7 +92,7 @@ class OpenGLView extends DirectRenderer {
 	#if !flash
 	@:noCompletion public override function __renderDOM (renderSession:RenderSession):Void {
 		
-		#if html5
+		#if js
 		if (stage != null && __worldVisible && __renderable) {
 			
 			if (!__added) {
@@ -198,7 +202,7 @@ class OpenGLView extends DirectRenderer {
 		
 		return false;
 		
-		#elseif html5
+		#elseif js
 		
 		if (untyped (!window.WebGLRenderingContext)) {
 			

@@ -1,7 +1,7 @@
 package openfl.gl;
 
 
-#if (!openfl_next && !flash && !html5 && !display)
+#if lime_legacy
 typedef GLFramebuffer = openfl._v2.gl.GLFramebuffer;
 #else
 typedef GLFramebuffer = lime.graphics.opengl.GLFramebuffer;

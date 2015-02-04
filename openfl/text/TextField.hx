@@ -1,4 +1,4 @@
-package openfl.text; #if !flash #if (display || openfl_next || html5)
+package openfl.text; #if !flash #if !lime_legacy
 
 
 import lime.graphics.opengl.GLTexture;
@@ -15,7 +15,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextFormatAlign;
 
-#if html5
+#if js
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.html.CSSStyleDeclaration;
@@ -554,7 +554,7 @@ class TextField extends InteractiveObject {
 	@:noCompletion private var __texture:GLTexture;
 	@:noCompletion private var __width:Float;
 	
-	#if html5
+	#if js
 	private var __div:DivElement;
 	#end
 	
@@ -906,7 +906,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function __measureText ():Array<Float> {
 		
-		#if html5
+		#if js
 		
 		if (__ranges == null) {
 			
@@ -939,7 +939,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function __measureTextWithDOM ():Void {
 	 	
-	 	#if html5
+	 	#if js
 	 	
 		var div:Element = __div;
 		
@@ -1110,7 +1110,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_htmlText (value:String):String {
 		
-		#if html5
+		#if js
 		
 		if (!__isHTML || __text != value) __dirty = true;
 		__ranges = null;
@@ -1281,26 +1281,22 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public function get_textWidth ():Float {
 		
-		#if html5
-
-		if (__canvas == null)
-		{
-			__canvas = cast Browser.document.createElement("canvas");
-			__context = __canvas.getContext2d();
-		}
-			
-		var sizes = __measureText ();
-		var total:Float = 0;
-			
-		for (size in sizes) {
-			
-			total += size;
-			
-		}
+		#if js
 		
-		return total;
+		if (__canvas != null) {
 			
-		/*} else if (__div != null) {
+			var sizes = __measureText ();
+			var total:Float = 0;
+			
+			for (size in sizes) {
+				
+				total += size;
+				
+			}
+			
+			return total;
+			
+		} else if (__div != null) {
 			
 			return __div.clientWidth;
 			
@@ -1309,7 +1305,7 @@ class TextField extends InteractiveObject {
 			__measureTextWithDOM ();
 			return __measuredWidth;
 			
-		}*/
+		}
 		
 		#else
 		
@@ -1322,15 +1318,14 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public function get_textHeight ():Float {
 		
-		#if html5
+		#if js
 		
-		//if (__canvas != null) {
+		if (__canvas != null) {
 			
-		// TODO: Make this more accurate
-		// return __textFormat.size * 1.185;
-		return __textFormat.size;
+			// TODO: Make this more accurate
+			return __textFormat.size * 1.185;
 			
-		/*} else if (__div != null) {
+		} else if (__div != null) {
 			
 			return __div.clientHeight;
 			
@@ -1339,10 +1334,9 @@ class TextField extends InteractiveObject {
 			__measureTextWithDOM ();
 			
 			// Add a litte extra space for descenders...
-			// return __measuredHeight + __textFormat.size * 0.185;
-			return __measuredHeight;
+			return __measuredHeight + __textFormat.size * 0.185;
 			
-		}*/
+		}
 		
 		#else
 		

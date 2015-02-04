@@ -1,4 +1,4 @@
-package openfl.net; #if !flash #if (display || openfl_next || html5)
+package openfl.net; #if !flash #if !lime_legacy
 
 
 import haxe.io.Bytes;
@@ -9,7 +9,7 @@ import openfl.events.EventDispatcher;
 import openfl.net.SharedObjectFlushStatus;
 import openfl.Lib;
 
-#if html5
+#if js
 import js.html.Storage;
 import js.Browser;
 #end
@@ -208,7 +208,7 @@ class SharedObject extends EventDispatcher {
 		
 		data = { };
 		
-		#if html5
+		#if js
 		try {
 			
 			__getLocalStorage ().removeItem (__key);
@@ -279,7 +279,7 @@ class SharedObject extends EventDispatcher {
 	 */
 	public function flush (minDiskSpace:Int = 0):SharedObjectFlushStatus {
 		
-		#if html5
+		#if js
 		var data = Serializer.run (data);
 		
 		try {
@@ -452,7 +452,7 @@ class SharedObject extends EventDispatcher {
 	 */
 	public static function getLocal (name:String, localPath:String = null, secure:Bool = false /* note: unsupported */) {
 		
-		#if html5
+		#if js
 		if (localPath == null) {
 			
 			localPath = Browser.window.location.href;
@@ -464,7 +464,7 @@ class SharedObject extends EventDispatcher {
 		so.__key = localPath + ":" + name;
 		var rawData = null;
 		
-		#if html5
+		#if js
 		try {
 			
 			// user may have privacy settings which prevent reading
@@ -494,7 +494,7 @@ class SharedObject extends EventDispatcher {
 	}
 	
 	
-	#if html5
+	#if js
 	@:noCompletion private static function __getLocalStorage ():Storage {
 		
 		var res = Browser.getLocalStorage ();

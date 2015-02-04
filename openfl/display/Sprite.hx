@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 import openfl._internal.renderer.canvas.CanvasGraphics;
@@ -221,7 +221,7 @@ class Sprite extends DisplayObjectContainer {
 		
 	}
 	
-#if !disable_gl_renderer
+	
 	@:noCompletion public override function __renderGL (renderSession:RenderSession):Void {
 		
 		if (!__renderable || __worldAlpha <= 0) return;
@@ -241,7 +241,7 @@ class Sprite extends DisplayObjectContainer {
 		super.__renderGL (renderSession);
 		
 	}
-#end
+	
 	
 	@:noCompletion public override function __renderMask (renderSession:RenderSession):Void {
 		

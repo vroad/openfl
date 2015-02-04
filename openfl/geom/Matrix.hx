@@ -1,4 +1,4 @@
-package openfl.geom; #if !flash #if (display || openfl_next || html5)
+package openfl.geom; #if !flash #if !lime_legacy
 
 
 import openfl.geom.Point;

@@ -1,4 +1,4 @@
-package openfl.sensors; #if !flash #if (display || openfl_next || html5)
+package openfl.sensors; #if !flash #if !lime_legacy
 
 
 import haxe.Timer;
@@ -7,7 +7,7 @@ import openfl.errors.ArgumentError;
 import openfl.events.AccelerometerEvent;
 import openfl.events.EventDispatcher;
 
-#if html5
+#if js
 import js.Browser;
 #end
 

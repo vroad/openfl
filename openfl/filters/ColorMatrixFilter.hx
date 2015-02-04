@@ -1,10 +1,10 @@
-package openfl.filters; #if !flash #if (display || openfl_next || html5)
+package openfl.filters; #if !flash #if !lime_legacy
 
 
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
-#if html5
+#if js
 import js.html.ImageData;
 #end
 
@@ -38,7 +38,7 @@ class ColorMatrixFilter extends BitmapFilter {
 	}
 	
 	
-	#if html5
+	#if js
 	@:noCompletion public override function __applyFilter (sourceData:ImageData, targetData:ImageData, sourceRect:Rectangle, destPoint:Point):Void {
 		
 		var source = sourceData.data;

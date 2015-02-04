@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 interface IGraphicsFill {

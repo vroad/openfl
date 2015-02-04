@@ -1,10 +1,10 @@
-package openfl.filters; #if !flash #if (display || openfl_next || html5)
+package openfl.filters; #if !flash #if !lime_legacy
 
 
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
-#if html5
+#if js
 import js.html.ImageData;
 #end
 
@@ -42,7 +42,7 @@ class BitmapFilter {
 	}
 	
 	
-	#if html5
+	#if js
 	@:noCompletion public function __applyFilter (sourceData:ImageData, targetData:ImageData, sourceRect:Rectangle, destPoint:Point):Void {
 		
 		

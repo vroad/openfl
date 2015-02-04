@@ -1,4 +1,4 @@
-package openfl.events; #if !flash #if (display || openfl_next || html5)
+package openfl.events; #if !flash #if !lime_legacy
 
 
 import openfl.display.InteractiveObject;
@@ -269,7 +269,7 @@ class TouchEvent extends Event {
 	
 	@:noCompletion public static function __create (type:String, /*event:lime.ui.TouchEvent,*/ touch:Dynamic /*js.html.Touch*/, local:Point, target:InteractiveObject):TouchEvent {
 		
-		#if html5
+		#if js
 		var evt = new TouchEvent (type, true, false, local.x, local.y, null, false, false, false/*event.ctrlKey, event.altKey, event.shiftKey*/, false /* note: buttonDown not supported on w3c spec */, 0, 0);
 		
 		evt.stageX = Lib.current.stage.mouseX;

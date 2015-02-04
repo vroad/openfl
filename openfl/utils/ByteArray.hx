@@ -1,7 +1,7 @@
 package openfl.utils;
 
 
-#if (flash || openfl_next || html5 || display)
+#if !lime_legacy
 typedef ByteArray = lime.utils.ByteArray;
 #else
 typedef ByteArray = openfl._v2.utils.ByteArray;
@@ -17,7 +17,7 @@ import haxe.io.Input;
 import openfl.errors.IOError;
 import openfl.utils.ArrayBuffer;
 
-#if html5
+#if js
 import js.html.DataView;
 import js.html.Uint8Array;
 #end

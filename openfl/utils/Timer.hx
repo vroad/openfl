@@ -1,4 +1,4 @@
-package openfl.utils; #if !flash #if (display || openfl_next || html5)
+package openfl.utils; #if !flash #if !lime_legacy
 
 
 import haxe.Timer in HaxeTimer;
@@ -6,7 +6,7 @@ import openfl.errors.Error;
 import openfl.events.EventDispatcher;
 import openfl.events.TimerEvent;
 
-#if html5
+#if js
 import js.Browser;
 #end
 
@@ -142,7 +142,7 @@ class Timer extends EventDispatcher {
 			
 			running = true;
 			
-			#if html5
+			#if js
 			__timerID = Browser.window.setInterval (timer_onTimer, Std.int (__delay));
 			#else
 			__timer = new HaxeTimer (__delay);
@@ -164,7 +164,7 @@ class Timer extends EventDispatcher {
 		
 		running = false;
 		
-		#if html5
+		#if js
 		if (__timerID != null) {
 			
 			Browser.window.clearInterval (__timerID);

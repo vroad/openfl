@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 import openfl._internal.renderer.opengl.utils.FilterTexture;
@@ -12,7 +12,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.Vector;
 
-#if html5
+#if js
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 #end
@@ -57,7 +57,7 @@ class Graphics {
 	@:noCompletion private var __visible:Bool = true;
 	@:noCompletion private var __cachedTexture:FilterTexture;
 	
-	#if html5
+	#if js
 	@:noCompletion private var __canvas:CanvasElement;
 	@:noCompletion private var __context:CanvasRenderingContext2D;
 	#end

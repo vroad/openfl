@@ -1,4 +1,4 @@
-package openfl.text; #if !flash #if (display || openfl_next || html5)
+package openfl.text; #if !flash #if !lime_legacy
 
 
 /**

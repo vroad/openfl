@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 import haxe.EnumFlags;
@@ -27,7 +27,7 @@ import openfl.geom.Rectangle;
 import openfl.ui.Keyboard;
 import openfl.ui.KeyLocation;
 
-#if html5
+#if js
 import js.html.CanvasElement;
 import js.html.DivElement;
 import js.html.Element;
@@ -527,7 +527,7 @@ class Stage extends Sprite {
 	@:noCompletion private var __transparent:Bool;
 	@:noCompletion private var __wasDirty:Bool;
 	
-	#if html5
+	#if js
 	//@:noCompletion private var __div:DivElement;
 	//@:noCompletion private var __element:HtmlElement;
 	#if stats
@@ -748,7 +748,7 @@ class Stage extends Sprite {
 		switch (context) {
 			
 			case OPENGL (gl):
-#if !disable_gl_renderer				
+				
 				if (__renderer == null) {
 					
 					__renderer = new GLRenderer (stageWidth, stageHeight, gl);
@@ -756,7 +756,7 @@ class Stage extends Sprite {
 				}
 				
 				__renderer.render (this);
-#end			
+			
 			case CANVAS (context):
 				
 				if (__renderer == null) {
@@ -969,7 +969,7 @@ class Stage extends Sprite {
 	
 	
 	
-	#if html5
+	#if js
 	@:noCompletion private function canvas_onContextLost (event:js.html.webgl.ContextEvent):Void {
 		
 		//__glContextLost = true;

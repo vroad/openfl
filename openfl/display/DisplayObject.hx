@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || html5)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 import openfl._internal.renderer.RenderSession;
@@ -15,7 +15,7 @@ import openfl.geom.Rectangle;
 import openfl.geom.Transform;
 import openfl.Lib;
 
-#if html5
+#if js
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.html.CSSStyleDeclaration;
@@ -732,7 +732,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	@:noCompletion private var __x:Float;
 	@:noCompletion private var __y:Float;
 	
-	#if html5
+	#if js
 	@:noCompletion private var __canvas:CanvasElement;
 	@:noCompletion private var __context:CanvasRenderingContext2D;
 	@:noCompletion private var __style:CSSStyleDeclaration;
