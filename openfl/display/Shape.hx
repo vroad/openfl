@@ -92,7 +92,7 @@ class Shape extends DisplayObject {
 	
 	
 	@:noCompletion public override function __renderGL (renderSession:RenderSession):Void {
-		
+		#if !disable_gl_renderer
 		if (!__renderable || __worldAlpha <= 0) return;
 		
 		if (__graphics != null) {
@@ -100,7 +100,7 @@ class Shape extends DisplayObject {
 			GraphicsRenderer.render (this, renderSession);
 			
 		}
-		
+		#end
 	}
 	
 	

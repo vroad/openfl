@@ -92,7 +92,7 @@ class OpenGLView extends DirectRenderer {
 	#if !flash
 	@:noCompletion public override function __renderDOM (renderSession:RenderSession):Void {
 		
-		#if js
+		#if html5
 		if (stage != null && __worldVisible && __renderable) {
 			
 			if (!__added) {
@@ -202,7 +202,7 @@ class OpenGLView extends DirectRenderer {
 		
 		return false;
 		
-		#elseif js
+		#elseif html5
 		
 		if (untyped (!window.WebGLRenderingContext)) {
 			

@@ -159,9 +159,9 @@ class Bitmap extends DisplayObjectContainer {
 	
 	
 	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
-		
+		#if !disable_gl_renderer
 		GLBitmap.render (this, renderSession);
-		
+		#end
 	}
 	
 	
