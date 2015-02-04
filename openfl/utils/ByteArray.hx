@@ -17,7 +17,7 @@ import haxe.io.Input;
 import openfl.errors.IOError;
 import openfl.utils.ArrayBuffer;
 
-#if js
+#if html5
 import js.html.DataView;
 import js.html.Uint8Array;
 #end

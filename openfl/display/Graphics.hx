@@ -12,7 +12,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.Vector;
 
-#if js
+#if html5
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 #end
@@ -57,7 +57,7 @@ class Graphics {
 	@:noCompletion private var __visible:Bool = true;
 	@:noCompletion private var __cachedTexture:FilterTexture;
 	
-	#if js
+	#if html5
 	@:noCompletion private var __canvas:CanvasElement;
 	@:noCompletion private var __context:CanvasRenderingContext2D;
 	#end

@@ -10,7 +10,7 @@ import openfl.geom.Rectangle;
 import openfl.gl.GL;
 import openfl.Lib;
 
-#if js
+#if html5
 import js.html.CanvasElement;
 import js.Browser;
 #end
