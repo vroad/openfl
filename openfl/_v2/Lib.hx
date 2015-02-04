@@ -1,5 +1,4 @@
 package openfl._v2; #if lime_legacy
-#if !macro
 
 
 import openfl.display.BitmapData;
@@ -222,7 +221,17 @@ class Lib {
 		
 		__moduleNames.set (library, library);
 		
+		#if blackberry
+		var result:Dynamic = tryLoad ("/app/native/" + library, library, method, args);
+		
+		if (result == null) {
+			
+			result = tryLoad ("./" + library, library, method, args);
+			
+		}
+		#else
 		var result:Dynamic = tryLoad ("./" + library, library, method, args);
+		#end
 		
 		if (result == null) {
 			
@@ -239,15 +248,15 @@ class Lib {
 		if (result == null) {
 			
 			var slash = (sysName ().substr (7).toLowerCase () == "windows") ? "\\" : "/";
-			var haxelib = findHaxeLib ("openfl-native");
+			var haxelib = findHaxeLib ("lime");
 			
 			if (haxelib != "") {
 				
-				result = tryLoad (haxelib + slash + "ndll" + slash + sysName () + slash + library, library, method, args);
+				result = tryLoad (haxelib + slash + "legacy" + slash + "ndll" + slash + sysName () + slash + library, library, method, args);
 				
 				if (result == null) {
 					
-					result = tryLoad (haxelib + slash + "ndll" + slash + sysName() + "64" + slash + library, library, method, args);
+					result = tryLoad (haxelib + slash + "legacy" + slash + "ndll" + slash + sysName() + "64" + slash + library, library, method, args);
 					
 				}
 				
@@ -588,32 +597,4 @@ class Lib {
 }
 
 
-#else
-
-
-import haxe.macro.Context;
-import haxe.macro.Expr;
-
-
-class Lib {
-	
-	
-	public static function defined (haxedef:String):Expr {
-		
-		return Context.makeExpr (Context.defined (haxedef), Context.currentPos ());
-		
-	}
-	
-	
-	public static function definedValue (haxedef:String):Expr {
-		
-		return Context.makeExpr (Context.definedValue (haxedef), Context.currentPos ());
-		
-	}
-	
-	
-}
-
-
-#end
 #end
