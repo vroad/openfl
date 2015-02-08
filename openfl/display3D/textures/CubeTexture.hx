@@ -57,7 +57,6 @@ class CubeTexture extends TextureBase {
 		var source = @:privateAccess (bitmapData.__image).data;
 		#end
 		
-		var source:UInt8Array = untyped data.__image.buffer.data;
 		GL.bindTexture (GL.TEXTURE_CUBE_MAP, glTexture);
 		
 		switch (side) {
