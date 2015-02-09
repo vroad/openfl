@@ -6,6 +6,7 @@ enum Context3DTextureFormat {
 	BGRA;
 	COMPRESSED;
 	COMPRESSED_ALPHA;
+	ALPHA;
 	
 }
 

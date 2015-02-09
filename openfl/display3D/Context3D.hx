@@ -175,7 +175,8 @@ class Context3D {
 	
 	public function createRectangleTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool):RectangleTexture {
 		
-		var texture = new RectangleTexture (GL.createTexture (), optimizeForRenderToTexture, width, height); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var glFormat = getGLTextureFormat(format);
+		var texture = new RectangleTexture (GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		texturesCreated.push (texture);
 		return texture;
 		
@@ -184,12 +185,31 @@ class Context3D {
 	
 	public function createTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):Texture {
 		
-		var texture = new Texture (GL.createTexture (), optimizeForRenderToTexture, width, height); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var glFormat = getGLTextureFormat(format);
+		var texture = new Texture (GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		texturesCreated.push (texture);
 		return texture;
 		
 	}
+
 	
+	private function getGLTextureFormat(format:Context3DTextureFormat):{internalFormat:Int, format:Int, type:Int}
+	{
+		
+		switch (format)
+		{
+			
+			case Context3DTextureFormat.ALPHA:
+				return { internalFormat:GL.ALPHA8, format:GL.ALPHA, type:GL.UNSIGNED_BYTE };
+			case Context3DTextureFormat.BGRA:
+				return { internalFormat:GL.RGBA, format:GL.RGBA, type:GL.UNSIGNED_BYTE };
+			default:
+				return null;
+			
+		}
+		
+	}
+
 	
 	public function createVertexBuffer (numVertices:Int, data32PerVertex:Int):VertexBuffer3D {
 		

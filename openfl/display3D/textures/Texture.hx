@@ -18,27 +18,13 @@ class Texture extends TextureBase {
 	public var optimizeForRenderToTexture:Bool;
 	
 	
-	public function new (glTexture:GLTexture, optimize:Bool, width:Int, height:Int) {
+	public function new (glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
 		
 		optimizeForRenderToTexture = optimize;
 		
-		#if (js || neko)
-		if (optimizeForRenderToTexture == null) optimizeForRenderToTexture = false;
-		#end
+		super (glTexture, width, height, internalFormat, format, type);
 		
-		super (glTexture, width, height);
-		
-		#if (cpp || neko)
-		if (optimizeForRenderToTexture) { 
-			
-			GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, 1); 
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
-			
-		}
-		#end
+		uploadFromUInt8Array(null);
 		
 	}
 	
@@ -86,15 +72,29 @@ class Texture extends TextureBase {
 		
 	}
 	
-	private function uploadFromUInt8Array(data:UInt8Array, miplevel:Int = 0)
+	public function uploadFromUInt8Array (data:UInt8Array, miplevel:Int = 0, xOffset:Int = 0, yOffset:Int = 0, _width:Int = 0, _height:Int = 0)
 	{
+		if (_width == 0)
+			_width = width;
+		if (_height == 0)
+			_height = height;
+		
 		#if !html5
-		data = flipPixels(data);
+		data = flipPixels(data, _width, _height);
+		if (format == GL.ALPHA)
+			GL.pixelStorei(GL.UNPACK_ALIGNMENT, 1);
+		else
+			GL.pixelStorei(GL.UNPACK_ALIGNMENT, 4);
+		#else
+		GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, 1);
 		#end
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
-		GL.texImage2D (GL.TEXTURE_2D, miplevel, GL.RGBA, width, height, 0, GL.RGBA, GL.UNSIGNED_BYTE, data);
+		if (data == null)
+			GL.texImage2D (GL.TEXTURE_2D, miplevel, internalFormat, width, height, 0, format, type, null);
+		else
+			GL.texSubImage2D (GL.TEXTURE_2D, miplevel, xOffset, height - yOffset - _height, _width, _height, format, type, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
 		
 	}
