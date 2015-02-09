@@ -5,6 +5,7 @@ package openfl.display; #if !lime_legacy
 import openfl._internal.renderer.dom.DOMRenderer;
 import openfl._internal.renderer.RenderSession;
 #end
+import js.html.webgl.ContextAttributes;
 import openfl.display.Stage;
 import openfl.geom.Rectangle;
 import openfl.gl.GL;
@@ -42,13 +43,8 @@ class OpenGLView extends DirectRenderer {
 			__canvas.width = Lib.current.stage.stageWidth;
 			__canvas.height = Lib.current.stage.stageHeight;
 			
-			__context = cast __canvas.getContext ("webgl");
-			
-			if (__context == null) {
-				
-				__context = cast __canvas.getContext ("experimental-webgl");
-				
-			}
+			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha: false, antialias:false};
+			__context = cast __canvas.getContextWebGL(attributes);
 			
 			#if debug
 			__context = untyped WebGLDebugUtils.makeDebugContext (__context);
