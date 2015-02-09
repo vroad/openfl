@@ -40,6 +40,7 @@ class Context3D {
 	private var blendSourceFactor:Int; // to mimic Stage3d behavior of keeping blending across frames:
 	private var currentProgram:Program3D;
 	private var disposed:Bool;
+	private var renderToTexture : Bool;
 	private var drawing:Bool; // to mimic Stage3d behavior of not allowing calls to drawTriangles between present and clear
 	private var framebuffer:GLFramebuffer;
 	private var indexBuffersCreated:Array<IndexBuffer3D>; // to keep track of stuff to dispose when calling dispose
@@ -47,6 +48,9 @@ class Context3D {
 	private var programsCreated:Array<Program3D>; // to keep track of stuff to dispose when calling dispose
 	private var renderbuffer:GLRenderbuffer;
 	private var samplerParameters:Array<SamplerState>; //TODO : use Tupple3
+	private var scissorRectangle:Rectangle;
+	private var rttWidth:Int;
+	private var rttHeight:Int;
 	private var scrollRect:Rectangle;
 	private var stencilbuffer:GLRenderbuffer;
 	private var stencilCompareMode:Int;
@@ -59,6 +63,7 @@ class Context3D {
 	public function new () {
 		
 		disposed = false;
+		renderToTexture = false;
 		
 		_yFlip = 1;
 
@@ -111,12 +116,16 @@ class Context3D {
 		#if (cpp || neko)
 		GL.depthMask (true);
 		#end
+		if (scissorRectangle != null)
+			GL.disable(GL.SCISSOR_TEST);
 		GL.clearColor (red, green, blue, alpha);
 		GL.clearDepth (depth);
 		GL.clearStencil (stencil);
 		
 		GL.clear (mask);
 		
+		if (scissorRectangle != null)
+			GL.enable(GL.SCISSOR_TEST);
 	}
 	
 	
@@ -667,6 +676,10 @@ class Context3D {
 			GL.bindRenderbuffer (GL.RENDERBUFFER, null);
 
 		}
+		
+		GL.viewport(Std.int(scrollRect.x), Std.int(scrollRect.y), Std.int(scrollRect.width), Std.int(scrollRect.height));
+		renderToTexture = false;
+		updateScissorRectangle();
 
 	}
 	
@@ -706,12 +719,11 @@ class Context3D {
 			GL.enable (GL.STENCIL_TEST);
 		}
 		
-		GL.bindTexture (GL.TEXTURE_2D, texture.glTexture);
-		GL.texImage2D (GL.TEXTURE_2D, 0, GL.RGBA, texture.width, texture.height, 0, GL.RGBA, GL.UNSIGNED_BYTE, null);
-		GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
-		GL.texParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_NEAREST);
-		
 		GL.viewport (0, 0, texture.width, texture.height);
+		renderToTexture = true;
+		rttWidth = texture.width;
+		rttHeight = texture.height;
+		updateScissorRectangle();
 	}
 	
 	
@@ -733,9 +745,10 @@ class Context3D {
 		
 	}
 	
-	
-	public function setScissorRectangle (rectangle:Rectangle):Void {
+	public function setScissorRectangle(rectangle:Rectangle):Void 
+	{
 		
+		scissorRectangle = rectangle;
 		// TODO test it
 		
 		if (rectangle == null) {
@@ -746,10 +759,25 @@ class Context3D {
 		}
 		
 		GL.enable (GL.SCISSOR_TEST);
-		GL.scissor (Std.int (rectangle.x), Std.int (rectangle.y), Std.int (rectangle.width), Std.int (rectangle.height));
+		updateScissorRectangle ();
 		
 	}
 	
+	private function updateScissorRectangle()
+	{
+		
+		if (scissorRectangle == null)
+			return;
+		
+		//var width:Int = renderToTexture ? rttWidth : scrollRect.width;
+		var height:Float = renderToTexture ? rttHeight : scrollRect.height;
+		GL.scissor (Std.int (scissorRectangle.x),
+			Std.int (height - scissorRectangle.y - scissorRectangle.height),
+			Std.int (scissorRectangle.width),
+			Std.int (scissorRectangle.height)
+		);
+		
+	}
 	
 	public function setStencilActions (?triangleFace:Int, ?compareMode:Int, ?actionOnBothPass:Int, ?actionOnDepthFail:Int, ?actionOnDepthPassStencilFail:Int):Void {
 		
