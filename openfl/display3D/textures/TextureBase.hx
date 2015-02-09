@@ -12,7 +12,6 @@ class TextureBase extends EventDispatcher {
 	
 	
 	public var height:Int;
-	public var frameBuffer:GLFramebuffer;
 	public var glTexture:GLTexture;
 	public var width:Int;
 	public var internalFormat:Int;
