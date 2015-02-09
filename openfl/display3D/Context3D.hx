@@ -200,7 +200,7 @@ class Context3D {
 		{
 			
 			case Context3DTextureFormat.ALPHA:
-				return { internalFormat:GL.ALPHA8, format:GL.ALPHA, type:GL.UNSIGNED_BYTE };
+				return { internalFormat:GL.ALPHA, format:GL.ALPHA, type:GL.UNSIGNED_BYTE };
 			case Context3DTextureFormat.BGRA:
 				return { internalFormat:GL.RGBA, format:GL.RGBA, type:GL.UNSIGNED_BYTE };
 			default:
