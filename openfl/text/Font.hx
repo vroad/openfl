@@ -79,6 +79,12 @@ class Font extends lime.graphics.Font {
 		
 	}
 	
+	public static function fromName (name:String):Font {
+		
+		return cast lime.graphics.Font.fromName(name);
+		
+	}
+	
 	
 	/**
 	 * Registers a font class in the global font list.
