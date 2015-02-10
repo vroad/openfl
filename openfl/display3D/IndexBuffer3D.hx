@@ -13,12 +13,14 @@ class IndexBuffer3D {
 	
 	public var glBuffer:GLBuffer;
 	public var numIndices:Int;
+	public var bufferUsage:Int;
 	
 	
-	public function new (glBuffer:GLBuffer, numIndices:Int) {
+	public function new (glBuffer:GLBuffer, numIndices:Int, bufferUsage:Int) {
 		
 		this.glBuffer = glBuffer;
 		this.numIndices = numIndices;
+		this.bufferUsage = bufferUsage;
 		
 	}
 	
@@ -45,7 +47,7 @@ class IndexBuffer3D {
 		indices = new Int16Array (byteArray, offset, length);
 		#end
 		
-		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
+		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, indices, bufferUsage);
 		
 	}
 	
@@ -53,6 +55,7 @@ class IndexBuffer3D {
 	public function uploadFromVector (data:Vector<UInt>, startOffset:Int, count:Int):Void {
 		
 		var indices:Int16Array;
+		GL.bindBuffer (GL.ARRAY_BUFFER, glBuffer);
 		
 		#if js
 		indices = new Int16Array (count);
@@ -69,15 +72,15 @@ class IndexBuffer3D {
 		indices = new Int16Array (data, startOffset, count);
 		#end
 		
-		uploadFromInt16Array(indices);
+		GL.bufferData(GL.ARRAY_BUFFER, indices, bufferUsage);
 		
 	}
-    
+	
 	public function uploadFromInt16Array(data:Int16Array):Void 
-    {
-        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, glBuffer);
-        GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, GL.STATIC_DRAW);
-    }
+	{
+		GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, glBuffer);
+		GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, bufferUsage);
+	}
 }
 
 

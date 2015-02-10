@@ -13,13 +13,15 @@ class VertexBuffer3D {
 	public var data32PerVertex:Int;
 	public var glBuffer:GLBuffer;
 	public var numVertices:Int;
+	public var bufferUsage:Int;
 	
 	
-	public function new (glBuffer:GLBuffer, numVertices:Int, data32PerVertex:Int) {
+	public function new (glBuffer:GLBuffer, numVertices:Int, data32PerVertex:Int, bufferUsage:Int) {
 		
 		this.glBuffer = glBuffer;
 		this.numVertices = numVertices;
 		this.data32PerVertex = data32PerVertex;
+		this.bufferUsage = bufferUsage;
 		
 	}
 	
@@ -47,7 +49,7 @@ class VertexBuffer3D {
 		float32Array = new Float32Array (byteArray, offset, length);
 		#end
 		
-		GL.bufferData (GL.ARRAY_BUFFER, float32Array, GL.STATIC_DRAW);
+		GL.bufferData (GL.ARRAY_BUFFER, float32Array, bufferUsage);
 		
 	}
 	
@@ -55,7 +57,7 @@ class VertexBuffer3D {
 	public function uploadFromFloat32Array (data:Float32Array, startVertex:Int, numVertices:Int):Void {
 		
 		GL.bindBuffer (GL.ARRAY_BUFFER, glBuffer);
-		GL.bufferData (GL.ARRAY_BUFFER, data, GL.STATIC_DRAW);
+		GL.bufferData (GL.ARRAY_BUFFER, data, bufferUsage);
 		
 	}
 	
@@ -85,7 +87,7 @@ class VertexBuffer3D {
 		float32Array = new Float32Array (data, offset, length);
 		#end
 		
-		GL.bufferData (GL.ARRAY_BUFFER, float32Array, GL.STATIC_DRAW);
+		GL.bufferData (GL.ARRAY_BUFFER, float32Array, bufferUsage);
 		
 		float32Array = null;
 		
