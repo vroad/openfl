@@ -78,6 +78,9 @@ class VertexBuffer3D {
 			float32Array[i] = data[i];
 			
 		}
+		#if nodejs
+		float32Array.buffer;
+		#end
 		#else
 		float32Array = new Float32Array (data, offset, length);
 		#end

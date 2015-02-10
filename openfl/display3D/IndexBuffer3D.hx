@@ -62,6 +62,9 @@ class IndexBuffer3D {
 			indices[i] = data[i];
 			
 		}
+		#if nodejs
+		indices.buffer;
+		#end
 		#else
 		indices = new Int16Array (data, startOffset, count);
 		#end
