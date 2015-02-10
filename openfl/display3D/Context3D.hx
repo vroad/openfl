@@ -113,9 +113,6 @@ class Context3D {
 		 	
 		}
 		
-		#if (cpp || neko)
-		GL.depthMask (true);
-		#end
 		if (scissorRectangle != null)
 			GL.disable(GL.SCISSOR_TEST);
 		GL.clearColor (red, green, blue, alpha);
@@ -522,10 +519,6 @@ class Context3D {
 			if (location > -1) {
 				
 				GL.disableVertexAttribArray (location);
-				
-				#if (cpp || neko)
-				GL.bindBuffer (GL.ARRAY_BUFFER, null);
-				#end
 				
 			}
 			
