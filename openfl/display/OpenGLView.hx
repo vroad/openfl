@@ -5,7 +5,6 @@ package openfl.display; #if !lime_legacy
 import openfl._internal.renderer.dom.DOMRenderer;
 import openfl._internal.renderer.RenderSession;
 #end
-import js.html.webgl.ContextAttributes;
 import openfl.display.Stage;
 import openfl.geom.Rectangle;
 import openfl.gl.GL;
@@ -14,6 +13,7 @@ import openfl.Lib;
 #if html5
 import js.html.CanvasElement;
 import js.Browser;
+import js.html.webgl.ContextAttributes;
 #end
 
 @:access(lime.graphics.opengl.GL)
