@@ -826,10 +826,6 @@ class Context3D {
 		
 		if (Std.is (texture, Texture)) {
 			
-			#if (cpp || neko)
-			GL.bindTexture (GL.TEXTURE_2D, cast (texture, Texture).glTexture);
-			#end
-			
 			switch (wrap) {
 				
 				case Context3DWrapMode.CLAMP:
@@ -903,10 +899,6 @@ class Context3D {
 			
 		} else if (Std.is (texture, RectangleTexture)) {
 			
-			#if (cpp || neko)
-			GL.bindTexture (GL.TEXTURE_2D, cast(texture, RectangleTexture).glTexture);
-			#end
-			
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
 			
@@ -949,10 +941,6 @@ class Context3D {
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
 			
 		} else if (Std.is (texture, CubeTexture)) {
-			
-			#if (cpp || neko)
-			GL.bindTexture (GL.TEXTURE_CUBE_MAP, cast (texture, CubeTexture).glTexture);
-			#end
 			
 			switch (wrap) {
 				
