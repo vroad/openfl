@@ -69,11 +69,6 @@ class TextureBase extends EventDispatcher {
 		#end
 	}
 	
-	public function copyTo(dest:Texture, sourceX:Int, sourceY:Int, _width:Int, _height:Int, destX:Int, destY:Int)
-	{
-	}
-	
-	
 }
 
 
