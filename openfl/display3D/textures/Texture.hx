@@ -81,13 +81,11 @@ class Texture extends TextureBase {
 		
 		#if !html5
 		data = flipPixels(data, _width, _height);
+		#end
 		if (format == GL.ALPHA)
 			GL.pixelStorei(GL.UNPACK_ALIGNMENT, 1);
 		else
 			GL.pixelStorei(GL.UNPACK_ALIGNMENT, 4);
-		#else
-		GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, 1);
-		#end
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
