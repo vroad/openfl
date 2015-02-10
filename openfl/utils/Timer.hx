@@ -145,7 +145,7 @@ class Timer extends EventDispatcher {
 			#if html5
 			__timerID = Browser.window.setInterval (timer_onTimer, Std.int (__delay));
 			#else
-			__timer = new HaxeTimer (__delay);
+			__timer = new HaxeTimer (Std.int(__delay));
 			__timer.run = timer_onTimer;
 			#end
 			
