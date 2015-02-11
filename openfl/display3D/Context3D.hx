@@ -684,7 +684,7 @@ class Context3D {
 		
 		GL.bindFramebuffer (GL.FRAMEBUFFER, framebuffer);
 		
-		if (renderbuffer == null) {
+		if (renderbuffer == null && enableDepthAndStencil) {
 			
 			renderbuffer = GL.createRenderbuffer ();
 			
@@ -692,19 +692,21 @@ class Context3D {
 		
 		GL.bindRenderbuffer (GL.RENDERBUFFER, renderbuffer);
 		#if ios
-		GL.renderbufferStorage (GL.RENDERBUFFER, 0x88F0, texture.width, texture.height);
+		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, 0x88F0, texture.width, texture.height);
 		#else
-		GL.renderbufferStorage (GL.RENDERBUFFER, GL.RGBA, texture.width, texture.height);
+		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, texture.internalFormat, texture.width, texture.height);
 		#end
 		GL.framebufferTexture2D (GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, texture.glTexture, 0);
 
-		GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
-		GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, renderbuffer);
-		
-		if (enableDepthAndStencil) {
+		if (enableDepthAndStencil)
+		{
+			
+			GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
+			GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, renderbuffer);
 			
 			GL.enable (GL.DEPTH_TEST);
 			GL.enable (GL.STENCIL_TEST);
+			
 		}
 		
 		GL.viewport (0, 0, texture.width, texture.height);
