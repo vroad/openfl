@@ -20,7 +20,7 @@ class ApplicationMain {
 		preloader.onComplete = init;
 		preloader.create (config);
 		
-		#if html5
+		#if (js && html5)
 		var urls = [];
 		var types = [];
 		
@@ -35,12 +35,26 @@ class ApplicationMain {
 		::else::types.push (null);::end::
 		::end::::end::
 		
+		if (config.assetsPrefix != null) {
+			
+			for (i in 0...urls.length) {
+				
+				if (types[i] != AssetType.FONT) {
+					
+					urls[i] = config.assetsPrefix + urls[i];
+					
+				}
+				
+			}
+			
+		}
+		
 		preloader.load (urls, types);
 		#end
 		
 		var result = app.exec ();
 		
-		#if (sys && !nodejs && !html5)
+		#if (sys && !emscripten && !nodejs)
 		Sys.exit (result);
 		#end
 		
@@ -116,8 +130,9 @@ class ApplicationMain {
 		openfl.Lib.current.stage.scaleMode = openfl.display.StageScaleMode.NO_SCALE;
 		
 		var hasMain = false;
+		var entryPoint = Type.resolveClass ("::APP_MAIN::");
 		
-		for (methodName in Type.getClassFields (::APP_MAIN::)) {
+		for (methodName in Type.getClassFields (entryPoint)) {
 			
 			if (methodName == "main") {
 				
@@ -130,7 +145,7 @@ class ApplicationMain {
 		
 		if (hasMain) {
 			
-			Reflect.callMethod (::APP_MAIN::, Reflect.field (::APP_MAIN::, "main"), []);
+			Reflect.callMethod (entryPoint, Reflect.field (entryPoint, "main"), []);
 			
 		} else {
 			

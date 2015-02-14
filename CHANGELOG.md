@@ -1,3 +1,41 @@
+2.2.6 (02/13/2015)
+------------------
+
+#### General
+
+* Fixed regression in HTML5 font asset embedding
+* Minor Stage3D improvements
+
+#### HTML5, Native (next)
+
+* Added support for Emscripten
+* Improved handling of conflicting main class names
+
+
+2.2.5 (02/11/2015)
+------------------
+
+#### General
+
+* Improved documentation
+* Implemented Capabilities.version
+* Switched to Lime 2.1 System.getTimer where appropriate
+* Improved Stage3D render-to-texture support
+* Switched #if lime_legacy to #if !openfl_next, internally
+
+#### HTML5, Native (next)
+
+* Fixed conflicts with projects that use an "app" package
+* Added initial alpha support for transform.colorTransform
+
+#### Native (v2)
+
+* Fixed support for the BlackBerry 10.3 simulator
+* Fixed SAMPLE_DATA sounds on Android
+* Fixed bindFramebuffer (null) behavior on iOS
+* Improved the behavior of GL.getParameter
+
+
 2.2.4 (01/22/2015)
 ------------------
 

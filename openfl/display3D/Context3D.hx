@@ -76,7 +76,7 @@ class Context3D {
 		for (i in 0...MAX_SAMPLERS) {
 			
 			samplerParameters[i] = new SamplerState ();
-			samplerParameters[i].wrap = Context3DWrapMode.REPEAT;
+			samplerParameters[i].wrap = Context3DWrapMode.CLAMP;
 			samplerParameters[i].filter = Context3DTextureFilter.LINEAR;
 			samplerParameters[i].mipfilter =Context3DMipFilter.MIPNONE;
 			
@@ -90,12 +90,7 @@ class Context3D {
 		ogl.width = stage.stageWidth;
 		ogl.height = stage.stageHeight;
 		
-		//todo html something 
-		//#if html5
-		//stage.addChild(ogl);
-		//#else
 		stage.addChildAt(ogl, 0);
-		//#end
 		
 		#if html5
 		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, 1);
@@ -325,9 +320,6 @@ class Context3D {
 		
 		GL.bindBuffer (GL.ARRAY_BUFFER, null);
 		GL.disable (GL.CULL_FACE);
-		GL.disable (GL.DEPTH_TEST);
-		GL.disable (GL.STENCIL_TEST);
-		GL.disable (GL.SCISSOR_TEST);
 		
 		if (framebuffer != null) {
 
@@ -507,7 +499,7 @@ class Context3D {
 			
 		} else {
 			
-			setTextureParameters (texture, Context3DWrapMode.REPEAT, Context3DTextureFilter.NEAREST, Context3DMipFilter.MIPNONE);
+			setTextureParameters (texture, Context3DWrapMode.CLAMP, Context3DTextureFilter.NEAREST, Context3DMipFilter.MIPNONE);
 			
 		}
 		
@@ -653,6 +645,10 @@ class Context3D {
 	
 	public function setRenderToBackBuffer ():Void {
 		
+		GL.disable (GL.DEPTH_TEST);
+		GL.disable (GL.STENCIL_TEST);
+		GL.disable (GL.SCISSOR_TEST);
+
 		if (framebuffer != null) {
 
 			GL.bindFramebuffer (GL.FRAMEBUFFER, null);
