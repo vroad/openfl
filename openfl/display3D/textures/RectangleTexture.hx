@@ -78,10 +78,27 @@ class RectangleTexture extends TextureBase {
 		#if !html5
 		data = flipPixels(data, _width, _height);
 		#end
-		if (format == GL.ALPHA)
-			GL.pixelStorei(GL.UNPACK_ALIGNMENT, 1);
-		else
-			GL.pixelStorei(GL.UNPACK_ALIGNMENT, 4);
+		
+		var alignment:Int = 8;
+		var bpp:Int;
+		switch (format)
+		{
+			
+			case GL.ALPHA: bpp = 1;
+			case GL.RGBA: bpp = 4;
+			default: bpp = 4;
+			
+		}
+		while (alignment != 1)
+		{
+		
+			if ((_width * bpp) % alignment == 0)
+				break;
+			alignment >>= 1;
+			
+		}
+		
+		GL.pixelStorei (GL.UNPACK_ALIGNMENT, alignment);
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
