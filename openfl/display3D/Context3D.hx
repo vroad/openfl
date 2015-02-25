@@ -209,7 +209,7 @@ class Context3D {
 	
 	public function createVertexBuffer (numVertices:Int, data32PerVertex:Int, bufferUsage:Context3DBufferUsage = null):VertexBuffer3D {
 		
-        if (bufferUsage == null) bufferUsage = STATIC_DRAW;
+		if (bufferUsage == null) bufferUsage = STATIC_DRAW;
 		var vertexBuffer = new VertexBuffer3D (GL.createBuffer (), numVertices, data32PerVertex, bufferUsage == Context3DBufferUsage.STATIC_DRAW ? GL.STATIC_DRAW : GL.DYNAMIC_DRAW);
 		vertexBuffersCreated.push (vertexBuffer);
 		return vertexBuffer;
@@ -668,7 +668,7 @@ class Context3D {
 	}
 	
 	
-	public function setRenderToTexture (texture:TextureBase, enableDepthAndStencil:Bool = false, antiAlias:Int = 0, surfaceSelector:Int = 0):Void {      
+	public function setRenderToTexture (texture:TextureBase, enableDepthAndStencil:Bool = false, antiAlias:Int = 0, surfaceSelector:Int = 0):Void {
 		
 		// TODO : currently does not work (framebufferStatus always return zero)
 		
