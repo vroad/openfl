@@ -5,6 +5,7 @@ import lime.app.Application in LimeApplication;
 import lime.app.Config in LimeConfig;
 import lime.graphics.RenderContext;
 import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
 import lime.ui.Mouse;
 import openfl.display.InteractiveObject;
 import openfl.display.Stage;
@@ -14,6 +15,7 @@ import openfl.events.KeyboardEvent;
 import openfl.events.MouseEvent;
 import openfl.events.TouchEvent;
 import openfl.geom.Point;
+import openfl.text.TextField;
 import openfl.ui.Keyboard;
 import openfl.Lib;
 
@@ -26,6 +28,7 @@ class Application extends LimeApplication {
 	
 	private var stage:Stage;
 	private var __lastClickTime:Int;
+	private var __mouseOutStack = [];
 	
 	
 	public function new () {
@@ -323,24 +326,24 @@ class Application extends LimeApplication {
 	}
 	
 	
-	public override function onKeyDown (keyCode:Int, modifier:Int):Void {
+	public override function onKeyDown (keyCode:KeyCode, modifier:KeyModifier):Void {
 		
 		var keyCode = convertKeyCode (cast keyCode);
 		var charCode = keyCode;
 		
 		//var event = new KeyboardEvent (event.type == KEY_DOWN ? KeyboardEvent.KEY_DOWN : KeyboardEvent.KEY_UP, true, false, event.code, keyCode, keyLocation, event.ctrlKey, event.altKey, event.shiftKey, event.metaKey)
-		onKey (new KeyboardEvent (KeyboardEvent.KEY_DOWN, true, false, charCode, keyCode));
+		onKey (new KeyboardEvent (KeyboardEvent.KEY_DOWN, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey));
 		
 	}
 	
 	
-	public override function onKeyUp (keyCode:Int, modifier:Int):Void {
+	public override function onKeyUp (keyCode:KeyCode, modifier:KeyModifier):Void {
 		
 		var keyCode = convertKeyCode (cast keyCode);
 		var charCode = keyCode;
 		
 		//var event = new KeyboardEvent (event.type == KEY_DOWN ? KeyboardEvent.KEY_DOWN : KeyboardEvent.KEY_UP, true, false, event.code, keyCode, keyLocation, event.ctrlKey, event.altKey, event.shiftKey, event.metaKey)
-		onKey (new KeyboardEvent (KeyboardEvent.KEY_UP, true, false, charCode, keyCode));
+		onKey (new KeyboardEvent (KeyboardEvent.KEY_UP, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey));
 		
 	}
 	
@@ -414,9 +417,71 @@ class Application extends LimeApplication {
 				
 			}
 			
+		} else if (Std.is (target, SimpleButton)) {
+			
+			var targetButton:SimpleButton = cast target;
+			
+			if (targetButton.useHandCursor) {
+				
+				Mouse.cursor = POINTER;
+				
+			} else {
+				
+				Mouse.cursor = ARROW;
+				
+			}
+			
+		} else if (Std.is (target, TextField)) {
+			
+			var targetTextField:TextField = cast target;
+			
+			if (targetTextField.type == INPUT) {
+				
+				Mouse.cursor = TEXT;
+				
+			} else {
+				
+				Mouse.cursor = ARROW;
+				
+			}
+			
 		} else {
 			
 			Mouse.cursor = ARROW;
+			
+		}
+		
+		for (target in __mouseOutStack) {
+			
+			if (stack.indexOf (target) == -1) {
+				
+				__mouseOutStack.remove (target);
+				
+				var localPoint = target.globalToLocal (targetPoint);
+				target.dispatchEvent (new MouseEvent (MouseEvent.MOUSE_OUT, false, false, localPoint.x, localPoint.y, cast target));
+				
+			}
+			
+		}
+		
+		for (target in stack) {
+			
+			if (__mouseOutStack.indexOf (target) == -1) {
+				
+				if (target.hasEventListener (MouseEvent.MOUSE_OVER)) {
+					
+					var localPoint = target.globalToLocal (targetPoint);
+					target.dispatchEvent (new MouseEvent (MouseEvent.MOUSE_OVER, false, false, localPoint.x, localPoint.y, cast target));
+					
+				}
+				
+				if (target.hasEventListener (MouseEvent.MOUSE_OUT)) {
+					
+					__mouseOutStack.push (target);
+					
+				}
+				
+			}
 			
 		}
 		

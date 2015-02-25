@@ -120,7 +120,7 @@ class Stage extends DisplayObjectContainer {
 		#end
 		
 		#if ios
-		GL.defaultFramebuffer = GL.getParameter (GL.FRAMEBUFFER_BINDING);
+		GL.defaultFramebuffer = new GLFramebuffer (GL.getParameter (GL.FRAMEBUFFER_BINDING), GL.version);
 		#end
 		
 		lime_set_stage_handler (__handle, __processStageEvent, width, height);
@@ -821,23 +821,29 @@ class Stage extends DisplayObjectContainer {
 				
 				event.result = 1;
 				
-			}
-			
-			#if (windows || linux)
-			else if (flags & efAltDown > 0 && type == KeyboardEvent.KEY_DOWN && event.code == Keyboard.ENTER) {
+			} else {
 				
-				if (displayState == StageDisplayState.NORMAL) {
+				#if desktop
+				#if (windows || linux)
+				if (flags & efAltDown > 0 && type == KeyboardEvent.KEY_DOWN && event.code == Keyboard.ENTER) {
+				#elseif (mac)
+				if (flags & efCtrlDown > 0 && flags & efCommandDown > 0 && type == KeyboardEvent.KEY_DOWN && event.value == Keyboard.F) {
+				#end
 					
-					displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
-					
-				} else {
-					
-					displayState = StageDisplayState.NORMAL;
+					if (displayState == StageDisplayState.NORMAL) {
+						
+						displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
+						
+					} else {
+						
+						displayState = StageDisplayState.NORMAL;
+						
+					}
 					
 				}
+				#end
 				
 			}
-			#end
 			
 		}
 		
@@ -967,7 +973,7 @@ class Stage extends DisplayObjectContainer {
 	@:noCompletion private function __onRenderContext (active:Bool):Void {
 		
 		#if ios
-		GL.defaultFramebuffer = active ? GL.getParameter (GL.FRAMEBUFFER_BINDING) : null;
+		GL.defaultFramebuffer = active ? new GLFramebuffer (GL.getParameter (GL.FRAMEBUFFER_BINDING), GL.version) : null;
 		#end
 		
 		var event = new Event (!active ? OpenGLView.CONTEXT_LOST : OpenGLView.CONTEXT_RESTORED);
