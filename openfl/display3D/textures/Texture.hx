@@ -46,12 +46,12 @@ class Texture extends TextureBase {
 		#if lime_legacy
 		
 		var p = BitmapData.getRGBAPixels (bitmapData);
-		uploadFromByteArray(p);
+		uploadFromByteArray(p, 0, miplevel);
 		
 		#else
 		
 		var p = @:privateAccess (bitmapData.__image).data;
-		uploadFromUInt8Array(p);
+		uploadFromUInt8Array(p, miplevel);
 		
 		#end
 		
@@ -78,6 +78,16 @@ class Texture extends TextureBase {
 			_width = width;
 		if (_height == 0)
 			_height = height;
+		
+		var level:Int = miplevel;
+		while (level > 0)
+		{
+			
+			_width >>= 1;
+			_height >>= 1;
+			level >>= 1;
+			
+		}
 		
 		#if !html5
 		data = flipPixels(data, _width, _height);
@@ -108,7 +118,7 @@ class Texture extends TextureBase {
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
 		if (data == null)
-			GL.texImage2D (GL.TEXTURE_2D, miplevel, internalFormat, width, height, 0, format, type, null);
+			GL.texImage2D (GL.TEXTURE_2D, miplevel, internalFormat, _width, _height, 0, format, type, null);
 		else
 			GL.texSubImage2D (GL.TEXTURE_2D, miplevel, xOffset, height - yOffset - _height, _width, _height, format, type, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
