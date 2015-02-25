@@ -103,7 +103,7 @@ class RectangleTexture extends TextureBase {
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
 		if (data == null)
-			GL.texImage2D (GL.TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, null);
+			GL.texImage2D (GL.TEXTURE_2D, 0, internalFormat, _width, _height, 0, format, type, null);
 		else
 			GL.texSubImage2D (GL.TEXTURE_2D, 0, xOffset, height - yOffset - _height, _width, _height, format, type, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
