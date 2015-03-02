@@ -29,6 +29,7 @@ import js.html.DivElement;
 import js.html.Element;
 import js.html.InputElement;
 import js.html.KeyboardEvent in HTMLKeyboardEvent;
+import js.html.SpanElement;
 import js.Browser;
 #end
 
@@ -558,8 +559,8 @@ class TextField extends InteractiveObject {
 	@:noCompletion private var __height:Float;
 	@:noCompletion private var __isHTML:Bool;
 	@:noCompletion private var __isKeyDown:Bool;
-	@:noCompletion private var __measuredHeight:Int;
-	@:noCompletion private var __measuredWidth:Int;
+	@:noCompletion private var __measuredHeight:Null<Int>;
+	@:noCompletion private var __measuredWidth:Null<Int>;
 	@:noCompletion private var __ranges:Array<TextFormatRange>;
 	@:noCompletion private var __selectionStart:Int;
 	@:noCompletion private var __showCursor:Bool;
@@ -567,11 +568,17 @@ class TextField extends InteractiveObject {
 	@:noCompletion private var __textFormat:TextFormat;
 	@:noCompletion private var __texture:GLTexture;
 	@:noCompletion private var __width:Float;
+	@:noCompletion private var __baselines:Array<Int>;
+	@:noCompletion private var __lineHeights:Array<Int>;
 	
 	
 	#if html5
 	private var __div:DivElement;
 	private var __hiddenInput:InputElement;
+	
+	@:noCompletion private static var __helper_div:DivElement;
+	@:noCompletion private static var __helper_text:SpanElement;
+	@:noCompletion private static var __helper_block:DivElement;
 	#end
 	
 	
@@ -858,7 +865,7 @@ class TextField extends InteractiveObject {
 		if (format.letterSpacing != null) __textFormat.letterSpacing = format.letterSpacing;
 		if (format.tabStops != null) __textFormat.tabStops = format.tabStops;
 		
-		__dirty = true;
+		setDirty ();
 		
 	}
 	
@@ -1075,36 +1082,62 @@ class TextField extends InteractiveObject {
 	@:noCompletion private function __measureTextWithDOM ():Void {
 	 	
 	 	#if html5
-	 	
-		var div:Element = __div;
-		
-		if (__div == null) {
+
+		var text:SpanElement;
+		var block:DivElement;
+		var div:DivElement;
+	 	if (__helper_div == null)
+		{
 			
-			div = Browser.document.createElement ("div");
-			div.innerHTML = new EReg ("\n", "g").replace (__text, "<br>");
-			div.style.setProperty ("font", __getFont (__textFormat), null);
+			text = __helper_text = Browser.document.createSpanElement ();
+			text.style.lineHeight = "1.185";
+			
+			block = __helper_block = Browser.document.createDivElement ();
+			block.style.display = "inline-block";
+			block.style.width = "1px";
+			block.style.height = "0px";
+			
+			div = __helper_div = Browser.document.createDivElement ();
 			div.style.position = "absolute";
-			div.style.top = "110%"; // position off-screen!
+			div.style.visibility = "hidden";
+			div.style.top = "110%";
+			div.appendChild (text);
+			div.appendChild (block);
 			Browser.document.body.appendChild (div);
 			
 		}
-		
-		__measuredWidth = div.clientWidth;
-		
-		// Now set the width so that the height is accurate as a
-		// function of the flow within the width bounds...
-		if (__div == null) {
+		else
+		{
 			
-			div.style.width = Std.string (__width) + "px";
+			text = __helper_text;
+			block = __helper_block;
+			div = __helper_div;
 			
 		}
 		
-		__measuredHeight = div.clientHeight;
+		text.style.font = __getFont (__textFormat);
 		
-		if (__div == null) {
+		var lines:Array<String> = __text.split ("\n");
+		if (__baselines == null)
+			__baselines = new Array ();
+		if (__lineHeights == null)
+			__lineHeights = new Array ();
 			
-			Browser.document.body.removeChild (div);
+		__measuredWidth = 0;
+		__measuredHeight = 0;
+		
+		for (i in 0 ... lines.length)
+		{
+			text.innerHTML = lines[i];
+			block.style.verticalAlign = "baseline";
+			__baselines[i] = block.offsetTop - text.offsetTop;
 			
+			block.style.verticalAlign = "bottom";
+			if (div.clientWidth > __measuredWidth)
+				__measuredWidth = div.clientWidth;
+
+			__lineHeights[i] = block.offsetTop - text.offsetTop + 4;
+			__measuredHeight += __lineHeights[i];
 		}
 		
 		#end
@@ -1137,7 +1170,7 @@ class TextField extends InteractiveObject {
 		
 		__cursorTimer = Timer.delay (__startCursorTimer, 500);
 		__showCursor = !__showCursor;
-		__dirty = true;
+		setDirty ();
 		
 	}
 	
@@ -1172,7 +1205,7 @@ class TextField extends InteractiveObject {
 		
 		__cursorPosition = __hiddenInput.selectionStart;
 		__selectionStart = __cursorPosition;
-		__dirty = true;
+		setDirty ();
 		
 		dispatchEvent (new Event (Event.CHANGE, true));
 		
@@ -1192,7 +1225,7 @@ class TextField extends InteractiveObject {
 			__hiddenInput.selectionStart = 0;
 			__hiddenInput.selectionEnd = text.length;
 			event.preventDefault ();
-			__dirty = true;
+			setDirty ();
 			return;
 			
 		}
@@ -1208,7 +1241,7 @@ class TextField extends InteractiveObject {
 		__isHTML = false;
 		
 		__selectionStart = __hiddenInput.selectionStart;
-		__dirty = true;
+		setDirty ();
 		
 	}
 	
@@ -1219,7 +1252,7 @@ class TextField extends InteractiveObject {
 		__hasFocus = false;
 		__stopCursorTimer ();
 		__hiddenInput.blur ();
-		__dirty = true;
+		setDirty ();
 		
 	}
 	
@@ -1229,7 +1262,7 @@ class TextField extends InteractiveObject {
 		if (__hasFocus && __selectionStart >= 0) {
 			
 			__cursorPosition = __getPosition (event.localX, event.localY);
-			__dirty = true;
+			setDirty ();
 			
 		}
 		
@@ -1268,7 +1301,7 @@ class TextField extends InteractiveObject {
 		__startCursorTimer ();
 		
 		__hasFocus = true;
-		__dirty = true;
+		setDirty ();
 		
 	}
 	
@@ -1321,7 +1354,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_autoSize (value:TextFieldAutoSize):TextFieldAutoSize {
 		
-		if (value != autoSize) __dirty = true;
+		if (value != autoSize) setDirty ();
 		return autoSize = value;
 		
 	}
@@ -1329,7 +1362,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_background (value:Bool):Bool {
 		
-		if (value != background) __dirty = true;
+		if (value != background) setDirty ();
 		return background = value;
 		
 	}
@@ -1337,7 +1370,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_backgroundColor (value:Int):Int {
 		
-		if (value != backgroundColor) __dirty = true;
+		if (value != backgroundColor) setDirty ();
 		return backgroundColor = value;
 		
 	}
@@ -1345,7 +1378,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_border (value:Bool):Bool {
 		
-		if (value != border) __dirty = true;
+		if (value != border) setDirty ();
 		return border = value;
 		
 	}
@@ -1353,7 +1386,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_borderColor (value:Int):Int {
 		
-		if (value != borderColor) __dirty = true;
+		if (value != borderColor) setDirty ();
 		return borderColor = value;
 		
 	}
@@ -1403,7 +1436,7 @@ class TextField extends InteractiveObject {
 		if (scaleY != 1 || value != __height) {
 			
 			__setTransformDirty ();
-			__dirty = true;
+			setDirty ();
 			
 		}
 		
@@ -1426,7 +1459,7 @@ class TextField extends InteractiveObject {
 		
 		#if html5
 		
-		if (!__isHTML || __text != value) __dirty = true;
+		if (!__isHTML || __text != value) setDirty ();
 		__ranges = null;
 		__isHTML = true;
 		
@@ -1562,7 +1595,7 @@ class TextField extends InteractiveObject {
 	@:noCompletion public function set_text (value:String):String {
 		
 		#if (js && html5) if (__text != value && __hiddenInput != null) __hiddenInput.value = value; #end
-		if (__isHTML || __text != value) __dirty = true;
+		if (__isHTML || __text != value) setDirty ();
 		__ranges = null;
 		__isHTML = false;
 		return __text = value;
@@ -1579,7 +1612,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public function set_textColor (value:Int):Int {
 		
-		if (value != __textFormat.color) __dirty = true;
+		if (value != __textFormat.color) setDirty ();
 		
 		if (__ranges != null) {
 			
@@ -1600,7 +1633,7 @@ class TextField extends InteractiveObject {
 		
 		#if html5
 		
-		if (__canvas != null) {
+		/*if (__canvas != null) {
 			
 			var sizes = __measureText ();
 			var total:Float = 0;
@@ -1613,13 +1646,15 @@ class TextField extends InteractiveObject {
 			
 			return total;
 			
-		} else if (__div != null) {
+		} else */
+		if (__div != null) {
 			
 			return __div.clientWidth;
 			
 		} else {
 			
-			__measureTextWithDOM ();
+			if (__measuredWidth == null)
+				__measureTextWithDOM ();
 			return __measuredWidth;
 			
 		}
@@ -1637,21 +1672,23 @@ class TextField extends InteractiveObject {
 		
 		#if html5
 		
+		/*
 		if (__canvas != null) {
 			
 			// TODO: Make this more accurate
 			return __textFormat.size * 1.185;
 			
-		} else if (__div != null) {
+		} else
+		*/
+		if (__div != null) {
 			
 			return __div.clientHeight;
 			
 		} else {
 			
-			__measureTextWithDOM ();
-			
-			// Add a litte extra space for descenders...
-			return __measuredHeight + __textFormat.size * 0.185;
+			if (__measuredHeight == null)
+				__measureTextWithDOM ();
+			return __measuredHeight;
 			
 		}
 		
@@ -1680,7 +1717,7 @@ class TextField extends InteractiveObject {
 			}
 			#end
 			
-			__dirty = true;
+			setDirty ();
 			
 		}
 		
@@ -1710,7 +1747,7 @@ class TextField extends InteractiveObject {
 		if (scaleX != 1 || __width != value) {
 			
 			__setTransformDirty ();
-			__dirty = true;
+			setDirty ();
 			
 		}
 		
@@ -1729,8 +1766,16 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public function set_wordWrap (value:Bool):Bool {
 		
-		//if (value != wordWrap) __dirty = true;
+		//if (value != wordWrap) setDirty ();
 		return wordWrap = value;
+		
+	}
+	
+	@:noCompletion private function setDirty () {
+		
+		__dirty = true;
+		__measuredWidth = null;
+		__measuredHeight = null;
 		
 	}
 	
