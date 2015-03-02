@@ -6,6 +6,7 @@ import openfl._internal.renderer.dom.DOMRenderer;
 import openfl._internal.renderer.RenderSession;
 #end
 import openfl.display.Stage;
+import openfl.events.Event;
 import openfl.geom.Rectangle;
 import openfl.gl.GL;
 import openfl.Lib;
@@ -51,6 +52,7 @@ class OpenGLView extends DirectRenderer {
 			#end
 			
 			GL.context = cast __context;
+			Lib.current.stage.addEventListener(Event.RESIZE, __onResize);
 			__initialized = true;
 			
 		}
@@ -181,6 +183,17 @@ class OpenGLView extends DirectRenderer {
 			if (__render != null) __render (rect);	
 			
 		}
+		
+	}
+	#end
+	
+	
+	
+	#if html5
+	@:noCompletion private function __onResize (e:Event):Void {
+		
+		__canvas.width = Lib.current.stage.stageWidth;
+		__canvas.height = Lib.current.stage.stageHeight;
 		
 	}
 	#end
