@@ -8,8 +8,7 @@ import openfl.display.MovieClip;
 import openfl.display.Stage;
 import openfl.net.URLRequest;
 
-#if html5
-import js.html.HtmlElement;
+#if (js && html5)
 import js.Browser;
 #end
 

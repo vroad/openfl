@@ -1197,7 +1197,7 @@ class TextField extends InteractiveObject {
 	@:noCompletion private function input_onKeyUp (event:HTMLKeyboardEvent):Void {
 		
 		__isKeyDown = false;
-		if (event == null) event == Browser.window.event;
+		if (event == null) event == untyped Browser.window.event;
 		
 		__text = __hiddenInput.value;
 		__ranges = null;
@@ -1215,7 +1215,7 @@ class TextField extends InteractiveObject {
 	@:noCompletion private function input_onKeyDown (event:#if (js && html5) HTMLKeyboardEvent #else Dynamic #end):Void {
 		
 		__isKeyDown = true;
-		if (event == null) event == Browser.window.event;
+		if (event == null) event == untyped Browser.window.event;
 		
 		var keyCode = event.which;
 		var isShift = event.shiftKey;

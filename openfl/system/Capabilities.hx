@@ -3,7 +3,8 @@ package openfl.system; #if !flash #if !lime_legacy
 
 import haxe.macro.Compiler;
 
-#if html5
+#if (js && html5)
+import js.html.DivElement;
 import js.html.Element;
 import js.Browser;
 #end
@@ -416,7 +417,7 @@ class Capabilities {
 		//little trick of measuring the width of a 1 inch div
 		//but sadly most browsers/OSs still return wrong result...
 		var body = Browser.document.getElementsByTagName ("body")[0];
-		var testDiv:Element = cast Browser.document.createElement ("div");
+		var testDiv:DivElement = cast Browser.document.createElement ("div");
 		testDiv.style.width = testDiv.style.height = "1in";
 		testDiv.style.padding = testDiv.style.margin = "0px";
 		testDiv.style.position = "absolute";
