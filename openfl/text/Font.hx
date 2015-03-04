@@ -65,7 +65,7 @@ class Font extends lime.graphics.Font {
 	public static function fromBytes (bytes:ByteArray):Font {
 		
 		var font = new Font ();
-		// TODO font.__fromBytes (bytes);
+		font.__fromBytes (bytes);
 		return font;
 		
 	}
