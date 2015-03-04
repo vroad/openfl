@@ -876,12 +876,10 @@ class Context3D {
 				
 				case Context3DMipFilter.MIPLINEAR:
 					
-					GL.generateMipmap (GL.TEXTURE_2D);
 					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_LINEAR);
 				
 				case Context3DMipFilter.MIPNEAREST:
 					
-					GL.generateMipmap (GL.TEXTURE_2D);
 					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST_MIPMAP_NEAREST);
 				
 				case Context3DMipFilter.MIPNONE:
@@ -892,6 +890,15 @@ class Context3D {
 						GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
 				
 			} 
+			
+			var tex:Texture = cast texture;
+			if (mipfilter != Context3DMipFilter.MIPNONE && !tex.hasMipmap)
+			{
+				
+				GL.generateMipmap(GL.TEXTURE_2D);
+				tex.hasMipmap = true;
+				
+			}
 			
 		} else if (Std.is (texture, RectangleTexture)) {
 			

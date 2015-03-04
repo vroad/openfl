@@ -16,11 +16,13 @@ class Texture extends TextureBase {
 	
 	
 	public var optimizeForRenderToTexture:Bool;
+	public var hasMipmap:Bool;
 	
 	
 	public function new (glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
 		
 		optimizeForRenderToTexture = optimize;
+		hasMipmap = false;
 		
 		super (glTexture, width, height, internalFormat, format, type);
 		
@@ -123,6 +125,8 @@ class Texture extends TextureBase {
 			GL.texSubImage2D (GL.TEXTURE_2D, miplevel, xOffset, height - yOffset - _height, _width, _height, format, type, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
 		
+		if (miplevel > 0)
+			hasMipmap = true;
 	}
 }
 
