@@ -886,7 +886,10 @@ class Context3D {
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
+					if (filter == Context3DTextureFilter.NEAREST)
+						GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
+					else
+						GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
 				
 			} 
 			
