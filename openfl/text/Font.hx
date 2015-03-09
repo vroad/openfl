@@ -81,7 +81,7 @@ class Font extends lime.text.Font {
 	
 	public static function fromName (name:String):Font {
 		
-		return cast lime.graphics.Font.fromName(name);
+		return cast lime.text.Font.fromName(name);
 		
 	}
 	
