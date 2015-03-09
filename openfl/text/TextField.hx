@@ -568,7 +568,6 @@ class TextField extends InteractiveObject {
 	@:noCompletion private var __textFormat:TextFormat;
 	@:noCompletion private var __texture:GLTexture;
 	@:noCompletion private var __width:Float;
-	@:noCompletion private var __baselines:Array<Int>;
 	@:noCompletion private var __lineHeights:Array<Int>;
 	
 	
@@ -1090,12 +1089,12 @@ class TextField extends InteractiveObject {
 		{
 			
 			text = __helper_text = Browser.document.createSpanElement ();
-			text.style.lineHeight = "1.185";
 			
 			block = __helper_block = Browser.document.createDivElement ();
 			block.style.display = "inline-block";
 			block.style.width = "1px";
 			block.style.height = "0px";
+			block.style.verticalAlign = "bottom";
 			
 			div = __helper_div = Browser.document.createDivElement ();
 			div.style.position = "absolute";
@@ -1118,25 +1117,22 @@ class TextField extends InteractiveObject {
 		text.style.font = __getFont (__textFormat);
 		
 		var lines:Array<String> = __text.split ("\n");
-		if (__baselines == null)
-			__baselines = new Array ();
 		if (__lineHeights == null)
 			__lineHeights = new Array ();
-			
+		else if (lines.length < __lineHeights.length)
+			__lineHeights.splice(lines.length, __lineHeights.length - lines.length);
+		
 		__measuredWidth = 0;
 		__measuredHeight = 0;
 		
 		for (i in 0 ... lines.length)
 		{
 			text.innerHTML = lines[i];
-			block.style.verticalAlign = "baseline";
-			__baselines[i] = block.offsetTop - text.offsetTop;
 			
-			block.style.verticalAlign = "bottom";
 			if (div.clientWidth > __measuredWidth)
 				__measuredWidth = div.clientWidth;
 
-			__lineHeights[i] = block.offsetTop - text.offsetTop + 4;
+			__lineHeights[i] = block.offsetTop - text.offsetTop;
 			__measuredHeight += __lineHeights[i];
 		}
 		

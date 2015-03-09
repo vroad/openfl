@@ -71,34 +71,34 @@ class CanvasTextField {
 		#if html5
 		
 		context.font = textField.__getFont (format);
-		context.textBaseline = "alphabetic";
+		context.textBaseline = "bottom";
 		context.fillStyle = "#" + StringTools.hex (format.color, 6);
 		
 		var lines = text.split("\n");
-		var yOffset:Int = 0;
+        var size:Float = textField.__textFormat.size;
+		var yOffset:Float = 5 + size;
 		var height = textField.textHeight;	// recalculate height
 		
 		for (i in 0 ... lines.length) {
 			
 			var line:String = lines[i];
-			var baseline:Int = textField.__baselines[i];
 			
 			switch (format.align) {
 				
 				case TextFormatAlign.CENTER:
 					
 					context.textAlign = "center";
-					context.fillText (line, textField.__width / 2, yOffset + baseline, textField.__width - 4);
+					context.fillText (line, textField.__width / 2, yOffset, textField.__width - 4);
 					
 				case TextFormatAlign.RIGHT:
 					
 					context.textAlign = "end";
-					context.fillText (line, textField.__width - 2, yOffset + baseline, textField.__width - 4);
+					context.fillText (line, textField.__width - 2, yOffset, textField.__width - 4);
 					
 				default:
 					
 					context.textAlign = "start";
-					context.fillText (line, 2 + offsetX, yOffset + baseline, textField.__width - 4);
+					context.fillText (line, 2 + offsetX, yOffset, textField.__width - 4);
 					
 			}
 			
