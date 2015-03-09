@@ -17,8 +17,9 @@ class OpenFLStage3D {
     static private var stage3Ds:Array<Stage3D> = []; 
     #end
     
-    static public function requestContext3D(stage3D : Stage3D,?context3DRenderMode:String =  "auto"):Void 
+    static public function requestContext3D(stage3D : Stage3D,?context3DRenderMode:Context3DRenderMode = null):Void 
     {
+        if (context3DRenderMode == null) context3DRenderMode = Context3DRenderMode.AUTO;
         #if !flash
         
         if (OpenGLView.isSupported) {

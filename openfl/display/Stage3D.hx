@@ -3,6 +3,7 @@ package openfl.display; #if !flash
 
 import openfl.display.OpenGLView;
 import openfl.display3D.Context3D;
+import openfl.display3D.Context3DRenderMode;
 import openfl.events.ErrorEvent;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
@@ -23,7 +24,7 @@ class Stage3D extends EventDispatcher {
 		
 	}
 	
-	public function requestContext3D (context3DRenderMode:String = ""):Void {
+	public function requestContext3D (context3DRenderMode:Context3DRenderMode = null):Void {
 		
 		if (OpenGLView.isSupported) {
 			
