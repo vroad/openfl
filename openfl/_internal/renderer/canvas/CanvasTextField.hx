@@ -76,7 +76,7 @@ class CanvasTextField {
 		
 		var lines = text.split("\n");
         var size:Float = textField.__textFormat.size;
-		var yOffset:Float = 5 + size;
+		var yOffset:Float = 3 + size;
 		var height = textField.textHeight;	// recalculate height
 		
 		for (i in 0 ... lines.length) {
