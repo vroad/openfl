@@ -1,6 +1,7 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
+import lime.graphics.ImageChannel;
 import lime.graphics.opengl.GLBuffer;
 import lime.graphics.opengl.GLTexture;
 import lime.graphics.GLRenderContext;
@@ -10,6 +11,8 @@ import lime.graphics.utils.ImageCanvasUtil;
 import lime.math.ColorMatrix;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
+import openfl._internal.renderer.opengl.utils.FilterTexture;
+import openfl._internal.renderer.opengl.utils.SpriteBatch;
 import openfl._internal.renderer.RenderSession;
 import openfl.errors.IOError;
 import openfl.filters.BitmapFilter;
@@ -128,15 +131,19 @@ class BitmapData implements IBitmapDrawable {
 	 */
 	public var width (default, null):Int;
 	
+	@:noCompletion @:dox(hide) public var blendMode:BlendMode;
 	@:noCompletion @:dox(hide) public var __worldTransform:Matrix;
+	@:noCompletion @:dox(hide) public var __worldColorTransform:ColorTransform;
+	@:noCompletion @:dox(hide) public var __cacheAsBitmap:Bool;
 	
 	@:noCompletion private var __buffer:GLBuffer;
 	@:noCompletion private var __image:Image;
 	@:noCompletion private var __isValid:Bool;
 	@:noCompletion private var __texture:GLTexture;
 	@:noCompletion private var __textureImage:Image;
+	@:noCompletion private var __framebuffer:FilterTexture;
 	@:noCompletion private var __uvData:TextureUvs;
-	
+	@:noCompletion private var __usingFramebuffer:Bool = false;
 	
 	/**
 	 * Creates a BitmapData object with a specified width and height. If you specify a value for 
@@ -157,24 +164,35 @@ class BitmapData implements IBitmapDrawable {
 		
 		this.transparent = transparent;
 		
+		#if (neko || (js && html5))
+		width = width == null ? 0 : width;
+		height = height == null ? 0 : height;
+		#end
+		
+		width = width < 0 ? 0 : width;
+		height = height < 0 ? 0 : height;
+		
+		this.width = width;
+		this.height = height;
+		rect = new Rectangle (0, 0, width, height);
+		
 		if (width > 0 && height > 0) {
 			
-			this.width = width;
-			this.height = height;
-			rect = new Rectangle (0, 0, width, height);
-			
 			if (transparent) {
-
-				if ((fillColor & 0xFF000000) == 0) {				
+				
+				if ((fillColor & 0xFF000000) == 0) {
+					
 					fillColor = 0;
+					
 				}
-                
-			}
-			else {
+				
+			} else {
 				
 				fillColor = (0xFF << 24) | (fillColor & 0xFFFFFF);
 				
 			}
+			
+			fillColor = (fillColor << 8) | ((fillColor >> 24) & 0xFF);
 			
 			__image = new Image (null, 0, 0, width, height, fillColor);
 			__image.transparent = transparent;
@@ -182,7 +200,10 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		__createUVs ();
+		__createUVs ();	
+		
+		__worldTransform = new Matrix();
+		__worldColorTransform = new ColorTransform();
 		
 	}
 	
@@ -260,7 +281,10 @@ class BitmapData implements IBitmapDrawable {
 	 */
 	public function colorTransform (rect:Rectangle, colorTransform:ColorTransform):Void {
 		
+		if (!__isValid) return;
+		
 		__image.colorTransform (rect.__toLimeRectangle (), colorTransform.__toLimeColorMatrix ());
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -333,6 +357,7 @@ class BitmapData implements IBitmapDrawable {
 		}
 		
 		__image.copyChannel (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), sourceChannel, destChannel);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -381,7 +406,7 @@ class BitmapData implements IBitmapDrawable {
 		if (!__isValid || sourceBitmapData == null) return;
 		
 		__image.copyPixels (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), alphaBitmapData != null ? alphaBitmapData.__image : null, alphaPoint != null ? alphaPoint.__toLimeVector2 () : null, mergeAlpha);
-		
+		__usingFramebuffer = false;
 	}
 	
 	
@@ -412,6 +437,24 @@ class BitmapData implements IBitmapDrawable {
 		height = 0;
 		rect = null;
 		__isValid = false;
+		
+		if (__texture != null) {
+			var renderer = @:privateAccess Lib.current.stage.__renderer;
+			if(renderer != null) {
+				var renderSession = @:privateAccess renderer.renderSession;
+				var gl = renderSession.gl;
+				if (gl != null) {
+					gl.deleteTexture(__texture);
+				}
+			}
+			
+		}
+		
+		if (__framebuffer != null) {
+			
+			__framebuffer.destroy();
+			
+		}
 		
 	}
 	
@@ -532,6 +575,13 @@ class BitmapData implements IBitmapDrawable {
 				buffer.__srcContext.setTransform (1, 0, 0, 1, 0, 0);
 				#end
 				
+			case DATA:
+				
+				
+				var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
+				__drawGL(renderSession, width, height, source, matrix, colorTransform, blendMode, clipRect, smoothing, !__usingFramebuffer, false, true);
+				
+				
 			default:
 				
 				// TODO
@@ -574,7 +624,8 @@ class BitmapData implements IBitmapDrawable {
 	public function fillRect (rect:Rectangle, color:Int):Void {
 		
 		if (!__isValid || rect == null) return;
-		__image.fillRect (rect.__toLimeRectangle (), color);
+		__image.fillRect (rect.__toLimeRectangle (), color, ARGB);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -593,7 +644,8 @@ class BitmapData implements IBitmapDrawable {
 	public function floodFill (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.floodFill (x, y, color);
+		__image.floodFill (x, y, color, ARGB);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -601,7 +653,7 @@ class BitmapData implements IBitmapDrawable {
 	public static function fromBase64 (base64:String, type:String, onload:BitmapData -> Void = null):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, true);
-		bitmapData.__loadFromBase64 (base64, type, onload);
+		bitmapData.__fromBase64 (base64, type, onload);
 		return bitmapData;
 		
 	}
@@ -610,7 +662,7 @@ class BitmapData implements IBitmapDrawable {
 	public static function fromBytes (bytes:ByteArray, rawAlpha:ByteArray = null, onload:BitmapData -> Void = null):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, true);
-		bitmapData.__loadFromBytes (bytes, rawAlpha, onload);
+		bitmapData.__fromBytes (bytes, rawAlpha, onload);
 		return bitmapData;
 		
 	}
@@ -620,7 +672,7 @@ class BitmapData implements IBitmapDrawable {
 	public static function fromCanvas (canvas:CanvasElement, transparent:Bool = true):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, transparent);
-		bitmapData.__loadFromImage (Image.fromCanvas (canvas));
+		bitmapData.__fromImage (Image.fromCanvas (canvas));
 		bitmapData.__image.transparent = transparent;
 		return bitmapData;
 		
@@ -631,7 +683,7 @@ class BitmapData implements IBitmapDrawable {
 	public static function fromFile (path:String, onload:BitmapData -> Void = null, onerror:Void -> Void = null):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, true);
-		bitmapData.__loadFromFile (path, onload, onerror);
+		bitmapData.__fromFile (path, onload, onerror);
 		return bitmapData;
 		
 	}
@@ -640,7 +692,7 @@ class BitmapData implements IBitmapDrawable {
 	public static function fromImage (image:Image, transparent:Bool = true):BitmapData {
 		
 		var bitmapData = new BitmapData (0, 0, transparent);
-		bitmapData.__loadFromImage (image);
+		bitmapData.__fromImage (image);
 		bitmapData.__image.transparent = transparent;
 		return bitmapData;
 		
@@ -742,6 +794,7 @@ class BitmapData implements IBitmapDrawable {
 	 */
 	public function getColorBoundsRect (mask:Int, color:Int, findColor:Bool = true):Rectangle {
 		
+		if (!__isValid) return new Rectangle (0, 0, width, height);
 		return __image.rect.__toFlashRectangle ();
 		
 	}
@@ -773,7 +826,7 @@ class BitmapData implements IBitmapDrawable {
 	public function getPixel (x:Int, y:Int):Int {
 		
 		if (!__isValid) return 0;
-		return __image.getPixel (x, y);
+		return __image.getPixel (x, y, ARGB);
 		
 	}
 	
@@ -803,7 +856,7 @@ class BitmapData implements IBitmapDrawable {
 	public function getPixel32 (x:Int, y:Int):Int {
 		
 		if (!__isValid) return 0;
-		return __image.getPixel32 (x, y);
+		return __image.getPixel32 (x, y, ARGB);
 		
 	}
 	
@@ -821,12 +874,18 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return null;
 		if (rect == null) rect = this.rect;
-		return __image.getPixels (rect.__toLimeRectangle ());
+		return __image.getPixels (rect.__toLimeRectangle (), ARGB);
 		
 	}
 	
 	
 	public function getTexture (gl:GLRenderContext):GLTexture {
+		
+		if (!__isValid) return null;
+		
+		if (__usingFramebuffer && __framebuffer != null) {
+			return __framebuffer.texture;
+		}
 		
 		if (__texture == null) {
 			
@@ -840,12 +899,13 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		if (__image.dirty) {
+		if (__image != null && __image.dirty) {
 			
+			var format = (__image.buffer.bitsPerPixel == 1 ? gl.ALPHA : gl.RGBA);
 			gl.bindTexture (gl.TEXTURE_2D, __texture);
 			var textureImage = __image.clone ();
 			textureImage.premultiplied = true;
-			gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, textureImage.data);
+			gl.texImage2D (gl.TEXTURE_2D, 0, format, width, height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
 			gl.bindTexture (gl.TEXTURE_2D, null);
 			__image.dirty = false;
 			
@@ -929,6 +989,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid || sourceRect == null || destPoint == null) return;
 		__image.merge (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -1122,7 +1183,8 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixel (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.setPixel (x, y, color);
+		__image.setPixel (x, y, color, ARGB);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -1161,7 +1223,8 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixel32 (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.setPixel32 (x, y, color);
+		__image.setPixel32 (x, y, color, ARGB);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -1188,7 +1251,8 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixels (rect:Rectangle, byteArray:ByteArray):Void {
 		
 		if (!__isValid || rect == null) return;
-		__image.setPixels (rect.__toLimeRectangle (), byteArray);
+		__image.setPixels (rect.__toLimeRectangle (), byteArray, ARGB);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -1468,11 +1532,11 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion private inline function __loadFromBase64 (base64:String, type:String, ?onload:BitmapData -> Void):Void {
+	@:noCompletion private inline function __fromBase64 (base64:String, type:String, ?onload:BitmapData -> Void):Void {
 		
 		Image.fromBase64 (base64, type, function (image) {
 			
-			__loadFromImage (image);
+			__fromImage (image);
 			
 			if (onload != null) {
 				
@@ -1485,11 +1549,11 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion private inline function __loadFromBytes (bytes:ByteArray, rawAlpha:ByteArray = null, ?onload:BitmapData -> Void):Void {
+	@:noCompletion private inline function __fromBytes (bytes:ByteArray, rawAlpha:ByteArray = null, ?onload:BitmapData -> Void):Void {
 		
 		Image.fromBytes (bytes, function (image) {
 			
-			__loadFromImage (image);
+			__fromImage (image);
 			
 			if (rawAlpha != null) {
 				
@@ -1521,11 +1585,11 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion private function __loadFromFile (path:String, onload:BitmapData -> Void, onerror:Void -> Void):Void {
+	@:noCompletion private function __fromFile (path:String, onload:BitmapData -> Void, onerror:Void -> Void):Void {
 		
 		Image.fromFile (path, function (image) {
 			
-			__loadFromImage (image);
+			__fromImage (image);
 			
 			if (onload != null) {
 				
@@ -1538,7 +1602,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion private function __loadFromImage (image:Image):Void {
+	@:noCompletion private function __fromImage (image:Image):Void {
 		
 		__image = image;
 		
@@ -1580,7 +1644,140 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
+	@:noCompletion @:dox(hide) public function __renderGL (renderSession:RenderSession):Void {
+		
+		renderSession.spriteBatch.renderBitmapData(this, true, __worldTransform, __worldColorTransform, __worldColorTransform.alphaMultiplier, blendMode);
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __drawGL (renderSession:RenderSession, width:Int, height:Int, source:IBitmapDrawable, matrix:Matrix = null, colorTransform:ColorTransform = null, blendMode:BlendMode = null, clipRect:Rectangle = null, smoothing:Bool = false, drawSelf:Bool = false, clearBuffer:Bool = false, readPixels:Bool = false):Void {
+		
+		var renderer = @:privateAccess Lib.current.stage.__renderer;
+		if (renderer == null) return;
+		
+		var renderSession = @:privateAccess renderer.renderSession;
+		var gl:GLRenderContext = renderSession.gl;
+		if (gl == null) return;
+		
+		var spritebatch = renderSession.spriteBatch;
+		var mainProjection = renderSession.projection;
+		var renderTransparent = renderSession.renderer.transparent;
+
+		var tmpRect = clipRect == null ? new Rectangle(0, 0, width, height) : clipRect.clone();
+		
+		renderSession.projection = new Point((width / 2), -(height / 2));
+		renderSession.renderer.transparent = transparent;
+		
+		if (__framebuffer == null) {
+			__framebuffer = new FilterTexture(gl, width, height, smoothing);
+		}
+		
+		__framebuffer.resize(width, height);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, __framebuffer.frameBuffer);
+		
+		gl.viewport (0, 0, width, height);
+		
+		spritebatch.begin(renderSession, drawSelf ? null : tmpRect);
+		
+		// enable writing to all the colors and alpha
+		gl.colorMask(true, true, true, true);
+		renderSession.blendModeManager.setBlendMode(BlendMode.NORMAL);
+		
+		if (clearBuffer || drawSelf) {
+			__framebuffer.clear();
+		}
+
+		if (drawSelf) {
+			__worldTransform.identity();
+			__flipMatrix(__worldTransform);
+			this.__renderGL(renderSession);
+			spritebatch.stop();
+			gl.deleteTexture(__texture);
+			spritebatch.start(tmpRect);
+		}
+		
+		var ctCache = source.__worldColorTransform;
+		var matrixCache = source.__worldTransform;
+		var blendModeCache = source.blendMode;
+		var cached = source.__cacheAsBitmap;
+		
+		var m = matrix != null ? matrix.clone() : new Matrix ();
+
+		__flipMatrix(m);
+		
+		source.__worldTransform = m;
+		source.__worldColorTransform = colorTransform != null ? colorTransform : new ColorTransform();
+		source.blendMode = blendMode;
+		source.__cacheAsBitmap = false;
+		
+		source.__updateChildren (false);
+		
+		source.__renderGL (renderSession);
+		
+		source.__worldColorTransform = ctCache;
+		source.__worldTransform = matrixCache;
+		source.blendMode = blendModeCache;
+		source.__cacheAsBitmap = cached;
+		
+		source.__updateChildren (true);
+		
+		spritebatch.finish();
+		
+		if (readPixels) {
+			
+			// TODO is this possible?
+			if (__image.width != width || __image.height != height) {
+				
+				__image.resize(width, height);
+				
+			}
+			
+			gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, __image.buffer.data);
+			
+		}
+		
+		gl.bindFramebuffer(gl.FRAMEBUFFER, renderSession.defaultFramebuffer);
+		
+		gl.viewport(0, 0, renderSession.renderer.width, renderSession.renderer.height);
+		
+		renderSession.projection = mainProjection;
+		renderSession.renderer.transparent = renderTransparent;
+		
+		gl.colorMask(true, true, true, renderSession.renderer.transparent);
+		
+		__usingFramebuffer = true;
+		if(__image != null) {
+			__image.dirty = false;
+			__image.premultiplied = true;
+		}
+		__createUVs();
+		__isValid = true;
+		
+	}
+	
+	@:noCompletion @:dox(hide) private inline function __flipMatrix (m:Matrix):Void {
+		
+		var tx = m.tx;
+		var ty = m.ty;
+		m.tx = 0;
+		m.ty = 0;
+		m.scale(1, -1);
+		m.translate(0, height);
+		m.tx += tx;
+		m.ty -= ty;
+		
+	}
+	
+	
 	@:noCompletion @:dox(hide) public function __renderMask (renderSession:RenderSession):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __updateMask (maskGraphics:Graphics):Void {
 		
 		
 		
@@ -1682,7 +1879,7 @@ class BitmapData implements IBitmapDrawable {
 
 
 #else
-typedef BitmapData = openfl._v2.display.BitmapData;
+typedef BitmapData = openfl._legacy.display.BitmapData;
 #end
 #else
 typedef BitmapData = flash.display.BitmapData;

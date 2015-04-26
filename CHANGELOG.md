@@ -1,3 +1,101 @@
+3.0.3 (04/21/2015)
+------------------
+
+* Improved hit test when there are interactive and non-interactive matches
+* Improved accuracy of text metrics
+* Improved accuracy of GL TextField glyph positioning
+* Added wordWrap support to canvas TextField
+* Added handling of stage.focus on mouse down
+* Fixed the start time and loop count for native sounds
+* Fixed the behavior of sprite.contains to loop recursively
+* Fixed upside-down BitmapData in some cases when using GL bitmapData.draw
+* Fixed layering of GL bitmapData.draw over existing BitmapData contents
+* Improved performance of getRGBAPixels (legacy)
+
+
+3.0.2 (04/15/2015)
+------------------
+
+* Improved handling of keyCode/charCode in keyboard events
+* Improved the frame timing when using hybrid mode
+* Improved the font lookup behavior of GL TextField
+* Added better auto-size left support to GL TextField
+* Added basic text line metrics in TextField
+* Added support for compilation with -Ddisable-cffi
+* Added dynamic DisplayObject field support for MovieClip
+* Fixed UVs when using drawTiles with bitmapData.draw (GL)
+* Fixed blendMode setting when using bitmapData.draw (GL)
+
+
+3.0.1 (04/09/2015)
+------------------
+
+* Improved -Dhybrid support
+* Improved handling of key codes in events
+* Fixed alpha and blendMode for bitmapData.draw in GL
+
+
+3.0.0 (04/08/2015)
+------------------
+
+* Added -Dhybrid support (Lime 2 + OpenFL legacy)
+* Added initial support for gradient fills in canvas
+* Added -Ddisable-legacy-audio for use with hybrid builds
+* Added -Ddisable-legacy-networking for use with hybrid builds
+* Improved the behavior of graphics.drawRoundRect in GL
+* Updated OpenFL legacy for use with Lime 2.3.1
+* Improved the transparency of bitmapData.draw renders in GL
+* Fixed the count for HTML5 sound looping
+* Fixed the solid and bitmap fill positioning in GL
+* Fixed displayObject.getBounds for objects with graphics
+* Fixed the default font paths used for Linux systems
+* Fixed displayObject.hitTestPoint to use stage (not local) coordinates
+* Added support for stage.softKeyboardRect in iOS (legacy)
+
+
+3.0.0-beta.3 (03/26/2015)
+-------------------------
+
+* Updated for Lime 2.3
+* Improved handling of default framebuffer on iOS
+* Fixed mapping of the meta/command key
+* Fixed System.exit
+
+
+3.0.0-beta.2 (03/25/2015)
+-------------------------
+
+* Added support for default fonts in GL TextField
+* Fixed an issue when unserializing SharedObjects
+* Fixed an issue when embedding images
+* Fixed builds when using "-Dlegacy" with the HTML5 target
+* Fixed the GL window background color
+
+
+3.0.0-beta (03/20/2015)
+-----------------------
+
+_Legacy OpenFL v2 behavior is available using -Dv2 or -Dlegacy_
+
+* Added support for Haxe 3.2
+* Added support for using OpenFL as a Lime module
+* Added initial support for GL colorTransform
+* Added initial support for GL masks
+* Added initial support for OpenGL BitmapData.draw
+* Added initial OpenGL TextField support
+* Added fullscreen toggle support
+* Implemented key modifiers for mouse events
+* Implemented support for mouse wheel events
+* Implemented Sound.fromFile
+* Made drawTiles respect the parent (x, y) position
+* Made drawTiles respect the parent alpha value
+* Made Stage inherit from DisplayObjectContainer, not Sprite
+* Fixed the implied (0, 0) start position in Graphics
+* Fixed line thickness evaluation in Graphics
+* Fixed an issue with SoundChannel peak in Neko
+* Improved support for node.js
+
+
 2.2.8 (03/02/2015)
 ------------------
 

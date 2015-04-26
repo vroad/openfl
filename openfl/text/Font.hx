@@ -1,6 +1,7 @@
-package openfl.text; #if !flash #if !lime_legacy
+package openfl.text; #if !flash #if !openfl_legacy
 
 
+import lime.text.Font in LimeFont;
 import openfl.utils.ByteArray;
 
 
@@ -12,13 +13,13 @@ import openfl.utils.ByteArray;
  * load external fonts, or to create an instance of a Font object by itself.
  * Use the Font class as an abstract base class.
  */
-class Font extends lime.text.Font {
+class Font extends LimeFont {
 	
 	
 	/**
 	 * The name of an embedded font.
 	 */
-	//public var fontName:String;
+	public var fontName (get, set):String;
 	
 	/**
 	 * The style of the font. This value can be any of the values defined in the
@@ -66,7 +67,12 @@ class Font extends lime.text.Font {
 		
 		var font = new Font ();
 		font.__fromBytes (bytes);
+		
+		#if (cpp || neko || nodejs)
+		return (font.src != null) ? font : null;
+		#else
 		return font;
+		#end
 		
 	}
 	
@@ -75,13 +81,12 @@ class Font extends lime.text.Font {
 		
 		var font = new Font ();
 		font.__fromFile (path);
+		
+		#if (cpp || neko || nodejs)
+		return (font.src != null) ? font : null;
+		#else
 		return font;
-		
-	}
-	
-	public static function fromName (name:String):Font {
-		
-		return cast lime.text.Font.fromName(name);
+		#end
 		
 	}
 	
@@ -105,6 +110,37 @@ class Font extends lime.text.Font {
 			__registeredFonts.push (instance);
 			
 		}
+		
+	}
+	
+	
+	@:noCompletion private static function __fromLimeFont (value:LimeFont):Font {
+		
+		var font = new Font ();
+		font.name = value.name;
+		font.src = value.src;
+		return font;
+		
+	}
+	
+	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	private inline function get_fontName ():String {
+		
+		return name;
+		
+	}
+	
+	
+	private inline function set_fontName (value:String):String {
+		
+		return name = value;
 		
 	}
 	
@@ -367,7 +403,7 @@ typedef GlyphData = {
 
 
 #else
-typedef Font = openfl._v2.text.Font;
+typedef Font = openfl._legacy.text.Font;
 #end
 #else
 typedef Font = flash.text.Font;

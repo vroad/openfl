@@ -1,4 +1,4 @@
-package openfl; #if !lime_legacy
+package openfl; #if !openfl_legacy
 #if !macro
 
 
@@ -49,7 +49,7 @@ import js.Browser;
 	}
 	
 	
-	#if html5
+	#if (js && html5)
 	@:keep @:expose("openfl.embed")
 	public static function embed (elementName:String, width:Null<Int> = null, height:Null<Int> = null, background:String = null, assetsPrefix:String = null) {
 		
@@ -213,5 +213,5 @@ class Lib {
 
 #end
 #else
-typedef Lib = openfl._v2.Lib;
+typedef Lib = openfl._legacy.Lib;
 #end

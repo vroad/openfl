@@ -147,7 +147,7 @@ class DefaultShader extends AbstractShader {
 				
 			} else {
 				
-				#if html5
+				#if (js && html5)
 				gl.texImage2D (gl.TEXTURE_2D, 0, format, gl.RGBA, gl.UNSIGNED_BYTE, uniform.value.baseTexture.source);
 				#end
 				

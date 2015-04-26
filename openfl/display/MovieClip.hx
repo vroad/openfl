@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 /**
@@ -36,7 +36,7 @@ package openfl.display; #if !flash #if !lime_legacy
  * MovieClip.opaqueBackground property for a suitable device, define
  * FEATURE_BITMAPCACHE in your project.</p>
  */
-class MovieClip extends Sprite {
+class MovieClip extends Sprite implements Dynamic<DisplayObject> {
 	
 	
 	/**
@@ -243,7 +243,7 @@ class MovieClip extends Sprite {
 
 
 #else
-typedef MovieClip = openfl._v2.display.MovieClip;
+typedef MovieClip = openfl._legacy.display.MovieClip;
 #end
 #else
 typedef MovieClip = flash.display.MovieClip;

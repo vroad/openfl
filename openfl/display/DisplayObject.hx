@@ -1,6 +1,11 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
+import lime.ui.MouseCursor;
+import openfl._internal.renderer.canvas.CanvasGraphics;
+import openfl._internal.renderer.canvas.CanvasShape;
+import openfl._internal.renderer.dom.DOMShape;
+import openfl._internal.renderer.opengl.utils.GraphicsRenderer;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.Stage;
 import openfl.errors.TypeError;
@@ -154,7 +159,9 @@ import js.html.Element;
  */
 
 @:access(openfl.events.Event)
+@:access(openfl.display.Graphics)
 @:access(openfl.display.Stage)
+@:access(openfl.geom.ColorTransform)
 
 
 class DisplayObject extends EventDispatcher implements IBitmapDrawable {
@@ -700,6 +707,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	public var y (get, set):Float;
 	
 	@:dox(hide) @:noCompletion public var __worldTransform:Matrix;
+	@:dox(hide) @:noCompletion public var __worldColorTransform:ColorTransform;
 	
 	@:noCompletion private var __alpha:Float;
 	@:noCompletion private var __filters:Array<BitmapFilter>;
@@ -707,6 +715,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	@:noCompletion private var __interactive:Bool;
 	@:noCompletion private var __isMask:Bool;
 	@:noCompletion private var __mask:DisplayObject;
+	@:noCompletion private var __maskGraphics:Graphics;
+	@:noCompletion private var __maskCached:Bool = false;
 	@:noCompletion private var __name:String;
 	@:noCompletion private var __renderable:Bool;
 	@:noCompletion private var __renderDirty:Bool;
@@ -731,6 +741,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	@:noCompletion private var __worldZ:Int;
 	@:noCompletion private var __x:Float;
 	@:noCompletion private var __y:Float;
+	@:noCompletion private var __cacheAsBitmap:Bool = false;
 	
 	#if html5
 	@:noCompletion private var __canvas:CanvasElement;
@@ -756,6 +767,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		__rotationCache = 0;
 		__rotationSine = 0;
 		__rotationCosine = 1;
+		
+		__worldColorTransform = new ColorTransform ();
 		
 		#if dom
 		__worldVisible = true;
@@ -925,8 +938,10 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		
 		if (parent != null) {
 			
-			var currentBounds = getBounds (this);
-			return currentBounds.containsPoint (new Point (x, y));
+			var bounds = new Rectangle ();
+			__getBounds (bounds, null);
+			
+			return bounds.containsPoint (new Point (x, y));
 			
 		}
 		
@@ -988,14 +1003,25 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	@:noCompletion private function __getBounds (rect:Rectangle, matrix:Matrix):Void {
 		
-		
+		if (__graphics != null) {
+			
+			__graphics.__getBounds (rect, matrix != null ? matrix : __worldTransform);
+			
+		}
 		
 	}
 	
 	
-	@:noCompletion private function __getInteractive (stack:Array<DisplayObject>):Void {
+	@:noCompletion private function __getCursor ():MouseCursor {
 		
+		return null;
 		
+	}
+	
+	
+	@:noCompletion private function __getInteractive (stack:Array<DisplayObject>):Bool {
+		
+		return false;
 		
 	}
 	
@@ -1057,6 +1083,22 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	@:noCompletion private function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
 		
+		if (__graphics != null) {
+			
+			if (visible && __graphics.__hitTest (x, y, shapeFlag, __getTransform ())) {
+				
+				if (!interactiveOnly) {
+					
+					stack.push (this);
+					
+				}
+				
+				return true;
+				
+			}
+			
+		}
+		
 		return false;
 		
 	}
@@ -1064,28 +1106,46 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __renderCanvas (renderSession:RenderSession):Void {
 		
-		
+		if (__graphics != null) {
+			
+			CanvasShape.render (this, renderSession);
+			
+		}
 		
 	}
 	
 	
 	@:noCompletion @:dox(hide) public function __renderDOM (renderSession:RenderSession):Void {
 		
-		
+		if (__graphics != null) {
+			
+			DOMShape.render (this, renderSession);
+			
+		}
 		
 	}
 	
 	
 	@:noCompletion @:dox(hide) public function __renderGL (renderSession:RenderSession):Void {
 		
+		if (!__renderable || __worldAlpha <= 0) return;
 		
+		if (__graphics != null) {
+			
+			GraphicsRenderer.render (this, renderSession);
+			
+		}
 		
 	}
 	
 	
 	@:noCompletion @:dox(hide) public function __renderMask (renderSession:RenderSession):Void {
 		
-		
+		if (__graphics != null) {
+			
+			CanvasGraphics.renderMask (__graphics, renderSession);
+			
+		}
 		
 	}
 	
@@ -1137,7 +1197,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion @:dox(hide) public function __update (transformOnly:Bool, updateChildren:Bool):Void {
+	@:noCompletion @:dox(hide) public function __update (transformOnly:Bool, updateChildren:Bool, ?maskGraphics:Graphics = null):Void {
 		
 		__renderable = (visible && scaleX != 0 && scaleY != 0 && !__isMask);
 		//if (!__renderable && !__isMask) return;
@@ -1183,6 +1243,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 				
 			}
 			
+			if(__isMask) __maskCached = false;
+			
 		} else {
 			
 			__worldTransform.a = __rotationCosine * scaleX;
@@ -1211,6 +1273,26 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 			
 		}
 		
+		if (!transformOnly && __mask != null && !__mask.__maskCached) {
+			
+			if (__maskGraphics == null) {
+				__maskGraphics = new Graphics();
+			}
+			
+			__maskGraphics.clear();
+			
+			__mask.__update(true, true, __maskGraphics);
+			__mask.__maskCached = true;
+			
+		}
+		
+		if (maskGraphics != null) {
+			
+			__updateMask(maskGraphics);
+			
+		}
+		
+		
 		if (!transformOnly) {
 			
 			#if dom
@@ -1220,11 +1302,16 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 			var worldClip:Rectangle = null;
 			#end
 			
+			if(!__worldColorTransform.__equals(transform.colorTransform)) {
+				__worldColorTransform = transform.colorTransform.__clone();
+			}
+			
 			if (parent != null) {
 				
 				#if !dom
 				
 				__worldAlpha = alpha * parent.__worldAlpha;
+				__worldColorTransform.__combine(parent.__worldColorTransform);
 				
 				#else
 				
@@ -1306,6 +1393,25 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 			
 			__transformDirty = false;
 			__worldTransformDirty--;
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __updateMask (maskGraphics:Graphics):Void {
+		
+		if (__graphics != null) {
+			
+			maskGraphics.__commands.push(OverrideMatrix(this.__worldTransform));
+			maskGraphics.__commands = maskGraphics.__commands.concat(__graphics.__commands);
+			maskGraphics.__dirty = true;
+			maskGraphics.__visible = true;
+			if (maskGraphics.__bounds == null) {
+				maskGraphics.__bounds = new Rectangle();
+			}
+			
+			__graphics.__getBounds(maskGraphics.__bounds, @:privateAccess Matrix.__identity);
 			
 		}
 		
@@ -1397,8 +1503,17 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	@:noCompletion private function set_mask (value:DisplayObject):DisplayObject {
 		
-		if (value != __mask) __setRenderDirty ();
-		if (__mask != null) __mask.__isMask = false;
+		if (value != __mask) {
+			__setTransformDirty ();
+			__setRenderDirty ();
+		}
+		if (__mask != null) {
+			__mask.__isMask = false;
+			__mask.__maskCached = false;
+			__mask.__setTransformDirty();
+			__mask.__setRenderDirty();
+			__maskGraphics = null;
+		}
 		if (value != null) value.__isMask = true;
 		return __mask = value;
 		
@@ -1553,7 +1668,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		
 		__setTransformDirty ();
 		__transform.matrix = value.matrix.clone ();
-		__transform.colorTransform = new ColorTransform (value.colorTransform.redMultiplier, value.colorTransform.greenMultiplier, value.colorTransform.blueMultiplier, value.colorTransform.alphaMultiplier, value.colorTransform.redOffset, value.colorTransform.greenOffset, value.colorTransform.blueOffset, value.colorTransform.alphaOffset);
+		__transform.colorTransform = value.colorTransform.__clone();
 		
 		return __transform;
 		
@@ -1639,7 +1754,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 
 
 #else
-typedef DisplayObject = openfl._v2.display.DisplayObject;
+typedef DisplayObject = openfl._legacy.display.DisplayObject;
 #end
 #else
 typedef DisplayObject = flash.display.DisplayObject;

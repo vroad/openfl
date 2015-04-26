@@ -1,8 +1,9 @@
-package openfl; #if !lime_legacy
+package openfl; #if (!openfl_legacy || (openfl_legacy && lime_hybrid))
 #if !macro
 
 
 import haxe.Unserializer;
+import lime.text.Font in LimeFont;
 import lime.Assets.AssetLibrary in LimeAssetLibrary;
 import lime.Assets in LimeAssets;
 import openfl.display.Bitmap;
@@ -18,6 +19,7 @@ import openfl.utils.ByteArray;
 @:access(lime.Assets)
 @:access(openfl.AssetLibrary)
 @:access(openfl.display.BitmapData)
+@:access(openfl.text.Font)
 
 /**
  * <p>The Assets class provides a cross-platform interface to access 
@@ -150,9 +152,21 @@ class Assets {
 			
 		}
 		
-		var font = LimeAssets.getFont (id, false);
+		var limeFont = LimeAssets.getFont (id, false);
 		
-		if (font != null) {
+		if (limeFont != null) {
+			
+			#if flash
+			var font = limeFont.src;
+			#else
+			var font = Font.__fromLimeFont (limeFont);
+			#end
+			
+			if (useCache && cache.enabled) {
+				
+				cache.setFont (id, font);
+				
+			}
 			
 			return font;
 			
@@ -572,20 +586,23 @@ class Assets {
 			
 			if (library.exists (symbolName, cast AssetType.FONT)) {
 				
-				if (useCache && cache.enabled) {
+				library.loadFont (symbolName, function (limeFont:LimeFont):Void {
 					
-					library.loadFont (symbolName, function (font:Font):Void {
+					#if flash
+					var font = limeFont.src;
+					#else
+					var font = Font.__fromLimeFont (limeFont);
+					#end
+					
+					if (useCache && cache.enabled) {
 						
 						cache.setFont (id, font);
-						handler (font);
 						
-					});
+					}
 					
-				} else {
+					handler (font);
 					
-					library.loadFont (symbolName, handler);
-					
-				}
+				});
 				
 				return;
 				
@@ -1147,7 +1164,7 @@ class Assets {
 					
 				} else {
 					
-					__loadFromBase64 (haxe.Resource.getString (resourceName), resourceType, function (b) {
+					__fromBase64 (haxe.Resource.getString (resourceName), resourceType, function (b) {
 						
 						if (preload == null) {
 							
@@ -1170,7 +1187,7 @@ class Assets {
 				super (width, height, transparent, fillRGBA);
 				
 				var byteArray = openfl.utils.ByteArray.fromBytes (haxe.Resource.getBytes (resourceName));
-				__loadFromBytes (byteArray);
+				__fromBytes (byteArray);
 				
 				#end
 				
@@ -1308,7 +1325,10 @@ class Assets {
 						
 						case EConst(CString(filePath)):
 							
-							path = Context.resolvePath (filePath);
+							path = filePath;
+							if (!sys.FileSystem.exists(filePath)) {
+								path = Context.resolvePath (filePath);
+							}
 							
 						default:
 						
@@ -1388,12 +1408,12 @@ class Assets {
 
 #end
 #else
-typedef Assets = openfl._v2.Assets;
+typedef Assets = openfl._legacy.Assets;
 #if !macro
-typedef AssetLibrary = openfl._v2.Assets.AssetLibrary;
-typedef AssetCache = openfl._v2.Assets.AssetCache;
-typedef IAssetCache = openfl._v2.Assets.IAssetCache;
-typedef AssetData = openfl._v2.Assets.AssetData;
-typedef AssetType = openfl._v2.Assets.AssetType;
+typedef AssetLibrary = openfl._legacy.Assets.AssetLibrary;
+typedef AssetCache = openfl._legacy.Assets.AssetCache;
+typedef IAssetCache = openfl._legacy.Assets.IAssetCache;
+typedef AssetData = openfl._legacy.Assets.AssetData;
+typedef AssetType = openfl._legacy.Assets.AssetType;
 #end
 #end

@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 import haxe.EnumFlags;
@@ -12,6 +12,9 @@ import lime.graphics.GLRenderContext;
 import lime.graphics.RenderContext;
 import lime.math.Matrix4;
 import lime.utils.GLUtils;
+import lime.ui.Gamepad;
+import lime.ui.GamepadAxis;
+import lime.ui.GamepadButton;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.ui.Mouse;
@@ -19,6 +22,7 @@ import openfl._internal.renderer.AbstractRenderer;
 import openfl._internal.renderer.canvas.CanvasRenderer;
 import openfl._internal.renderer.dom.DOMRenderer;
 import openfl._internal.renderer.opengl.GLRenderer;
+import openfl.display.DisplayObjectContainer;
 import openfl.events.Event;
 import openfl.events.EventPhase;
 import openfl.events.FocusEvent;
@@ -158,9 +162,10 @@ import js.Browser;
  */
 
 @:access(openfl.events.Event)
+@:access(openfl.ui.Keyboard)
 
 
-class Stage extends Sprite implements IModule {
+class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	/**
@@ -274,7 +279,7 @@ class Stage extends Sprite implements IModule {
 	 *                       <code>allowFullScreen</code> attribute is not set to
 	 *                       <code>true</code> throws a security error.
 	 */
-	public var displayState (default, set):StageDisplayState;
+	public var displayState (get, set):StageDisplayState;
 	
 	/**
 	 * The interactive object with keyboard focus; or <code>null</code> if focus
@@ -515,6 +520,7 @@ class Stage extends Sprite implements IModule {
 	@:noCompletion private var __colorSplit:Array<Float>;
 	@:noCompletion private var __colorString:String;
 	@:noCompletion private var __dirty:Bool;
+	@:noCompletion private var __displayState:StageDisplayState;
 	@:noCompletion private var __dragBounds:Rectangle;
 	@:noCompletion private var __dragObject:Sprite;
 	@:noCompletion private var __dragOffsetX:Float;
@@ -523,9 +529,9 @@ class Stage extends Sprite implements IModule {
 	@:noCompletion private var __fullscreen:Bool;
 	@:noCompletion private var __invalidated:Bool;
 	@:noCompletion private var __lastClickTime:Int;
-	@:noCompletion private var __mouseOutStack = [];
-	@:noCompletion private var __mouseX:Float = 0;
-	@:noCompletion private var __mouseY:Float = 0;
+	@:noCompletion private var __mouseOutStack:Array<DisplayObject>;
+	@:noCompletion private var __mouseX:Float;
+	@:noCompletion private var __mouseY:Float;
 	@:noCompletion private var __originalWidth:Int;
 	@:noCompletion private var __originalHeight:Int;
 	@:noCompletion private var __renderer:AbstractRenderer;
@@ -560,9 +566,11 @@ class Stage extends Sprite implements IModule {
 		
 		this.name = null;
 		
+		__displayState = NORMAL;
 		__mouseX = 0;
 		__mouseY = 0;
-		
+		__lastClickTime = 0;
+
 		stageWidth = width;
 		stageHeight = height;
 		
@@ -570,7 +578,6 @@ class Stage extends Sprite implements IModule {
 		
 		align = StageAlign.TOP_LEFT;
 		allowsFullScreen = false;
-		displayState = StageDisplayState.NORMAL;
 		frameRate = 60;
 		quality = StageQuality.HIGH;
 		scaleMode = StageScaleMode.NO_SCALE;
@@ -578,6 +585,7 @@ class Stage extends Sprite implements IModule {
 		
 		__clearBeforeRender = true;
 		__stack = [];
+		__mouseOutStack = [];
 		
 		stage3Ds = new Vector ();
 		stage3Ds.push (new Stage3D ());
@@ -594,7 +602,25 @@ class Stage extends Sprite implements IModule {
 	
 	public function init (context:RenderContext):Void {
 		
-		
+		switch (context) {
+			
+			case OPENGL (gl):
+				
+				#if !disable_cffi
+				__renderer = new GLRenderer (stageWidth, stageHeight, gl);
+				#end
+			
+			case CANVAS (context):
+				
+				__renderer = new CanvasRenderer (stageWidth, stageHeight, context);
+			
+			case DOM (element):
+				
+				__renderer = new DOMRenderer (stageWidth, stageHeight, element);
+			
+			default:
+			
+		}
 		
 	}
 	
@@ -635,22 +661,51 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
+	public function onGamepadAxisMove (gamepad:Gamepad, axis:GamepadAxis, value:Float):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadButtonDown (gamepad:Gamepad, button:GamepadButton):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadButtonUp (gamepad:Gamepad, button:GamepadButton):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadConnect (gamepad:Gamepad):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadDisconnect (gamepad:Gamepad):Void {
+		
+		
+		
+	}
+	
+	
 	public function onKeyDown (keyCode:KeyCode, modifier:KeyModifier):Void {
 		
-		var keyCode = __convertKeyCode (keyCode);
-		var charCode = keyCode;
-		
-		__onKey (new KeyboardEvent (KeyboardEvent.KEY_DOWN, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey));
+		__onKey (KeyboardEvent.KEY_DOWN, keyCode, modifier);
 		
 	}
 	
 	
 	public function onKeyUp (keyCode:KeyCode, modifier:KeyModifier):Void {
 		
-		var keyCode = __convertKeyCode (keyCode);
-		var charCode = keyCode;
-		
-		__onKey (new KeyboardEvent (KeyboardEvent.KEY_UP, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey));
+		__onKey (KeyboardEvent.KEY_UP, keyCode, modifier);
 		
 	}
 	
@@ -670,9 +725,16 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
-	public function onMouseMove (x:Float, y:Float, button:Int):Void {
+	public function onMouseMove (x:Float, y:Float):Void {
 		
 		__onMouse (MouseEvent.MOUSE_MOVE, x, y, 0);
+		
+	}
+	
+	
+	public function onMouseMoveRelative (x:Float, y:Float):Void {
+		
+		
 		
 	}
 	
@@ -694,7 +756,7 @@ class Stage extends Sprite implements IModule {
 	
 	public function onMouseWheel (deltaX:Float, deltaY:Float):Void {
 		
-		
+		__onMouseWheel (deltaX, deltaY);
 		
 	}
 	
@@ -757,6 +819,13 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
+	public function onWindowEnter ():Void {
+		
+		
+		
+	}
+	
+	
 	public function onWindowFocusIn ():Void {
 		
 		
@@ -765,6 +834,27 @@ class Stage extends Sprite implements IModule {
 	
 	
 	public function onWindowFocusOut ():Void {
+		
+		
+		
+	}
+	
+	
+	public function onWindowFullscreen ():Void {
+		
+		
+		
+	}
+	
+	
+	public function onWindowLeave ():Void {
+		
+		dispatchEvent (new Event (Event.MOUSE_LEAVE));
+		
+	}
+	
+	
+	public function onWindowMinimize ():Void {
 		
 		
 		
@@ -783,8 +873,21 @@ class Stage extends Sprite implements IModule {
 		stageWidth = width;
 		stageHeight = height;
 		
+		if (__renderer != null) {
+			
+			__renderer.resize (width, height);
+			
+		}
+		
 		var event = new Event (Event.RESIZE);
 		__broadcast (event, false);
+		
+	}
+	
+	
+	public function onWindowRestore ():Void {
+		
+		
 		
 	}
 	
@@ -806,43 +909,9 @@ class Stage extends Sprite implements IModule {
 		__renderable = true;
 		__update (false, true);
 		
-		switch (context) {
+		if (__renderer != null) {
 			
-			case OPENGL (gl):
-				
-				#if !disable_gl_renderer
-				
-				if (__renderer == null) {
-					
-					__renderer = new GLRenderer (stageWidth, stageHeight, gl);
-					
-				}
-				
-				__renderer.render (this);
-				
-				#end
-			
-			case CANVAS (context):
-				
-				if (__renderer == null) {
-					
-					__renderer = new CanvasRenderer (stageWidth, stageHeight, context);
-					
-				}
-				
-				__renderer.render (this);
-			
-			case DOM (element):
-				
-				if (__renderer == null) {
-					
-					__renderer = new DOMRenderer (stageWidth, stageHeight, element);
-					
-				}
-				
-				__renderer.render (this);
-			
-			default:
+			__renderer.render (this);
 			
 		}
 		
@@ -854,252 +923,6 @@ class Stage extends Sprite implements IModule {
 	public function update (deltaTime:Int):Void {
 		
 		
-		
-	}
-	
-	
-	@:noCompletion private function __convertKeyCode (keyCode:KeyCode):Int {
-		
-		return switch (keyCode) {
-			
-			case BACKSPACE: Keyboard.BACKSPACE;
-			case TAB: Keyboard.TAB;
-			case RETURN: Keyboard.ENTER;
-			case ESCAPE: Keyboard.ESCAPE;
-			case SPACE: Keyboard.SPACE;
-			//case EXCLAMATION: 0x21;
-			//case QUOTE: 0x22;
-			//case HASH: 0x23;
-			//case DOLLAR: 0x24;
-			//case PERCENT: 0x25;
-			//case AMPERSAND: 0x26;
-			case SINGLE_QUOTE: Keyboard.QUOTE;
-			//case LEFT_PARENTHESIS: 0x28;
-			//case RIGHT_PARENTHESIS: 0x29;
-			//case ASTERISK: 0x2A;
-			//case PLUS: 0x2B;
-			case COMMA: Keyboard.COMMA;
-			case MINUS: Keyboard.MINUS;
-			case PERIOD: Keyboard.PERIOD;
-			case SLASH: Keyboard.SLASH;
-			case NUMBER_0: Keyboard.NUMBER_0;
-			case NUMBER_1: Keyboard.NUMBER_1;
-			case NUMBER_2: Keyboard.NUMBER_2;
-			case NUMBER_3: Keyboard.NUMBER_3;
-			case NUMBER_4: Keyboard.NUMBER_4;
-			case NUMBER_5: Keyboard.NUMBER_5;
-			case NUMBER_6: Keyboard.NUMBER_6;
-			case NUMBER_7: Keyboard.NUMBER_7;
-			case NUMBER_8: Keyboard.NUMBER_8;
-			case NUMBER_9: Keyboard.NUMBER_9;
-			//case COLON: 0x3A;
-			case SEMICOLON: Keyboard.SEMICOLON;
-			//case LESS_THAN: 0x3C;
-			case EQUALS: Keyboard.EQUAL;
-			//case GREATER_THAN: 0x3E;
-			//case QUESTION: 0x3F;
-			//case AT: 0x40;
-			case LEFT_BRACKET: Keyboard.LEFTBRACKET;
-			case BACKSLASH: Keyboard.BACKSLASH;
-			case RIGHT_BRACKET: Keyboard.RIGHTBRACKET;
-			//case CARET: 0x5E;
-			//case UNDERSCORE: 0x5F;
-			case GRAVE: Keyboard.BACKQUOTE;
-			case A: Keyboard.A;
-			case B: Keyboard.B;
-			case C: Keyboard.C;
-			case D: Keyboard.D;
-			case E: Keyboard.E;
-			case F: Keyboard.F;
-			case G: Keyboard.G;
-			case H: Keyboard.H;
-			case I: Keyboard.I;
-			case J: Keyboard.J;
-			case K: Keyboard.K;
-			case L: Keyboard.L;
-			case M: Keyboard.M;
-			case N: Keyboard.N;
-			case O: Keyboard.O;
-			case P: Keyboard.P;
-			case Q: Keyboard.Q;
-			case R: Keyboard.R;
-			case S: Keyboard.S;
-			case T: Keyboard.T;
-			case U: Keyboard.U;
-			case V: Keyboard.V;
-			case W: Keyboard.W;
-			case X: Keyboard.X;
-			case Y: Keyboard.Y;
-			case Z: Keyboard.Z;
-			case DELETE: Keyboard.DELETE;
-			case CAPS_LOCK: Keyboard.CAPS_LOCK;
-			case F1: Keyboard.F1;
-			case F2: Keyboard.F2;
-			case F3: Keyboard.F3;
-			case F4: Keyboard.F4;
-			case F5: Keyboard.F5;
-			case F6: Keyboard.F6;
-			case F7: Keyboard.F7;
-			case F8: Keyboard.F8;
-			case F9: Keyboard.F9;
-			case F10: Keyboard.F10;
-			case F11: Keyboard.F11;
-			case F12: Keyboard.F12;
-			//case PRINT_SCREEN: 0x40000046;
-			//case SCROLL_LOCK: 0x40000047;
-			//case PAUSE: 0x40000048;
-			case INSERT: Keyboard.INSERT;
-			case HOME: Keyboard.HOME;
-			case PAGE_UP: Keyboard.PAGE_UP;
-			case END: Keyboard.END;
-			case PAGE_DOWN: Keyboard.PAGE_DOWN;
-			case RIGHT: Keyboard.RIGHT;
-			case LEFT: Keyboard.LEFT;
-			case DOWN: Keyboard.DOWN;
-			case UP: Keyboard.UP;
-			//case NUM_LOCK_CLEAR: 0x40000053;
-			case NUMPAD_DIVIDE: Keyboard.NUMPAD_DIVIDE;
-			case NUMPAD_MULTIPLY: Keyboard.NUMPAD_MULTIPLY;
-			case NUMPAD_MINUS: Keyboard.NUMPAD_SUBTRACT;
-			case NUMPAD_PLUS: Keyboard.NUMPAD_ADD;
-			case NUMPAD_ENTER: Keyboard.NUMPAD_ENTER;
-			case NUMPAD_1: Keyboard.NUMPAD_1;
-			case NUMPAD_2: Keyboard.NUMPAD_2;
-			case NUMPAD_3: Keyboard.NUMPAD_3;
-			case NUMPAD_4: Keyboard.NUMPAD_4;
-			case NUMPAD_5: Keyboard.NUMPAD_5;
-			case NUMPAD_6: Keyboard.NUMPAD_6;
-			case NUMPAD_7: Keyboard.NUMPAD_7;
-			case NUMPAD_8: Keyboard.NUMPAD_8;
-			case NUMPAD_9: Keyboard.NUMPAD_9;
-			case NUMPAD_0: Keyboard.NUMPAD_0;
-			case NUMPAD_PERIOD: Keyboard.NUMPAD_DECIMAL;
-			//case APPLICATION: 0x40000065;
-			//case POWER: 0x40000066;
-			//case NUMPAD_EQUALS: 0x40000067;
-			case F13: Keyboard.F13;
-			case F14: Keyboard.F14;
-			case F15: Keyboard.F15;
-			//case F16: 0x4000006B;
-			//case F17: 0x4000006C;
-			//case F18: 0x4000006D;
-			//case F19: 0x4000006E;
-			//case F20: 0x4000006F;
-			//case F21: 0x40000070;
-			//case F22: 0x40000071;
-			//case F23: 0x40000072;
-			//case F24: 0x40000073;
-			//case EXECUTE: 0x40000074;
-			//case HELP: 0x40000075;
-			//case MENU: 0x40000076;
-			//case SELECT: 0x40000077;
-			//case STOP: 0x40000078;
-			//case AGAIN: 0x40000079;
-			//case UNDO: 0x4000007A;
-			//case CUT: 0x4000007B;
-			//case COPY: 0x4000007C;
-			//case PASTE: 0x4000007D;
-			//case FIND: 0x4000007E;
-			//case MUTE: 0x4000007F;
-			//case VOLUME_UP: 0x40000080;
-			//case VOLUME_DOWN: 0x40000081;
-			//case NUMPAD_COMMA: 0x40000085;
-			////case NUMPAD_EQUALS_AS400: 0x40000086;
-			//case ALT_ERASE: 0x40000099;
-			//case SYSTEM_REQUEST: 0x4000009A;
-			//case CANCEL: 0x4000009B;
-			//case CLEAR: 0x4000009C;
-			//case PRIOR: 0x4000009D;
-			//case RETURN2: 0x4000009E;
-			//case SEPARATOR: 0x4000009F;
-			//case OUT: 0x400000A0;
-			//case OPER: 0x400000A1;
-			//case CLEAR_AGAIN: 0x400000A2;
-			//case CRSEL: 0x400000A3;
-			//case EXSEL: 0x400000A4;
-			//case NUMPAD_00: 0x400000B0;
-			//case NUMPAD_000: 0x400000B1;
-			//case THOUSAND_SEPARATOR: 0x400000B2;
-			//case DECIMAL_SEPARATOR: 0x400000B3;
-			//case CURRENCY_UNIT: 0x400000B4;
-			//case CURRENCY_SUBUNIT: 0x400000B5;
-			//case NUMPAD_LEFT_PARENTHESIS: 0x400000B6;
-			//case NUMPAD_RIGHT_PARENTHESIS: 0x400000B7;
-			//case NUMPAD_LEFT_BRACE: 0x400000B8;
-			//case NUMPAD_RIGHT_BRACE: 0x400000B9;
-			//case NUMPAD_TAB: 0x400000BA;
-			//case NUMPAD_BACKSPACE: 0x400000BB;
-			//case NUMPAD_A: 0x400000BC;
-			//case NUMPAD_B: 0x400000BD;
-			//case NUMPAD_C: 0x400000BE;
-			//case NUMPAD_D: 0x400000BF;
-			//case NUMPAD_E: 0x400000C0;
-			//case NUMPAD_F: 0x400000C1;
-			//case NUMPAD_XOR: 0x400000C2;
-			//case NUMPAD_POWER: 0x400000C3;
-			//case NUMPAD_PERCENT: 0x400000C4;
-			//case NUMPAD_LESS_THAN: 0x400000C5;
-			//case NUMPAD_GREATER_THAN: 0x400000C6;
-			//case NUMPAD_AMPERSAND: 0x400000C7;
-			//case NUMPAD_DOUBLE_AMPERSAND: 0x400000C8;
-			//case NUMPAD_VERTICAL_BAR: 0x400000C9;
-			//case NUMPAD_DOUBLE_VERTICAL_BAR: 0x400000CA;
-			//case NUMPAD_COLON: 0x400000CB;
-			//case NUMPAD_HASH: 0x400000CC;
-			//case NUMPAD_SPACE: 0x400000CD;
-			//case NUMPAD_AT: 0x400000CE;
-			//case NUMPAD_EXCLAMATION: 0x400000CF;
-			//case NUMPAD_MEM_STORE: 0x400000D0;
-			//case NUMPAD_MEM_RECALL: 0x400000D1;
-			//case NUMPAD_MEM_CLEAR: 0x400000D2;
-			//case NUMPAD_MEM_ADD: 0x400000D3;
-			//case NUMPAD_MEM_SUBTRACT: 0x400000D4;
-			//case NUMPAD_MEM_MULTIPLY: 0x400000D5;
-			//case NUMPAD_MEM_DIVIDE: 0x400000D6;
-			//case NUMPAD_PLUS_MINUS: 0x400000D7;
-			//case NUMPAD_CLEAR: 0x400000D8;
-			//case NUMPAD_CLEAR_ENTRY: 0x400000D9;
-			//case NUMPAD_BINARY: 0x400000DA;
-			//case NUMPAD_OCTAL: 0x400000DB;
-			//case NUMPAD_DECIMAL: 0x400000DC;
-			//case NUMPAD_HEXADECIMAL: 0x400000DD;
-			case LEFT_CTRL: Keyboard.CONTROL;
-			case LEFT_SHIFT: Keyboard.SHIFT;
-			case LEFT_ALT: Keyboard.ALTERNATE;
-			//case LEFT_META: 0x400000E3;
-			case RIGHT_CTRL: Keyboard.CONTROL;
-			case RIGHT_SHIFT: Keyboard.SHIFT;
-			case RIGHT_ALT: Keyboard.ALTERNATE;
-			//case RIGHT_META: 0x400000E7;
-			//case MODE: 0x40000101;
-			//case AUDIO_NEXT: 0x40000102;
-			//case AUDIO_PREVIOUS: 0x40000103;
-			//case AUDIO_STOP: 0x40000104;
-			//case AUDIO_PLAY: 0x40000105;
-			//case AUDIO_MUTE: 0x40000106;
-			//case MEDIA_SELECT: 0x40000107;
-			//case WWW: 0x40000108;
-			//case MAIL: 0x40000109;
-			//case CALCULATOR: 0x4000010A;
-			//case COMPUTER: 0x4000010B;
-			//case APP_CONTROL_SEARCH: 0x4000010C;
-			//case APP_CONTROL_HOME: 0x4000010D;
-			//case APP_CONTROL_BACK: 0x4000010E;
-			//case APP_CONTROL_FORWARD: 0x4000010F;
-			//case APP_CONTROL_STOP: 0x40000110;
-			//case APP_CONTROL_REFRESH: 0x40000111;
-			//case APP_CONTROL_BOOKMARKS: 0x40000112;
-			//case BRIGHTNESS_DOWN: 0x40000113;
-			//case BRIGHTNESS_UP: 0x40000114;
-			//case DISPLAY_SWITCH: 0x40000115;
-			//case BACKLIGHT_TOGGLE: 0x40000116;
-			//case BACKLIGHT_DOWN: 0x40000117;
-			//case BACKLIGHT_UP: 0x40000118;
-			//case EJECT: 0x40000119;
-			//case SLEEP: 0x4000011A;
-			default: cast keyCode;
-			
-		}
 		
 	}
 	
@@ -1207,14 +1030,25 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
-	@:noCompletion private override function __getInteractive (stack:Array<DisplayObject>):Void {
+	@:noCompletion private override function __getInteractive (stack:Array<DisplayObject>):Bool {
 		
-		stack.push (this);
+		if (stack != null) {
+			
+			stack.push (this);
+			
+		}
+		
+		return true;
 		
 	}
 	
 	
-	@:noCompletion private function __onKey (event:KeyboardEvent):Void {
+	@:noCompletion private function __onKey (type:String, keyCode:KeyCode, modifier:KeyModifier):Void {
+		
+		MouseEvent.__altKey = modifier.altKey;
+		MouseEvent.__commandKey = modifier.metaKey;
+		MouseEvent.__ctrlKey = modifier.ctrlKey;
+		MouseEvent.__shiftKey = modifier.shiftKey;
 		
 		var stack = new Array <DisplayObject> ();
 		
@@ -1230,8 +1064,41 @@ class Stage extends Sprite implements IModule {
 		
 		if (stack.length > 0) {
 			
+			var keyCode = Keyboard.convertKeyCode (keyCode);
+			var charCode = Keyboard.__getCharCode (keyCode, modifier.shiftKey);
+			
+			var event = new KeyboardEvent (type, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey);
+			
 			stack.reverse ();
 			__fireEvent (event, stack);
+			
+			#if (windows || linux)
+			
+			if (keyCode == KeyCode.RETURN && modifier.altKey && type == KeyboardEvent.KEY_DOWN && !modifier.ctrlKey && !modifier.shiftKey && !modifier.metaKey && !event.isDefaultPrevented ()) {
+				
+				switch (displayState) {
+					
+					case NORMAL: displayState = FULL_SCREEN;
+					default: displayState = NORMAL;
+					
+				}
+				
+			}
+			
+			#elseif mac
+			
+			if (keyCode == KeyCode.F && modifier.ctrlKey && modifier.metaKey && type == KeyboardEvent.KEY_DOWN && !modifier.altKey && !modifier.shiftKey && !event.isDefaultPrevented ()) {
+				
+				switch (displayState) {
+					
+					case NORMAL: displayState = FULL_SCREEN;
+					default: displayState = NORMAL;
+					
+				}
+				
+			}
+			
+			#end
 			
 		}
 		
@@ -1260,7 +1127,13 @@ class Stage extends Sprite implements IModule {
 			
 		}
 		
-		__fireEvent (MouseEvent.__create (type, button, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+		if (type == MouseEvent.MOUSE_DOWN) {
+			
+			focus = target;
+			
+		}
+		
+		__fireEvent (MouseEvent.__create (type, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 		
 		var clickType = switch (type) {
 			
@@ -1273,14 +1146,14 @@ class Stage extends Sprite implements IModule {
 		
 		if (clickType != null) {
 			
-			__fireEvent (MouseEvent.__create (clickType, button, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+			__fireEvent (MouseEvent.__create (clickType, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 			
 			if (type == MouseEvent.MOUSE_UP && cast (target, openfl.display.InteractiveObject).doubleClickEnabled) {
 				
 				var currentTime = Lib.getTimer ();
 				if (currentTime - __lastClickTime < 500) {
 					
-					__fireEvent (MouseEvent.__create (MouseEvent.DOUBLE_CLICK, button, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+					__fireEvent (MouseEvent.__create (MouseEvent.DOUBLE_CLICK, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 					__lastClickTime = 0;
 					
 				} else {
@@ -1293,49 +1166,22 @@ class Stage extends Sprite implements IModule {
 			
 		}
 		
-		if (Std.is (target, Sprite)) {
+		var cursor = null;
+		
+		for (target in stack) {
 			
-			var targetSprite:Sprite = cast target;
+			cursor = target.__getCursor ();
 			
-			if (targetSprite.buttonMode && targetSprite.useHandCursor) {
+			if (cursor != null) {
 				
-				Mouse.cursor = POINTER;
-				
-			} else {
-				
-				Mouse.cursor = ARROW;
+				Mouse.cursor = cursor;
+				break;
 				
 			}
 			
-		} else if (Std.is (target, SimpleButton)) {
-			
-			var targetButton:SimpleButton = cast target;
-			
-			if (targetButton.useHandCursor) {
-				
-				Mouse.cursor = POINTER;
-				
-			} else {
-				
-				Mouse.cursor = ARROW;
-				
-			}
-			
-		} else if (Std.is (target, TextField)) {
-			
-			var targetTextField:TextField = cast target;
-			
-			if (targetTextField.type == INPUT) {
-				
-				Mouse.cursor = TEXT;
-				
-			} else {
-				
-				Mouse.cursor = ARROW;
-				
-			}
-			
-		} else {
+		}
+		
+		if (cursor == null) {
 			
 			Mouse.cursor = ARROW;
 			
@@ -1384,6 +1230,28 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
+	@:noCompletion private function __onMouseWheel (deltaX:Float, deltaY:Float):Void {
+		
+		var x = __mouseX;
+		var y = __mouseY;
+		
+		var stack = [];
+		
+		if (!__hitTest (x, y, false, stack, true)) {
+			
+			stack = [ this ];
+			
+		}
+		
+		var target:InteractiveObject = cast stack[stack.length - 1];
+		var targetPoint = new Point (x, y);
+		var delta = Std.int (deltaY);
+		
+		__fireEvent (MouseEvent.__create (MouseEvent.MOUSE_WHEEL, 0, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target, delta), stack);
+		
+	}
+	
+	
 	@:noCompletion private function __onTouch (type:String, x:Float, y:Float, id:Int):Void {
 		
 		/*event.preventDefault ();
@@ -1424,12 +1292,12 @@ class Stage extends Sprite implements IModule {
 			var target = __stack[__stack.length - 1];
 			var localPoint = target.globalToLocal (point);
 			
-			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, localPoint, cast target);
+			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, __mouseX, __mouseY, localPoint, cast target);
 			touchEvent.touchPointID = id;
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, 0, localPoint, cast target);
+			var mouseEvent = MouseEvent.__create (mouseType, 0, __mouseX, __mouseY, localPoint, cast target);
 			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
 			
 			__fireEvent (touchEvent, __stack);
@@ -1437,12 +1305,12 @@ class Stage extends Sprite implements IModule {
 			
 		} else {
 			
-			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, point, this);
+			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, __mouseX, __mouseY, point, this);
 			touchEvent.touchPointID = id;
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, 0, point, this);
+			var mouseEvent = MouseEvent.__create (mouseType, 0, __mouseX, __mouseY, point, this);
 			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
 			
 			__fireEvent (touchEvent, [ stage ]);
@@ -1561,13 +1429,13 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
-	@:noCompletion public override function __update (transformOnly:Bool, updateChildren:Bool):Void {
+	@:noCompletion public override function __update (transformOnly:Bool, updateChildren:Bool, ?maskGrahpics:Graphics = null):Void {
 		
 		if (transformOnly) {
 			
 			if (DisplayObject.__worldTransformDirty > 0) {
 				
-				super.__update (true, updateChildren);
+				super.__update (true, updateChildren, maskGrahpics);
 				
 				if (updateChildren) {
 					
@@ -1582,7 +1450,7 @@ class Stage extends Sprite implements IModule {
 			
 			if (DisplayObject.__worldTransformDirty > 0 || __dirty || DisplayObject.__worldRenderDirty > 0) {
 				
-				super.__update (false, updateChildren);
+				super.__update (false, updateChildren, maskGrahpics);
 				
 				if (updateChildren) {
 					
@@ -1601,7 +1469,7 @@ class Stage extends Sprite implements IModule {
 				// If we were dirty last time, we need at least one more
 				// update in order to clear "changed" properties
 				
-				super.__update (false, updateChildren);
+				super.__update (false, updateChildren, maskGrahpics);
 				
 				if (updateChildren) {
 					
@@ -1728,34 +1596,30 @@ class Stage extends Sprite implements IModule {
 	}
 	
 	
+	@:noCompletion private inline function get_displayState ():StageDisplayState {
+		
+		return __displayState;
+		
+	}
+	
+	
 	@:noCompletion private function set_displayState (value:StageDisplayState):StageDisplayState {
 		
-		/*switch(value) {
+		switch (value) {
+			
 			case NORMAL:
-				var fs_exit_function = untyped __js__("function() {
-			    if (document.exitFullscreen) {
-			      document.exitFullscreen();
-			    } else if (document.msExitFullscreen) {
-			      document.msExitFullscreen();
-			    } else if (document.mozCancelFullScreen) {
-			      document.mozCancelFullScreen();
-			    } else if (document.webkitExitFullscreen) {
-			      document.webkitExitFullscreen();
-			    }
-				}");
-				fs_exit_function();
-			case FULL_SCREEN | FULL_SCREEN_INTERACTIVE:
-				var fsfunction = untyped __js__("function(elem) {
-					if (elem.requestFullscreen) elem.requestFullscreen();
-					else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-					else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-					else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-				}");
-				fsfunction(__element);
+				
+				//Lib.application.window.minimized = false;
+				Lib.application.window.fullscreen = false;
+			
 			default:
-		}*/
-		displayState = value;
-		return value;
+				
+				//Lib.application.window.minimized = false;
+				Lib.application.window.fullscreen = true;
+			
+		}
+		
+		return __displayState = value;
 		
 	}
 	
@@ -1764,7 +1628,7 @@ class Stage extends Sprite implements IModule {
 
 
 #else
-typedef Stage = openfl._v2.display.Stage;
+typedef Stage = openfl._legacy.display.Stage;
 #end
 #else
 typedef Stage = flash.display.Stage;

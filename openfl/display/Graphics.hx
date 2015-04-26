@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 import openfl._internal.renderer.opengl.utils.FilterTexture;
@@ -47,7 +47,7 @@ class Graphics {
 	
 	@:noCompletion private var __bounds:Rectangle;
 	@:noCompletion private var __commands:Array<DrawCommand> = [];
-	@:noCompletion private var __dirty:Bool = true;
+	@:noCompletion private var __dirty(default, set):Bool = true;
 	@:noCompletion private var __glStack:Array<GLStack> = [];
 	@:noCompletion private var __drawPaths:Array<DrawPath>;
 	@:noCompletion private var __halfStrokeWidth:Float;
@@ -56,6 +56,7 @@ class Graphics {
 	@:noCompletion private var __transformDirty:Bool;
 	@:noCompletion private var __visible:Bool = true;
 	@:noCompletion private var __cachedTexture:FilterTexture;
+	@:noCompletion private var __owner:DisplayObject;
 	
 	#if html5
 	@:noCompletion private var __canvas:CanvasElement;
@@ -70,6 +71,9 @@ class Graphics {
 		__positionX = 0;
 		__positionY = 0;
 		
+		#if js
+		moveTo( 0, 0);
+		#end
 	}
 	
 	
@@ -209,7 +213,18 @@ class Graphics {
 	 */
 	public function beginGradientFill (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix = null, spreadMethod:Null<SpreadMethod> = null, interpolationMethod:Null<InterpolationMethod> = null, focalPointRatio:Null<Float> = null):Void {
 		
-		openfl.Lib.notImplemented ("Graphics.beginGradientFill");
+		__commands.push (BeginGradientFill (type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio));
+		
+		for (alpha in alphas) {
+			
+			if (alpha > 0) {
+				
+				__visible = true;
+				break;
+				
+			}
+			
+		}
 		
 	}
 	
@@ -234,6 +249,9 @@ class Graphics {
 		
 		__visible = false;
 		
+		#if js
+		moveTo( 0, 0);
+		#end
 	}
 	
 	
@@ -1020,6 +1038,14 @@ class Graphics {
 	}
 	
 	
+	@:noCompletion private function set___dirty (value:Bool):Bool {
+		if (value && __owner != null) {
+			@:privateAccess __owner.__setRenderDirty();
+		}
+		return __dirty = value;
+	}
+	
+	
 }
 
 
@@ -1027,6 +1053,7 @@ class Graphics {
 	
 	BeginBitmapFill (bitmap:BitmapData, matrix:Matrix, repeat:Bool, smooth:Bool);
 	BeginFill (color:Int, alpha:Float);
+	BeginGradientFill (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix, spreadMethod:Null<SpreadMethod>, interpolationMethod:Null<InterpolationMethod>, focalPointRatio:Null<Float>);
 	CubicCurveTo (controlX1:Float, controlY1:Float, controlX2:Float, controlY2:Float, anchorX:Float, anchorY:Float);
 	CurveTo (controlX:Float, controlY:Float, anchorX:Float, anchorY:Float);
 	DrawCircle (x:Float, y:Float, radius:Float);
@@ -1039,12 +1066,14 @@ class Graphics {
 	LineStyle (thickness:Null<Float>, color:Null<Int>, alpha:Null<Float>, pixelHinting:Null<Bool>, scaleMode:LineScaleMode, caps:CapsStyle, joints:JointStyle, miterLimit:Null<Float>);
 	LineTo (x:Float, y:Float);
 	MoveTo (x:Float, y:Float);
+	DrawPathC(commands:Vector<Int>, data:Vector<Float>, winding:GraphicsPathWinding);
+	OverrideMatrix(matrix:Matrix);
 	
 }
 
 
 #else
-typedef Graphics = openfl._v2.display.Graphics;
+typedef Graphics = openfl._legacy.display.Graphics;
 #end
 #else
 

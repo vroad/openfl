@@ -7,7 +7,6 @@ import lime.graphics.opengl.GLFramebuffer;
 import lime.graphics.GLRenderContext;
 import openfl._internal.renderer.AbstractRenderer;
 import openfl._internal.renderer.opengl.utils.*;
-import openfl._internal.renderer.opengl.utils.MaskManager;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.BlendMode;
 import openfl.display.DisplayObject;
@@ -28,6 +27,7 @@ class GLRenderer extends AbstractRenderer {
 	
 	public var blendModeManager:BlendModeManager;
 	public var contextLost:Bool;
+	public var defaultFramebuffer:GLFramebuffer;
 	public var filterManager:FilterManager;
 	public var gl:GLRenderContext;
 	public var _glContextId:Int;
@@ -39,7 +39,6 @@ class GLRenderer extends AbstractRenderer {
 	public var shaderManager:ShaderManager;
 	public var spriteBatch:SpriteBatch;
 	public var stencilManager:StencilManager;
-	public var transparent:Bool;
 	public var view:Dynamic;
 	
 	private var __stage:Dynamic;
@@ -64,6 +63,12 @@ class GLRenderer extends AbstractRenderer {
 		
 		_glContextId = glContextId ++;
 		this.gl = gl;
+		
+		#if ios
+		defaultFramebuffer = new GLFramebuffer (GL.version, GL.getParameter (GL.FRAMEBUFFER_BINDING));
+		#else
+		defaultFramebuffer = null;
+		#end
 		
 		glContexts[_glContextId] = gl;
 		
@@ -100,7 +105,7 @@ class GLRenderer extends AbstractRenderer {
 		
 		shaderManager = new ShaderManager (gl);
 		spriteBatch = new SpriteBatch (gl);
-		maskManager = new openfl._internal.renderer.opengl.utils.MaskManager (gl);
+		maskManager = new MaskManager (gl);
 		filterManager = new FilterManager (gl, this.transparent);
 		stencilManager = new StencilManager (gl);
 		blendModeManager = new BlendModeManager (gl);
@@ -115,8 +120,12 @@ class GLRenderer extends AbstractRenderer {
 		renderSession.spriteBatch = this.spriteBatch;
 		renderSession.stencilManager = this.stencilManager;
 		renderSession.renderer = this;
+		renderSession.defaultFramebuffer = this.defaultFramebuffer;
 		
-		gl.useProgram (shaderManager.defaultShader.program);
+		renderSession.projection = projection;
+		renderSession.offset = offset;
+		
+		shaderManager.setShader(shaderManager.defaultShader);
 		
 		gl.disable (gl.DEPTH_TEST);
 		gl.disable (gl.CULL_FACE);
@@ -216,6 +225,12 @@ class GLRenderer extends AbstractRenderer {
 		
 		renderSession.gl = gl;
 		
+		#if ios
+		defaultFramebuffer = new GLFramebuffer (GL.version, GL.getParameter (GL.FRAMEBUFFER_BINDING));
+		#else
+		defaultFramebuffer = null;
+		#end
+		
 		gl.disable (gl.DEPTH_TEST);
 		gl.disable (gl.CULL_FACE);
 		
@@ -244,7 +259,8 @@ class GLRenderer extends AbstractRenderer {
 		
 		var gl = this.gl;
 		gl.viewport (0, 0, width, height);
-		gl.bindFramebuffer (gl.FRAMEBUFFER, null);
+		
+		gl.bindFramebuffer (gl.FRAMEBUFFER, defaultFramebuffer);
 		
 		if (this.transparent) {
 			
@@ -252,7 +268,7 @@ class GLRenderer extends AbstractRenderer {
 			
 		} else {
 			
-			gl.clearColor (Std.int (stage.__colorSplit[0]), Std.int (stage.__colorSplit[1]), Std.int (stage.__colorSplit[2]), 1);
+			gl.clearColor (stage.__colorSplit[0], stage.__colorSplit[1], stage.__colorSplit[2], 1);
 			
 		}
 		
@@ -276,12 +292,15 @@ class GLRenderer extends AbstractRenderer {
 		filterManager.begin (renderSession, buffer);
 		displayObject.__renderGL (renderSession);
 		
-		spriteBatch.end ();
+		spriteBatch.finish();
 		
 	}
 	
 	
 	public override function resize (width:Int, height:Int):Void {
+		
+		this.width = width;
+		this.height = height;
 		
 		super.resize (width, height);
 		

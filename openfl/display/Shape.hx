@@ -1,13 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
-
-
-import openfl._internal.renderer.canvas.CanvasGraphics;
-import openfl._internal.renderer.canvas.CanvasShape;
-import openfl._internal.renderer.dom.DOMShape;
-import openfl._internal.renderer.opengl.utils.GraphicsRenderer;
-import openfl._internal.renderer.RenderSession;
-import openfl.geom.Matrix;
-import openfl.geom.Rectangle;
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 /**
@@ -24,8 +15,6 @@ import openfl.geom.Rectangle;
  * However, a Sprite object supports user input events, while a Shape object
  * does not.</p>
  */
-
-@:access(openfl.display.Graphics)
 
 
 class Shape extends DisplayObject {
@@ -48,74 +37,6 @@ class Shape extends DisplayObject {
 	}
 	
 	
-	@:noCompletion private override function __getBounds (rect:Rectangle, matrix:Matrix):Void {
-		
-		if (__graphics != null) {
-			
-			__graphics.__getBounds (rect, __worldTransform);
-			
-		}
-		
-	}
-	
-	
-	@:noCompletion private override function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
-		
-		if (visible && __graphics != null && __graphics.__hitTest (x, y, shapeFlag, __getTransform ())) {
-			
-			if (!interactiveOnly) {
-				
-				stack.push (this);
-				
-			}
-			
-			return true;
-			
-		}
-		
-		return false;
-		
-	}
-	
-	
-	@:noCompletion public override function __renderCanvas (renderSession:RenderSession):Void {
-		
-		CanvasShape.render (this, renderSession);
-		
-	}
-	
-	
-	@:noCompletion public override function __renderDOM (renderSession:RenderSession):Void {
-		
-		DOMShape.render (this, renderSession);
-		
-	}
-	
-	
-	@:noCompletion public override function __renderGL (renderSession:RenderSession):Void {
-		#if !disable_gl_renderer
-		if (!__renderable || __worldAlpha <= 0) return;
-		
-		if (__graphics != null) {
-			
-			GraphicsRenderer.render (this, renderSession);
-			
-		}
-		#end
-	}
-	
-	
-	@:noCompletion public override function __renderMask (renderSession:RenderSession):Void {
-		
-		if (__graphics != null) {
-			
-			CanvasGraphics.renderMask (__graphics, renderSession);
-			
-		}
-		
-	}
-	
-	
 	
 	
 	// Get & Set Methods
@@ -128,6 +49,7 @@ class Shape extends DisplayObject {
 		if (__graphics == null) {
 			
 			__graphics = new Graphics ();
+			@:privateAccess __graphics.__owner = this;
 			
 		}
 		
@@ -140,7 +62,7 @@ class Shape extends DisplayObject {
 
 
 #else
-typedef Shape = openfl._v2.display.Shape;
+typedef Shape = openfl._legacy.display.Shape;
 #end
 #else
 typedef Shape = flash.display.Shape;

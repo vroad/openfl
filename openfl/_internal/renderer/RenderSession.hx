@@ -4,6 +4,7 @@ package openfl._internal.renderer; #if !flash
 import lime.graphics.CanvasRenderContext;
 import lime.graphics.DOMRenderContext;
 import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.GLFramebuffer;
 import lime.math.Matrix4;
 import openfl._internal.renderer.opengl.utils.BlendModeManager;
 import openfl._internal.renderer.opengl.utils.FilterManager;
@@ -40,11 +41,12 @@ class RenderSession {
 	public var offset:Point;
 	
 	public var shaderManager:ShaderManager;
-	public var maskManager:Dynamic;
+	public var maskManager:#if neko MaskManager #else Dynamic #end;
 	public var filterManager:FilterManager;
 	public var blendModeManager:BlendModeManager;
 	public var spriteBatch:SpriteBatch;
 	public var stencilManager:StencilManager;
+	public var defaultFramebuffer:GLFramebuffer;
 	
 	
 	public function new () {

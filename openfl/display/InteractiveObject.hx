@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 import openfl.geom.Rectangle;
@@ -1161,15 +1161,21 @@ class InteractiveObject extends DisplayObject {
 	}
 	
 	
-	@:noCompletion private override function __getInteractive (stack:Array<DisplayObject>):Void {
+	@:noCompletion private override function __getInteractive (stack:Array<DisplayObject>):Bool {
 		
-		stack.push (this);
-		
-		if (parent != null) {
+		if (stack != null) {
 			
-			parent.__getInteractive (stack);
+			stack.push (this);
+			
+			if (parent != null) {
+				
+				parent.__getInteractive (stack);
+				
+			}
 			
 		}
+		
+		return true;
 		
 	}
 	
@@ -1178,7 +1184,7 @@ class InteractiveObject extends DisplayObject {
 
 
 #else
-typedef InteractiveObject = openfl._v2.display.InteractiveObject;
+typedef InteractiveObject = openfl._legacy.display.InteractiveObject;
 #end
 #else
 typedef InteractiveObject = flash.display.InteractiveObject;
