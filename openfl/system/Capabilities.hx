@@ -439,7 +439,7 @@ class Capabilities {
 	
 	@:noCompletion private static function get_screenResolutionX ():Float { 
 		
-		#if html5
+		#if (js && html5)
 		
 		return Browser.window.screen.width;
 		
@@ -454,7 +454,7 @@ class Capabilities {
 	
 	@:noCompletion private static function get_screenResolutionY ():Float {
 		
-		#if html5
+		#if (js && html5)
 		
 		return Browser.window.screen.height;
 		
@@ -469,7 +469,7 @@ class Capabilities {
 	
 	@:noCompletion private static function get_language ():String {
 		
-		#if html5
+		#if (js && html5)
 		
 		return untyped navigator.language;
 		

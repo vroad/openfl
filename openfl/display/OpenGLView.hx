@@ -11,7 +11,7 @@ import openfl.geom.Rectangle;
 import openfl.gl.GL;
 import openfl.Lib;
 
-#if html5
+#if (js && html5)
 import js.html.CanvasElement;
 import js.Browser;
 import js.html.webgl.ContextAttributes;
@@ -90,7 +90,7 @@ class OpenGLView extends DirectRenderer {
 	#if !flash
 	@:noCompletion public override function __renderDOM (renderSession:RenderSession):Void {
 		
-		#if html5
+		#if (js && html5)
 		if (stage != null && __worldVisible && __renderable) {
 			
 			if (!__added) {

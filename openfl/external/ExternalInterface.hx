@@ -7,7 +7,7 @@ import openfl.Lib;
 /**
  * The ExternalInterface class is an application programming interface that
  * enables straightforward communication between ActionScript and the SWF
- * containerâ€“ for example, an HTML page with JavaScript or a desktop
+ * containerâ€? for example, an HTML page with JavaScript or a desktop
  * application that uses Flash Player to display a SWF file.
  *
  * <p>Using the ExternalInterface class, you can call an ActionScript function
@@ -167,7 +167,7 @@ class ExternalInterface {
 	 */
 	public static function addCallback (functionName:String, closure:Dynamic):Void {
 		
-		#if html5
+		#if (js && html5)
 		if (Lib.application.window.backend.element != null) {
 			
 			untyped Lib.application.window.backend.element[functionName] = closure;
@@ -220,10 +220,10 @@ class ExternalInterface {
 	 *                     container. Using a non-alphanumeric function name
 	 *                     causes a runtime error(error 2155). You can use a
 	 *                     <code>try..catch</code> block to handle the error.
-	 * @return The response received from the container. If the call failedâ€“
+	 * @return The response received from the container. If the call failedâ€?
 	 *         for example, if there is no such function in the container, the
 	 *         interface is not available, a recursion occurred(with a Netscape
-	 *         or Opera browser), or there is a security issueâ€“
+	 *         or Opera browser), or there is a security issueâ€?
 	 *         <code>null</code> is returned and an error is thrown.
 	 * @throws Error         The container does not support outgoing calls.
 	 *                       Outgoing calls are supported only in Internet
@@ -251,7 +251,7 @@ class ExternalInterface {
 	 */
 	public static function call (functionName:String, ?p1:Dynamic, ?p2:Dynamic, ?p3:Dynamic, ?p4:Dynamic, ?p5:Dynamic):Dynamic {
 		
-		#if html5
+		#if (js && html5)
 		var callResponse:Dynamic = null;
 		
 		var thisArg = functionName.split('.').slice(0, -1).join('.');

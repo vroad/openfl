@@ -12,7 +12,7 @@ class CanvasShape {
 	
 	public static inline function render (shape:DisplayObject, renderSession:RenderSession):Void {
 		
-		#if html5
+		#if (js && html5)
 		if (!shape.__renderable || shape.__worldAlpha <= 0) return;
 		
 		var graphics = shape.__graphics;

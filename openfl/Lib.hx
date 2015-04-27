@@ -96,7 +96,7 @@ import js.Browser;
 			
 		}
 		
-		#if html5
+		#if (js && html5)
 		Browser.window.open (request.url, target);
 		#elseif flash
 		return flash.Lib.getURL (request, target);
@@ -120,7 +120,7 @@ import js.Browser;
 	
 	public static function preventDefaultTouchMove ():Void {
 		
-		#if html5
+		#if (js && html5)
 		Browser.document.addEventListener ("touchmove", function (evt:js.html.Event):Void {
 			
 			evt.preventDefault ();
