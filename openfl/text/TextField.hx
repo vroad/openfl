@@ -1604,7 +1604,9 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion public override function __renderGL (renderSession:RenderSession):Void {
 		
+		#if !disable_gl_renderer
 		GLTextField.render (this, renderSession);
+		#end
 		
 	}
 	

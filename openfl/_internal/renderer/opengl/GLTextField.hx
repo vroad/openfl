@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl;
-
+#if !disable_gl_renderer
 
 import haxe.Utf8;
 import lime.graphics.Image;
@@ -388,3 +388,4 @@ class GLTextField {
 	
 	
 }
+#end

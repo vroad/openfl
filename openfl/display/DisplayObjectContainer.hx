@@ -860,6 +860,7 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
 		
+		#if !disable_gl_renderer
 		if (!__renderable || __worldAlpha <= 0) return;
 		
 		var masked = __mask != null && __maskGraphics != null && __maskGraphics.__commands.length > 0;
@@ -887,6 +888,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		}
 		
 		__removedChildren = [];
+		#end
 		
 	}
 	

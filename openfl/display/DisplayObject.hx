@@ -1128,6 +1128,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __renderGL (renderSession:RenderSession):Void {
 		
+		#if !disable_gl_renderer
 		if (!__renderable || __worldAlpha <= 0) return;
 		
 		if (__graphics != null) {
@@ -1135,6 +1136,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 			GraphicsRenderer.render (this, renderSession);
 			
 		}
+		#end
 		
 	}
 	

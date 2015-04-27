@@ -606,7 +606,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 			case OPENGL (gl):
 				
-				#if !disable_cffi
+				#if (!disable_cffi && !disable_gl_renderer)
 				__renderer = new GLRenderer (stageWidth, stageHeight, gl);
 				#end
 			
