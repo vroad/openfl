@@ -939,7 +939,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		if (parent != null) {
 			
 			var bounds = new Rectangle ();
-			__getBounds (bounds, null);
+			__getBounds (bounds, __getTransform ());
 			
 			return bounds.containsPoint (new Point (x, y));
 			
@@ -1005,7 +1005,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		
 		if (__graphics != null) {
 			
-			__graphics.__getBounds (rect, matrix != null ? matrix : __worldTransform);
+			__graphics.__getBounds (rect, matrix);
 			
 		}
 		
@@ -1405,15 +1405,18 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		
 		if (__graphics != null) {
 			
-			maskGraphics.__commands.push(OverrideMatrix(this.__worldTransform));
-			maskGraphics.__commands = maskGraphics.__commands.concat(__graphics.__commands);
+			maskGraphics.__commands.push (OverrideMatrix (this.__worldTransform));
+			maskGraphics.__commands = maskGraphics.__commands.concat (__graphics.__commands);
 			maskGraphics.__dirty = true;
 			maskGraphics.__visible = true;
+			
 			if (maskGraphics.__bounds == null) {
+				
 				maskGraphics.__bounds = new Rectangle();
+				
 			}
 			
-			__graphics.__getBounds(maskGraphics.__bounds, @:privateAccess Matrix.__identity);
+			__graphics.__getBounds (maskGraphics.__bounds, @:privateAccess Matrix.__identity);
 			
 		}
 		

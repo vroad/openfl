@@ -795,7 +795,8 @@ class BitmapData implements IBitmapDrawable {
 	public function getColorBoundsRect (mask:Int, color:Int, findColor:Bool = true):Rectangle {
 		
 		if (!__isValid) return new Rectangle (0, 0, width, height);
-		return __image.rect.__toFlashRectangle ();
+		var rect = __image.getColorBoundsRect (mask, color, findColor);
+		return new Rectangle(rect.x, rect.y, rect.width, rect.height);
 		
 	}
 	
@@ -893,8 +894,8 @@ class BitmapData implements IBitmapDrawable {
 			gl.bindTexture (gl.TEXTURE_2D, __texture);
 			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 			__image.dirty = true;
 			
 		}
@@ -1269,7 +1270,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setVector (rect:Rectangle, inputVector:Vector<UInt>) {
 		
 		var byteArray = new ByteArray ();
-		#if html5
+		#if js
 		byteArray.length = inputVector.length * 4;
 		#end
 		
@@ -1345,7 +1346,7 @@ class BitmapData implements IBitmapDrawable {
 			color = __flipPixel (color);
 			
 			var memory = new ByteArray ();
-			#if html5
+			#if js
 			memory.length  = width * height * 4;
 			#end
 			memory = getPixels (rect);
@@ -1424,7 +1425,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			var totalMemory = (canvasMemory + sourceMemory);
 			var memory = new ByteArray ();
-			#if html5
+			#if js
 			memory.length = totalMemory;
 			#end
 			memory.position = 0;
@@ -1646,15 +1647,13 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __renderGL (renderSession:RenderSession):Void {
 		
-		#if !disable_gl_renderer
-		renderSession.spriteBatch.renderBitmapData(this, true, __worldTransform, __worldColorTransform, __worldColorTransform.alphaMultiplier, blendMode);
-		#end
+		renderSession.spriteBatch.renderBitmapData(this, false, __worldTransform, __worldColorTransform, __worldColorTransform.alphaMultiplier, blendMode);
 		
 	}
 	
 	
 	@:noCompletion @:dox(hide) public function __drawGL (renderSession:RenderSession, width:Int, height:Int, source:IBitmapDrawable, matrix:Matrix = null, colorTransform:ColorTransform = null, blendMode:BlendMode = null, clipRect:Rectangle = null, smoothing:Bool = false, drawSelf:Bool = false, clearBuffer:Bool = false, readPixels:Bool = false):Void {
-		#if !disable_gl_renderer
+		
 		var renderer = @:privateAccess Lib.current.stage.__renderer;
 		if (renderer == null) return;
 		
@@ -1663,12 +1662,10 @@ class BitmapData implements IBitmapDrawable {
 		if (gl == null) return;
 		
 		var spritebatch = renderSession.spriteBatch;
-		var mainProjection = renderSession.projection;
 		var renderTransparent = renderSession.renderer.transparent;
 
 		var tmpRect = clipRect == null ? new Rectangle(0, 0, width, height) : clipRect.clone();
 		
-		renderSession.projection = new Point((width / 2), -(height / 2));
 		renderSession.renderer.transparent = transparent;
 		
 		if (__framebuffer == null) {
@@ -1678,7 +1675,7 @@ class BitmapData implements IBitmapDrawable {
 		__framebuffer.resize(width, height);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, __framebuffer.frameBuffer);
 		
-		gl.viewport (0, 0, width, height);
+		renderer.setViewport (0, 0, width, height);
 		
 		spritebatch.begin(renderSession, drawSelf ? null : tmpRect);
 		
@@ -1741,9 +1738,8 @@ class BitmapData implements IBitmapDrawable {
 		
 		gl.bindFramebuffer(gl.FRAMEBUFFER, renderSession.defaultFramebuffer);
 		
-		gl.viewport(0, 0, renderSession.renderer.width, renderSession.renderer.height);
+		renderer.setViewport (0, 0, renderSession.renderer.width, renderSession.renderer.height);
 		
-		renderSession.projection = mainProjection;
 		renderSession.renderer.transparent = renderTransparent;
 		
 		gl.colorMask(true, true, true, renderSession.renderer.transparent);
@@ -1755,7 +1751,6 @@ class BitmapData implements IBitmapDrawable {
 		}
 		__createUVs();
 		__isValid = true;
-		#end
 		
 	}
 	
