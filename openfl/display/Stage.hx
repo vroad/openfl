@@ -19,6 +19,7 @@ import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.ui.Mouse;
 import openfl._internal.renderer.AbstractRenderer;
+import openfl._internal.renderer.cairo.CairoRenderer;
 import openfl._internal.renderer.canvas.CanvasRenderer;
 import openfl._internal.renderer.dom.DOMRenderer;
 import openfl._internal.renderer.opengl.GLRenderer;
@@ -33,6 +34,7 @@ import openfl.geom.Matrix;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextField;
+import openfl.ui.GameInput;
 import openfl.ui.Keyboard;
 import openfl.ui.KeyLocation;
 
@@ -162,6 +164,7 @@ import js.Browser;
  */
 
 @:access(openfl.events.Event)
+@:access(openfl.ui.GameInput)
 @:access(openfl.ui.Keyboard)
 
 
@@ -318,7 +321,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	 *                       For more information, see the "Security" chapter in
 	 *                       the <i>ActionScript 3.0 Developer's Guide</i>.
 	 */
-	public var frameRate:Float;
+	public var frameRate (get, set):Float;
 	
 	/**
 	 * A value from the StageQuality class that specifies which rendering quality
@@ -578,7 +581,6 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		align = StageAlign.TOP_LEFT;
 		allowsFullScreen = false;
-		frameRate = 60;
 		quality = StageQuality.HIGH;
 		scaleMode = StageScaleMode.NO_SCALE;
 		stageFocusRect = true;
@@ -617,6 +619,10 @@ class Stage extends DisplayObjectContainer implements IModule {
 			case DOM (element):
 				
 				__renderer = new DOMRenderer (stageWidth, stageHeight, element);
+			
+			case CAIRO (cairo):
+				
+				__renderer = new CairoRenderer (stageWidth, stageHeight, cairo);
 			
 			default:
 			
@@ -663,35 +669,35 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public function onGamepadAxisMove (gamepad:Gamepad, axis:GamepadAxis, value:Float):Void {
 		
-		
+		GameInput.__onGamepadAxisMove (gamepad, axis, value);
 		
 	}
 	
 	
 	public function onGamepadButtonDown (gamepad:Gamepad, button:GamepadButton):Void {
 		
-		
+		GameInput.__onGamepadButtonDown (gamepad, button);
 		
 	}
 	
 	
 	public function onGamepadButtonUp (gamepad:Gamepad, button:GamepadButton):Void {
 		
-		
+		GameInput.__onGamepadButtonUp (gamepad, button);
 		
 	}
 	
 	
 	public function onGamepadConnect (gamepad:Gamepad):Void {
 		
-		
+		GameInput.__onGamepadConnect (gamepad);
 		
 	}
 	
 	
 	public function onGamepadDisconnect (gamepad:Gamepad):Void {
 		
-		
+		GameInput.__onGamepadDisconnect (gamepad);
 		
 	}
 	
@@ -769,6 +775,20 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	public function onRenderContextRestored (context:RenderContext):Void {
+		
+		
+		
+	}
+	
+	
+	public function onTextEdit (text:String, start:Int, length:Int):Void {
+		
+		
+		
+	}
+	
+	
+	public function onTextInput (text:String):Void {
 		
 		
 		
@@ -910,6 +930,17 @@ class Stage extends DisplayObjectContainer implements IModule {
 		__update (false, true);
 		
 		if (__renderer != null) {
+			
+			switch (context) {
+				
+				case CAIRO (cairo):
+					
+					cast (__renderer, CairoRenderer).cairo = cairo;
+					@:privateAccess (__renderer.renderSession).cairo = cairo;
+				
+				default:
+					
+			}
 			
 			__renderer.render (this);
 			
@@ -1556,6 +1587,34 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
+	@:noCompletion private inline function get_displayState ():StageDisplayState {
+		
+		return __displayState;
+		
+	}
+	
+	
+	@:noCompletion private function set_displayState (value:StageDisplayState):StageDisplayState {
+		
+		switch (value) {
+			
+			case NORMAL:
+				
+				//Lib.application.window.minimized = false;
+				Lib.application.window.fullscreen = false;
+			
+			default:
+				
+				//Lib.application.window.minimized = false;
+				Lib.application.window.fullscreen = true;
+			
+		}
+		
+		return __displayState = value;
+		
+	}
+	
+	
 	@:noCompletion private function get_focus ():InteractiveObject {
 		
 		return __focus;
@@ -1596,30 +1655,16 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
-	@:noCompletion private inline function get_displayState ():StageDisplayState {
+	@:noCompletion private function get_frameRate ():Float {
 		
-		return __displayState;
+		return Lib.application.frameRate;
 		
 	}
 	
 	
-	@:noCompletion private function set_displayState (value:StageDisplayState):StageDisplayState {
+	@:noCompletion private function set_frameRate (value:Float):Float {
 		
-		switch (value) {
-			
-			case NORMAL:
-				
-				//Lib.application.window.minimized = false;
-				Lib.application.window.fullscreen = false;
-			
-			default:
-				
-				//Lib.application.window.minimized = false;
-				Lib.application.window.fullscreen = true;
-			
-		}
-		
-		return __displayState = value;
+		return Lib.application.frameRate = value;
 		
 	}
 	

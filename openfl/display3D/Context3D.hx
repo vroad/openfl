@@ -665,6 +665,8 @@ class Context3D {
 		renderToTexture = false;
 		updateScissorRectangle();
 
+		GL.viewport (Std.int (scrollRect.x), Std.int (scrollRect.y), Std.int (scrollRect.width), Std.int (scrollRect.height));
+
 	}
 	
 	

@@ -1,6 +1,7 @@
 package openfl.display; #if !flash #if !openfl_legacy
 
 
+import openfl._internal.renderer.cairo.CairoBitmap;
 import openfl._internal.renderer.canvas.CanvasBitmap;
 import openfl._internal.renderer.dom.DOMBitmap;
 import openfl._internal.renderer.opengl.GLBitmap;
@@ -145,6 +146,20 @@ class Bitmap extends DisplayObjectContainer {
 	}
 	
 	
+	@:noCompletion @:dox(hide) public override function __renderCairo (renderSession:RenderSession):Void {
+		
+		CairoBitmap.render (this, renderSession);
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public override function __renderCairoMask (renderSession:RenderSession):Void {
+		
+		renderSession.cairo.rectangle (0, 0, width, height);
+		
+	}
+	
+	
 	@:noCompletion @:dox(hide) public override function __renderCanvas (renderSession:RenderSession):Void {
 		
 		CanvasBitmap.render (this, renderSession);
@@ -152,23 +167,23 @@ class Bitmap extends DisplayObjectContainer {
 	}
 	
 	
-	@:noCompletion @:dox(hide) public override function __renderDOM (renderSession:RenderSession):Void {
+	@:noCompletion @:dox(hide) public override function __renderCanvasMask (renderSession:RenderSession):Void {
 		
-		DOMBitmap.render (this, renderSession);
+		renderSession.context.rect (0, 0, width, height);
 		
 	}
 	
 	
-	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
+	@:noCompletion @:dox(hide) public override function __renderDOM (renderSession:RenderSession):Void {
 		#if !disable_gl_renderer
-		GLBitmap.render (this, renderSession);
+		DOMBitmap.render (this, renderSession);
 		#end
 	}
 	
 	
-	@:noCompletion @:dox(hide) public override function __renderMask (renderSession:RenderSession):Void {
+	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
 		
-		renderSession.context.rect (0, 0, width, height);
+		GLBitmap.render (this, renderSession);
 		
 	}
 
