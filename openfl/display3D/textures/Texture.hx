@@ -64,7 +64,7 @@ class Texture extends TextureBase {
 		
 		#if js
 		
-		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset) : null, miplevel);
+		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset, data.byteView.length) : null, miplevel);
 		
 		#else
 		

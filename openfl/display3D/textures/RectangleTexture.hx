@@ -57,7 +57,7 @@ class RectangleTexture extends TextureBase {
 		
 		#if js
 		
-		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset) : null);
+		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset, data.byteView.length) : null);
 		
 		#else
 		
