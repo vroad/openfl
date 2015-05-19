@@ -17,6 +17,7 @@ import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 import openfl.utils.ByteArray;
+import openfl.utils.UInt8Array;
 
 @:access(openfl.text.TextField)
 
