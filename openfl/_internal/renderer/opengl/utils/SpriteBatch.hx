@@ -134,7 +134,7 @@ class SpriteBatch {
 	}
 	
 	public function finish() {
-		flush();
+		stop();
 		clipRect = null;
 		drawing = false;
 	}
@@ -192,6 +192,7 @@ class SpriteBatch {
 			case Tilesheet.TILE_BLEND_ADD:		ADD;
 			case Tilesheet.TILE_BLEND_MULTIPLY:	MULTIPLY;
 			case Tilesheet.TILE_BLEND_SCREEN:	SCREEN;
+			case Tilesheet.TILE_BLEND_SUBTRACT:	SUBTRACT;
 			case _:								NORMAL;
 		};
 		
@@ -477,9 +478,7 @@ class SpriteBatch {
 	function flush() {
 		if (batchedSprites == 0) return;
 		
-		if (clipRect == null) {
-			gl.disable(gl.SCISSOR_TEST);
-		} else {
+		if (clipRect != null) {
 			gl.enable(gl.SCISSOR_TEST);
 			gl.scissor(Math.floor(clipRect.x), 
 						Math.floor(clipRect.y),
