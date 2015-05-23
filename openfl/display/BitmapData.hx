@@ -581,10 +581,10 @@ class BitmapData implements IBitmapDrawable {
 				
 			case DATA:
 				
-				
+				#if !disable_gl_renderer
 				var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
 				__drawGL(renderSession, width, height, source, matrix, colorTransform, blendMode, clipRect, smoothing, !__usingFramebuffer, false, true);
-				
+				#end
 				
 			default:
 				
@@ -1563,6 +1563,7 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __drawGL (renderSession:RenderSession, width:Int, height:Int, source:IBitmapDrawable, matrix:Matrix = null, colorTransform:ColorTransform = null, blendMode:BlendMode = null, clipRect:Rectangle = null, smoothing:Bool = false, drawSelf:Bool = false, clearBuffer:Bool = false, readPixels:Bool = false):Void {
 		
+		#if !disable_gl_renderer
 		var renderer = @:privateAccess Lib.current.stage.__renderer;
 		if (renderer == null) return;
 		
@@ -1672,6 +1673,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		__createUVs ();
 		__isValid = true;
+		#end
 		
 	}
 	
@@ -1863,7 +1865,9 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) public function __renderGL (renderSession:RenderSession):Void {
 		
+		#if !disable_gl_renderer
 		renderSession.spriteBatch.renderBitmapData (this, false, __worldTransform, __worldColorTransform, __worldColorTransform.alphaMultiplier, blendMode);
+		#end
 		
 	}
 	
