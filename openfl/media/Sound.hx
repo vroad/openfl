@@ -242,7 +242,7 @@ class Sound extends EventDispatcher {
 		#if !html5
 		if (__buffer != null) {
 			
-			__buffer.dispose ();
+			//__buffer.dispose ();
 			
 		}
 		#else
