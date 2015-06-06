@@ -633,6 +633,9 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
+	public function atExit ():Void {}
+	
+	
 	/**
 	 * Calling the <code>invalidate()</code> method signals Flash runtimes to
 	 * alert display objects on the next opportunity it has to render the display
