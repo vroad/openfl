@@ -4,6 +4,7 @@ package openfl.display;
 import haxe.io.Path;
 import lime.app.Preloader in LimePreloader;
 import lime.Assets;
+import lime.AssetType;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
 import openfl.media.Sound;
@@ -27,11 +28,17 @@ class Preloader extends LimePreloader {
 			this.display = display;
 			Lib.current.addChild (display);
 			
+			#if !codegen
 			if (Std.is (display, OpenFLPreloader)) {
 				
 				cast (display, OpenFLPreloader).onInit ();
 				
 			}
+			#else
+
+			untyped display.onInit ();
+
+			#end
 			
 		}
 		
@@ -87,10 +94,14 @@ class Preloader extends LimePreloader {
 	
 	private override function start ():Void {
 		
-		if (display != null && Std.is (display, OpenFLPreloader)) {
+		if (display != null #if !codegen && Std.is (display, OpenFLPreloader) #end) {
 			
 			display.addEventListener (Event.COMPLETE, display_onComplete);
+			#if !codegen
 			cast (display, OpenFLPreloader).onLoaded ();
+			#else
+			untyped display.onLoaded ();
+			#end
 			
 		} else {
 			
@@ -103,9 +114,13 @@ class Preloader extends LimePreloader {
 	
 	private override function update (loaded:Int, total:Int):Void {
 		
-		if (display != null && Std.is (display, OpenFLPreloader)) {
+		if (display != null #if !codegen && Std.is (display, OpenFLPreloader) #end) {
 			
+			#if !codegen
 			cast (display, OpenFLPreloader).onUpdate (loaded, total);
+			#else
+			untyped display.onUpdate (loaded, total);
+			#end
 			
 		}
 		

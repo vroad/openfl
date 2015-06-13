@@ -1,7 +1,7 @@
 package openfl.geom; #if !flash #if !openfl_legacy
 
 
-import lime.math.Rectangle in LimeRectangle;
+//import lime.math.Rectangle in LimeRectangle;
 
 
 /**
@@ -569,9 +569,9 @@ class Rectangle {
 	}
 	
 	
-	@:noCompletion private function __toLimeRectangle ():LimeRectangle {
+	@:noCompletion private function __toLimeRectangle ():lime.math.Rectangle  {
 		
-		return new LimeRectangle (x, y, width, height);
+		return new lime.math.Rectangle (x, y, width, height);
 		
 	}
 	

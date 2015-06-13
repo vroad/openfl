@@ -9,6 +9,9 @@ package openfl.display; #if !flash #if !openfl_legacy
  * three types of joints: miter, round, and bevel, as the following example
  * shows:
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_JointStyle") extern
+#end
 enum JointStyle {
 	
 	/**

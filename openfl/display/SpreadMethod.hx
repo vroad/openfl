@@ -9,6 +9,9 @@ package openfl.display; #if !flash #if !openfl_legacy
  * <p>The following example shows the same gradient fill using various spread
  * methods:</p>
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_SpreadMethod") extern
+#end
 enum SpreadMethod {
 	
 	/**

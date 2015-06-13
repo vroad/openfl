@@ -199,8 +199,12 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 			var newData = b.getBytes();
 			var rl = _input.length - _input.position;
 			var newInput = new ByteArray( rl + newData.length );
+			#if nodejs
+			// TODO:
+			#else
 			newInput.blit( 0, _input, _input.position, rl );
 			newInput.blit( rl, newData, 0, newData.length );
+			#end
 			_input = newInput;
 			dispatchEvent( new ProgressEvent(ProgressEvent.SOCKET_DATA, false, false, newData.length, 0) );
 		}
@@ -237,12 +241,12 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
     public function readBoolean():Bool {
 		if ( _socket == null ) 
 			throw new IOError("Operation attempted on invalid socket.");
-		return _input.readBoolean();
+		return #if nodejs false #else _input.readBoolean() #end;
 	}
     public function readByte():Int {
 		if ( _socket == null ) 
 			throw new IOError("Operation attempted on invalid socket.");
-		return _input.readByte(); 
+		return #if nodejs 0 #else _input.readByte() #end; 
 	}
 	public function readBytes(bytes: ByteArray, offset: Int = 0, length: Int = 0): Void {
 		if ( _socket == null ) 
@@ -267,7 +271,7 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 	public function readMultiByte(length:Int, charSet:String):String { 
 		if ( _socket == null ) 
 			throw new IOError("Operation attempted on invalid socket.");
-		return _input.readMultiByte(length, charSet);
+		return #if nodejs "" #else _input.readMultiByte(length, charSet) #end;
 	}
 	//public function readObject():Dynamic { return _input.readObject(); }
 	public function readShort():Int { 
@@ -306,7 +310,11 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 	public function writeBoolean( value:Bool ):Void { 
 		if ( _socket == null ) 
 			throw new IOError("Operation attempted on invalid socket.");
+		#if nodejs
+		// TODO:
+		#else
 		_output.writeBoolean(value);
+		#end
 	}
 	public function writeByte( value:Int ):Void { 
 		if ( _socket == null ) 
@@ -392,6 +400,8 @@ class Socket extends EventDispatcher /*implements IDataInput implements IDataOut
 			try {
 				#if (js && html5)
 				_socket.send( _output.__getBuffer() );
+				#elseif nodejs
+				// TODO:
 				#else
 				_socket.output.write( _output );
 				#end

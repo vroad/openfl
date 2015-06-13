@@ -7,6 +7,9 @@ package openfl.ui; #if !flash
  * values set the type of touch events the Flash runtime dispatches when the
  * user interacts with a touch-enabled device.
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_ui_MultitouchInputMode") extern
+#end
 enum MultitouchInputMode {
 	
 	/**

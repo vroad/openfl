@@ -18,3 +18,6 @@ docs/*.xml
 docs/pages
 haxedoc.xml
 .temp
+hxclasses
+openfl.js
+openfl-export.hxml

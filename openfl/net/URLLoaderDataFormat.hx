@@ -5,6 +5,9 @@ package openfl.net; #if !flash
  * The URLLoaderDataFormat class provides values that specify how downloaded
  * data is received.
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_net_URLLoaderDataFormat") extern
+#end
 enum URLLoaderDataFormat {
 	
 	/**

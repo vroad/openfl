@@ -22,6 +22,9 @@ package openfl.display; #if !flash #if !openfl_legacy
  * <code>TriangleCulling.NEGATIVE</code> algorithm is used, triangles with
  * negative normals will not be rendered. </p>
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_TriangleCulling") extern
+#end
 enum TriangleCulling {
 	
 	/**

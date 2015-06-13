@@ -1,7 +1,7 @@
 package openfl.utils; #if !flash #if !openfl_legacy
 
 
-import haxe.Timer in HaxeTimer;
+//import haxe.Timer in HaxeTimer;
 import openfl.errors.Error;
 import openfl.events.EventDispatcher;
 import openfl.events.TimerEvent;
@@ -72,7 +72,7 @@ class Timer extends EventDispatcher {
 	public var running (default, null):Bool;
 	
 	@:noCompletion private var __delay:Float;
-	@:noCompletion private var __timer:HaxeTimer;
+	@:noCompletion private var __timer:haxe.Timer;
 	@:noCompletion private var __timerID:Int;
 	
 	
@@ -145,8 +145,8 @@ class Timer extends EventDispatcher {
 			#if (js && html5)
 			__timerID = Browser.window.setInterval (timer_onTimer, Std.int (__delay));
 			#else
-			__timer = new HaxeTimer (Std.int(__delay));
-			__timer.run = timer_onTimer;
+			__timer = new haxe.Timer (Std.int(__delay));
+			untyped __timer.run = timer_onTimer;
 			#end
 			
 		}

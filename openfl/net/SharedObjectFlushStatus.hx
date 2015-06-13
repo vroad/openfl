@@ -5,6 +5,9 @@ package openfl.net; #if !flash
  * The SharedObjectFlushStatus class provides values for the code returned
  * from a call to the <code>SharedObject.flush()</code> method.
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_net_SharedObjectFlushStatus") extern
+#end
 @:fakeEnum(String) enum SharedObjectFlushStatus {
 	
 	/**

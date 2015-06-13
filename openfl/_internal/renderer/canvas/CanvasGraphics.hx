@@ -5,6 +5,7 @@ import openfl.display.BitmapData;
 import openfl.display.BitmapDataChannel;
 import openfl.display.CapsStyle;
 import openfl.display.DisplayObject;
+import openfl.display.DrawCommand;
 import openfl.display.GradientType;
 import openfl.display.Graphics;
 import openfl.display.InterpolationMethod;

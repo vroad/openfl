@@ -4,7 +4,7 @@ package openfl; #if (!openfl_legacy || (openfl_legacy && lime_hybrid))
 
 import haxe.Unserializer;
 import lime.text.Font in LimeFont;
-import lime.Assets.AssetLibrary in LimeAssetLibrary;
+//import lime.AssetLibrary in LimeAssetLibrary;
 import lime.Assets in LimeAssets;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
@@ -179,7 +179,7 @@ class Assets {
 	}
 	
 	
-	private static function getLibrary (name:String):lime.Assets.AssetLibrary {
+	private static function getLibrary (name:String):lime.AssetLibrary {
 		
 		if (name == null || name == "") {
 			
@@ -629,7 +629,7 @@ class Assets {
 	 * @param	name the name of the library to load
 	 * @param	handler the function to handle the loaded AssetLibrary
 	 */
-	public static function loadLibrary (name:String, handler:LimeAssetLibrary -> Void):Void {
+	public static function loadLibrary (name:String, handler:lime.AssetLibrary -> Void):Void {
 		
 		LimeAssets.loadLibrary (name, handler);
 		
@@ -830,7 +830,7 @@ class Assets {
 }
 
 
-@:dox(hide) class AssetLibrary extends LimeAssetLibrary {
+@:dox(hide) class AssetLibrary extends lime.AssetLibrary {
 	
 	
 	public function new () {

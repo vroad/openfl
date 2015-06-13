@@ -5,6 +5,9 @@ package openfl.text; #if !flash
  * The TextFieldAutoSize class is an enumeration of constant values used in
  * setting the <code>autoSize</code> property of the TextField class.
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_text_TextFieldAutoSize") extern
+#end
 enum TextFieldAutoSize {
 	
 	/**

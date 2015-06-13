@@ -5,6 +5,9 @@ package openfl.display; #if !flash #if !openfl_legacy
  * The StageQuality class provides values for the <code>Stage.quality</code>
  * property.
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_StageQuality") extern
+#end
 enum StageQuality {
 	
 	/**

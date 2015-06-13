@@ -1,0 +1,11 @@
+-openfl.display.IGraphicsData
+-openfl.display3D.Context3DBlendFactor
+-openfl.display3D.Context3DCompareMode
+-openfl.display3D.Context3DStencilAction
+-openfl.display3D.Context3DTriangleFace
+-openfl.geom.Matrix3D
+-openfl.geom.Point
+-openfl.geom.Vector3D
+-openfl.Vector
+-openfl.VectorData
+-openfl.VectorDataIterator

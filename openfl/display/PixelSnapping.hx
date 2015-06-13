@@ -6,6 +6,9 @@ package openfl.display; #if !flash
  * the pixel snapping options by using the <code>pixelSnapping</code> property
  * of a Bitmap object.
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_PixelSnapping") extern
+#end
 enum PixelSnapping {
 	
 	/**

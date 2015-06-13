@@ -8,6 +8,9 @@ package openfl.display; #if !flash #if !openfl_legacy
  * <code>openfl.display.Graphics.lineStyle()</code> method. You can specify the
  * following three types of caps:
  */
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_CapsStyle") extern
+#end
 enum CapsStyle {
 	
 	/**

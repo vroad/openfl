@@ -1,0 +1,3 @@
+--no-output
+-lib codegen
+--macro "CodeGen.haxeExtern('hxclasses', null, 'openfl', 'openfl.filter', null, 'openfl')"

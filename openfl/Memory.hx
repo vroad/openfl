@@ -28,7 +28,7 @@ class Memory {
 		
 		#if debug if (addr < 0 || addr + 1 > len) throw("Bad address"); #end
 		
-		return gcRef.__get (addr);
+		return #if nodejs 0 #else gcRef.__get (addr) #end;
 		
 	}
 	
@@ -97,7 +97,10 @@ class Memory {
 		
 		#if debug if (addr < 0 || addr + 1 > len) throw ("Bad address"); #end
 		
+		#if nodejs
+		#else
 		gcRef.__set (addr, v);
+		#end
 		
 	}
 	

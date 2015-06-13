@@ -7,7 +7,9 @@ interface IGraphicsFill {
 	
 }
 
-
+#if openfl_shared
+@:jsRequire("openfl", "openfl_display_GraphicsFillType") extern
+#end
 @:fakeEnum(Int) enum GraphicsFillType {
 	
 	SOLID_FILL;

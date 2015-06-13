@@ -147,7 +147,7 @@ class Accelerometer extends EventDispatcher {
 		if (isSupported && !muted) {
 			
 			timer = new Timer (_interval);
-			timer.run = update;
+			untyped timer.run = update;
 			
 		}
 		

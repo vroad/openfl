@@ -682,7 +682,7 @@ class URLLoader extends EventDispatcher {
 	
 	
 	
-	@:noCompletion private function onData (_):Void {
+	@:noCompletion private function onData (unused:Dynamic/*_*/):Void {
 		
 		#if (js && html5)
 		var content:Dynamic = getData ();
