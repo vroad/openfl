@@ -754,7 +754,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (__buffer == null) {
 			
-			var data = [
+			var data:Array<Float> = [
 				
 				width, height, 0, 1, 1, 
 				0, height, 0, 0, 1, 
