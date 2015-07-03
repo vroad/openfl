@@ -758,9 +758,9 @@ class Context3D {
 			return;
 		
 		//var width:Int = renderToTexture ? rttWidth : scrollRect.width;
-		var height:Float = renderToTexture ? rttHeight : scrollRect.height;
+		var height:Int = renderToTexture ? rttHeight : Std.int(scrollRect.height);
 		GL.scissor (Std.int (scissorRectangle.x),
-			Std.int (height - scissorRectangle.y - scissorRectangle.height),
+			Std.int (height - Std.int(scissorRectangle.y) - Std.int(scissorRectangle.height)),
 			Std.int (scissorRectangle.width),
 			Std.int (scissorRectangle.height)
 		);
