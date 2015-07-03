@@ -1330,6 +1330,7 @@ class TextField extends InteractiveObject {
 		
 	}
 	
+	
 	@:noCompletion private function get_bounds ():Rectangle {
 		
 		if (!__dirtyBounds) {
@@ -1601,11 +1602,15 @@ class TextField extends InteractiveObject {
 		#end
 		
 		if (__isHTML || __text != value) {
+			
 			__dirty = true;
 			__dirtyBounds = true;
+			
 		}
+		
 		__ranges = null;
 		__isHTML = false;
+		
 		return __text = value;
 		
 	}

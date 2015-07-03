@@ -886,10 +886,7 @@ class Context3D {
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					if (filter == Context3DTextureFilter.NEAREST)
-						GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST);
-					else
-						GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
+					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 				
 			} 
 			
@@ -943,7 +940,7 @@ class Context3D {
 				
 			}
 			
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 			
 		} else if (Std.is (texture, CubeTexture)) {
 			
@@ -1009,7 +1006,7 @@ class Context3D {
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
+					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MIN_FILTER, filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 				
 			}
 			

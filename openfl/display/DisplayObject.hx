@@ -1491,6 +1491,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	
 	@:noCompletion private function set_alpha (value:Float):Float {
 		
+		if (value > 1.0) value = 1.0;
 		if (value != __alpha) __setRenderDirty ();
 		return __alpha = value;
 		
