@@ -1,7 +1,11 @@
 package openfl.display; #if !flash #if !openfl_legacy
 
 
+import lime.graphics.cairo.CairoFilter;
+import lime.graphics.cairo.CairoImageSurface;
+import lime.graphics.cairo.CairoPattern;
 import lime.graphics.cairo.CairoSurface;
+import lime.graphics.cairo.Cairo;
 import lime.graphics.ImageChannel;
 import lime.graphics.opengl.GLBuffer;
 import lime.graphics.opengl.GLTexture;
@@ -552,58 +556,96 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return;
 		
-		switch (__image.type) {
+		#if (js && html5)
+		
+		ImageCanvasUtil.convertToCanvas (__image);
+		ImageCanvasUtil.sync (__image);
+		
+		var buffer = __image.buffer;
+		
+		var renderSession = new RenderSession ();
+		renderSession.context = cast buffer.__srcContext;
+		renderSession.roundPixels = true;
+		
+		if (!smoothing) {
 			
-			case CANVAS:
-				
-				ImageCanvasUtil.convertToCanvas (__image);
-				ImageCanvasUtil.sync (__image);
-				
-				#if (js && html5)
-				var buffer = __image.buffer;
-				
-				var renderSession = new RenderSession ();
-				renderSession.context = cast buffer.__srcContext;
-				renderSession.roundPixels = true;
-				
-				if (!smoothing) {
-					
-					untyped (buffer.__srcContext).mozImageSmoothingEnabled = false;
-					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = false;
-					untyped (buffer.__srcContext).imageSmoothingEnabled = false;
-					
-				}
-				
-				var matrixCache = source.__worldTransform;
-				source.__worldTransform = matrix != null ? matrix : new Matrix ();
-				source.__updateChildren (false);
-				source.__renderCanvas (renderSession);
-				source.__worldTransform = matrixCache;
-				source.__updateChildren (true);
-				
-				if (!smoothing) {
-					
-					untyped (buffer.__srcContext).mozImageSmoothingEnabled = true;
-					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = true;
-					untyped (buffer.__srcContext).imageSmoothingEnabled = true;
-					
-				}
-				
-				buffer.__srcContext.setTransform (1, 0, 0, 1, 0, 0);
-				#end
-				
-			case DATA:
-				
-				#if !disable_gl_renderer
-				var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
-				__drawGL(renderSession, width, height, source, matrix, colorTransform, blendMode, clipRect, smoothing, !__usingFramebuffer, false, true);
-				#end
-				
-			default:
-				
-				// TODO
+			untyped (buffer.__srcContext).mozImageSmoothingEnabled = false;
+			untyped (buffer.__srcContext).webkitImageSmoothingEnabled = false;
+			untyped (buffer.__srcContext).imageSmoothingEnabled = false;
 			
 		}
+		
+		if (matrix != null) {
+			
+			matrix = matrix.clone ();
+			
+		}
+		
+		source.__updateMatrices (matrix);
+		source.__updateChildren (false);
+		source.__renderCanvas (renderSession);
+		source.__updateMatrices ();
+		source.__updateChildren (true);
+		
+		if (!smoothing) {
+			
+			untyped (buffer.__srcContext).mozImageSmoothingEnabled = true;
+			untyped (buffer.__srcContext).webkitImageSmoothingEnabled = true;
+			untyped (buffer.__srcContext).imageSmoothingEnabled = true;
+			
+		}
+		
+		buffer.__srcContext.setTransform (1, 0, 0, 1, 0, 0);
+		buffer.__srcImageData = null;
+		buffer.data = null;
+		
+		#else
+		
+		//var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
+		//__drawGL (renderSession, width, height, source, matrix, colorTransform, blendMode, clipRect, smoothing, !__usingFramebuffer, false, true);
+		
+		var buffer = __image.buffer;
+		var surface = getSurface ();
+		var cairo = new Cairo (surface);
+		
+		if (!smoothing) {
+			
+			cairo.antialias = NONE;
+			
+		}
+		
+		var renderSession = new RenderSession ();
+		renderSession.cairo = cairo;
+		renderSession.roundPixels = true;
+		
+		if (matrix != null) {
+			
+			matrix = matrix.clone (); // TODO: Why is this being modified?
+			
+		}
+		
+		source.__updateMatrices (matrix);
+		source.__updateChildren (false);
+		source.__renderCairo (renderSession);
+		source.__updateMatrices ();
+		source.__updateChildren (true);
+		
+		surface.flush ();
+		
+		var data = ByteArray.__fromNativePointer (surface.data, surface.stride * surface.height);
+		buffer.data = new UInt8Array (data);
+		buffer.premultiplied = true;
+		buffer.format = BGRA;
+		
+		cairo.destroy ();
+		
+		// TODO: Improve RGBA/premultiplied support so we do not need to convert
+		
+		__image.format = RGBA;
+		__image.premultiplied = false;
+		__image.dirty = true;
+		
+		#end
 		
 	}
 	
@@ -897,7 +939,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function getSurface (clone:Bool = true):CairoSurface {
+	public function getSurface (clone:Bool = true):CairoImageSurface {
 		
 		if (!__isValid) return null;
 		
@@ -927,7 +969,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			__surfaceImage.format = BGRA;
 			__surfaceImage.premultiplied = true;
-			__surface = CairoSurface.fromImage (__surfaceImage);
+			__surface = CairoImageSurface.fromImage (__surfaceImage);
 			__image.dirty = false;
 			
 		}
@@ -1256,7 +1298,9 @@ class BitmapData implements IBitmapDrawable {
 	 */
 	public function scroll (x:Int, y:Int):Void {
 		
-		openfl.Lib.notImplemented ("BitmapData.scroll");
+		if (!__isValid) return;
+		__image.scroll (x, y);
+		__usingFramebuffer = false;
 		
 	}
 	
@@ -1672,6 +1716,7 @@ class BitmapData implements IBitmapDrawable {
 			this.__renderGL (renderSession);
 			spritebatch.stop ();
 			gl.deleteTexture (__texture);
+			__texture = null;
 			spritebatch.start (tmpRect);
 			
 		}
@@ -1685,21 +1730,22 @@ class BitmapData implements IBitmapDrawable {
 		
 		__flipMatrix (m);
 		
-		source.__worldTransform = m;
 		source.__worldColorTransform = colorTransform != null ? colorTransform : new ColorTransform ();
 		source.__blendMode = blendMode;
 		source.__cacheAsBitmap = false;
 		
+		source.__updateMatrices (m);
 		source.__updateChildren (false);
 		
 		source.__renderGL (renderSession);
 		
+		
 		source.__worldColorTransform = ctCache;
-		source.__worldTransform = matrixCache;
 		source.__blendMode = blendModeCache;
 		source.__cacheAsBitmap = cached;
 		
-		source.__updateChildren (true);
+		source.__updateMatrices ();
+		source.__updateChildren (false);
 		
 		spritebatch.finish ();
 		
@@ -1724,7 +1770,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		gl.colorMask (true, true, true, renderSession.renderer.transparent);
 		
-		__usingFramebuffer = true;
+		__usingFramebuffer = false;
 		
 		if (__image != null) {
 			
@@ -1873,8 +1919,21 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (surface != null) {
 			
-			cairo.setSourceSurface (surface, 0, 0);
+			var pattern = CairoPattern.createForSurface (surface);
+			
+			if (cairo.antialias == NONE) {
+				
+				pattern.filter = CairoFilter.NEAREST;
+				
+			} else {
+				
+				pattern.filter = CairoFilter.GOOD;
+				
+			}
+			
+			cairo.source = pattern;
 			cairo.paint ();
+			pattern.destroy ();
 			
 		}
 		
@@ -1992,6 +2051,17 @@ class BitmapData implements IBitmapDrawable {
 				
 			}
 			
+		}
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function __updateMatrices (?overrideTransform:Matrix = null):Void {
+		
+		if (overrideTransform == null) {
+			__worldTransform.identity();
+		} else {
+			__worldTransform = overrideTransform;
 		}
 		
 	}
