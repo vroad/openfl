@@ -16,6 +16,7 @@ import lime.graphics.utils.ImageCanvasUtil;
 import lime.math.ColorMatrix;
 import lime.math.Rectangle in LimeRectangle;
 import lime.math.Vector2;
+import lime.utils.BytesUtil;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
 import openfl._internal.renderer.opengl.utils.FilterTexture;
@@ -633,7 +634,7 @@ class BitmapData implements IBitmapDrawable {
 		surface.flush ();
 		
 		var data = ByteArray.__fromNativePointer (surface.data, surface.stride * surface.height);
-		buffer.data = new UInt8Array (data);
+		buffer.data = BytesUtil.getUInt8ArrayFromByteArray (data);
 		buffer.premultiplied = true;
 		buffer.format = BGRA;
 		
