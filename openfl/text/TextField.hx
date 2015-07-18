@@ -1025,7 +1025,9 @@ class TextField extends InteractiveObject {
 		
 		#else
 		
+		#if !disable_gl_renderer
 		GLTextField.render (this, renderSession);
+		#end
 		
 		#end
 		
