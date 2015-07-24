@@ -16,7 +16,7 @@ import openfl.gl.GL;
 class AGLSLShaderUtils {
 	
 	
-	inline public static function compile (programType:String, source:String):ByteArray {
+	public static function compile (programType:String, source:String):ByteArray {
 		
 		var agalMiniAssembler:AGALMiniAssembler = new AGALMiniAssembler ();
 		var data:ByteArray = null;
@@ -47,7 +47,7 @@ class AGLSLShaderUtils {
 	}
 	
 	
-	inline public static function createShader (type:Context3DProgramType, shaderSource:String):Shader {
+	public static function createShader (type:Context3DProgramType, shaderSource:String):Shader {
 		
 		#if flash
 		

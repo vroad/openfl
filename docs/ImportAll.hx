@@ -1596,7 +1596,18 @@ import Xml;
 #end // end #if !codegen
 
 #if codegen
+import openfl.display3D._shaders.AGLSLShaderUtils;
 import openfl._internal.renderer.TextFieldGraphics;
+import openfl._internal.aglsl.AGALTokenizer;
+import openfl._internal.aglsl.AGLSLCompiler;
+import openfl._internal.aglsl.AGLSLParser;
+import openfl._internal.aglsl.Context3D;
+import openfl._internal.aglsl.Description;
+import openfl._internal.aglsl.Header;
+import openfl._internal.aglsl.Mapping;
+import openfl._internal.aglsl.OpLUT;
+import openfl._internal.aglsl.Sampler;
+import openfl._internal.aglsl.Token; 
 #end
 
 #if codegen
@@ -1799,6 +1810,7 @@ class ImportAll
 
 			untyped __js__("exports.openfl__$internal_renderer_TextFieldGraphics = openfl__$internal_renderer_TextFieldGraphics");
 			untyped __js__("exports.openfl__$internal_renderer_cairo_CairoTextField = openfl__$internal_renderer_cairo_CairoTextField");
+			untyped __js__("exports.openfl__$internal_aglsl_AGLSLCompiler = openfl__$internal_aglsl_AGLSLCompiler");
 		}
 
 	}
