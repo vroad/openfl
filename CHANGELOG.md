@@ -1,3 +1,30 @@
+3.2.2 (07/23/2015)
+------------------
+
+* Improved the accuracy of bitmapData.threshold
+* Minor improvements to Cairo rendering
+* Fixed an issue where Bitmap objects could stop scaling 
+* Fixed possible infinite event dispatch loop
+
+
+3.2.1 (07/22/2015)
+------------------
+
+* Updated OpenGLView.isSupported to report false in single canvas mode 
+* Fixed a memory leak when using _sans, _serif and _typewriter fonts
+* Fixed possible black texture issue on some platforms
+* Fixed regression in bitmapData.draw
+
+
+3.2.0 (07/21/2015)
+------------------
+
+* Moved BitmapData to premultiplied BGRA instead of unmultiplied RGBA
+* Drastically improved performance of bitmapData.draw
+* Reverted scrollRect/transform change from 3.1.2
+* Improved support for both local/remote assets in Loader/URLLoader
+
+
 3.1.4 (07/17/2015)
 ------------------
 

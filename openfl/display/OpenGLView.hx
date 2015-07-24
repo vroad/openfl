@@ -217,6 +217,10 @@ class OpenGLView extends DirectRenderer {
 		
 		#elseif (js && html5)
 		
+		#if (!dom && !webgl)
+		return false;
+		#else
+		
 		if (untyped (!window.WebGLRenderingContext)) {
 			
 			return false;
@@ -241,6 +245,8 @@ class OpenGLView extends DirectRenderer {
 			return (context != null);
 			
 		}
+		#end
+		
 		#end
 		
 		return true;

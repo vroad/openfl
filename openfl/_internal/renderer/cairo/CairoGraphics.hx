@@ -942,12 +942,9 @@ class CairoGraphics {
 			if (graphics.__cairo == null) {
 				
 				var bitmap = new BitmapData (Math.floor (bounds.width), Math.floor (bounds.height), true);
-				bitmap.__image.buffer.premultiplied = true;
-				var surface = CairoImageSurface.fromImage (bitmap.__image);
+				var surface = bitmap.getSurface ();
 				graphics.__cairo = new Cairo (surface);
 				surface.destroy ();
-				
-				bitmap.__bgra = true;
 				
 				graphics.__bitmap = bitmap;
 				
@@ -1026,9 +1023,10 @@ class CairoGraphics {
 				
 			}
 			
+			graphics.__bitmap.__image.dirty = true;
+			
 		}
 		
-		graphics.__bitmap.__image.dirty = true;
 		graphics.__dirty = false;
 		
 		#end

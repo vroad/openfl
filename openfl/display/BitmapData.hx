@@ -19,6 +19,8 @@ import lime.math.Vector2;
 import lime.utils.BytesUtil;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
+import openfl._internal.renderer.cairo.CairoMaskManager;
+import openfl._internal.renderer.canvas.CanvasMaskManager;
 import openfl._internal.renderer.opengl.utils.FilterTexture;
 import openfl._internal.renderer.opengl.utils.SpriteBatch;
 import openfl._internal.renderer.RenderSession;
@@ -144,15 +146,13 @@ class BitmapData implements IBitmapDrawable {
 	@:noCompletion @:dox(hide) public var __worldColorTransform:ColorTransform;
 	@:noCompletion @:dox(hide) public var __cacheAsBitmap:Bool;
 	
-	@:noCompletion private static var __supportsBGRA:Null<Bool>;
+	//@:noCompletion private static var __supportsBGRA:Null<Bool>;
 	
-	@:noCompletion private var __bgra:Bool;
 	@:noCompletion private var __blendMode:BlendMode;
 	@:noCompletion private var __buffer:GLBuffer;
 	@:noCompletion private var __image:Image;
 	@:noCompletion private var __isValid:Bool;
 	@:noCompletion private var __surface:CairoSurface;
-	@:noCompletion private var __surfaceImage:Image;
 	@:noCompletion private var __texture:GLTexture;
 	@:noCompletion private var __textureImage:Image;
 	@:noCompletion private var __framebuffer:FilterTexture;
@@ -208,7 +208,22 @@ class BitmapData implements IBitmapDrawable {
 			
 			fillColor = (fillColor << 8) | ((fillColor >> 24) & 0xFF);
 			
+			#if sys
+			var buffer = new ImageBuffer (new UInt8Array (width * height * 4), width, height);
+			buffer.format = BGRA32;
+			buffer.premultiplied = true;
+			
+			__image = new Image (buffer, 0, 0, width, height);
+			
+			if (fillColor != 0) {
+				
+				__image.fillRect (__image.rect, fillColor);
+				
+			}
+			#else
 			__image = new Image (null, 0, 0, width, height, fillColor);
+			#end
+			
 			__image.transparent = transparent;
 			__isValid = true;
 			
@@ -465,6 +480,7 @@ class BitmapData implements IBitmapDrawable {
 				if (gl != null) {
 					
 					gl.deleteTexture (__texture);
+					__texture = null;
 					
 				}
 				
@@ -475,6 +491,7 @@ class BitmapData implements IBitmapDrawable {
 		if (__framebuffer != null) {
 			
 			__framebuffer.destroy ();
+			__framebuffer = null;
 			
 		}
 		
@@ -567,6 +584,7 @@ class BitmapData implements IBitmapDrawable {
 		var renderSession = new RenderSession ();
 		renderSession.context = cast buffer.__srcContext;
 		renderSession.roundPixels = true;
+		renderSession.maskManager = new CanvasMaskManager (renderSession);
 		
 		if (!smoothing) {
 			
@@ -576,16 +594,11 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		if (matrix != null) {
-			
-			matrix = matrix.clone ();
-			
-		}
-		
-		source.__updateMatrices (matrix);
+		var matrixCache = source.__worldTransform;
+		source.__worldTransform = matrix != null ? matrix : new Matrix ();
 		source.__updateChildren (false);
 		source.__renderCanvas (renderSession);
-		source.__updateMatrices ();
+		source.__worldTransform = matrixCache;
 		source.__updateChildren (true);
 		
 		if (!smoothing) {
@@ -618,32 +631,18 @@ class BitmapData implements IBitmapDrawable {
 		var renderSession = new RenderSession ();
 		renderSession.cairo = cairo;
 		renderSession.roundPixels = true;
+		renderSession.maskManager = new CairoMaskManager (renderSession);
 		
-		if (matrix != null) {
-			
-			matrix = matrix.clone (); // TODO: Why is this being modified?
-			
-		}
-		
-		source.__updateMatrices (matrix);
+		var matrixCache = source.__worldTransform;
+		source.__worldTransform = matrix != null ? matrix : new Matrix ();
 		source.__updateChildren (false);
 		source.__renderCairo (renderSession);
-		source.__updateMatrices ();
+		source.__worldTransform = matrixCache;
 		source.__updateChildren (true);
 		
 		surface.flush ();
-		
-		var data = ByteArray.__fromNativePointer (surface.data, surface.stride * surface.height);
-		buffer.data = BytesUtil.getUInt8ArrayFromByteArray (data);
-		buffer.premultiplied = true;
-		buffer.format = BGRA;
-		
 		cairo.destroy ();
 		
-		// TODO: Improve RGBA/premultiplied support so we do not need to convert
-		
-		__image.format = RGBA;
-		__image.premultiplied = false;
 		__image.dirty = true;
 		
 		#end
@@ -684,7 +683,7 @@ class BitmapData implements IBitmapDrawable {
 	public function fillRect (rect:Rectangle, color:Int):Void {
 		
 		if (!__isValid || rect == null) return;
-		__image.fillRect (rect.__toLimeRectangle (), color, ARGB);
+		__image.fillRect (rect.__toLimeRectangle (), color, ARGB32);
 		__usingFramebuffer = false;
 		
 	}
@@ -704,7 +703,7 @@ class BitmapData implements IBitmapDrawable {
 	public function floodFill (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.floodFill (x, y, color, ARGB);
+		__image.floodFill (x, y, color, ARGB32);
 		__usingFramebuffer = false;
 		
 	}
@@ -887,7 +886,7 @@ class BitmapData implements IBitmapDrawable {
 	public function getPixel (x:Int, y:Int):Int {
 		
 		if (!__isValid) return 0;
-		return __image.getPixel (x, y, ARGB);
+		return __image.getPixel (x, y, ARGB32);
 		
 	}
 	
@@ -917,7 +916,7 @@ class BitmapData implements IBitmapDrawable {
 	public function getPixel32 (x:Int, y:Int):Int {
 		
 		if (!__isValid) return 0;
-		return __image.getPixel32 (x, y, ARGB);
+		return __image.getPixel32 (x, y, ARGB32);
 		
 	}
 	
@@ -935,43 +934,18 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return null;
 		if (rect == null) rect = this.rect;
-		return __image.getPixels (rect.__toLimeRectangle (), ARGB);
+		return __image.getPixels (rect.__toLimeRectangle (), ARGB32);
 		
 	}
 	
 	
-	public function getSurface (clone:Bool = true):CairoImageSurface {
+	public function getSurface ():CairoImageSurface {
 		
 		if (!__isValid) return null;
 		
 		if (__surface == null) {
 			
-			__image.dirty = true;
-			
-		}
-		
-		if (__image != null && __image.dirty) {
-			
-			if (__surface != null) {
-				
-				__surface.destroy ();
-				
-			}
-			
-			if (clone) {
-				
-				__surfaceImage = __image.clone ();
-				
-			} else {
-				
-				__surfaceImage = __image;
-				
-			}
-			
-			__surfaceImage.format = BGRA;
-			__surfaceImage.premultiplied = true;
-			__surface = CairoImageSurface.fromImage (__surfaceImage);
-			__image.dirty = false;
+			__surface = CairoImageSurface.fromImage (__image);
 			
 		}
 		
@@ -1002,42 +976,37 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (__image != null && __image.dirty) {
 			
-			var internalFormat = (__image.buffer.bitsPerPixel == 1 ? gl.ALPHA : gl.RGBA);
-			var format = internalFormat;
-			gl.bindTexture (gl.TEXTURE_2D, __texture);
-			var textureImage = __image;
+			var internalFormat, format;
 			
-			if (__bgra) {
+			if (__surface != null) {
 				
-				// TODO: Use Lime pixel format code for this?
-				
-				if (__supportsBGRA == null) {
-					
-					__supportsBGRA = Lambda.has (gl.getSupportedExtensions (), "GL_EXT_bgra");
-					
-				}
-				
-				#if lime_cairo
-				if (__supportsBGRA) {
-					
-					format = gl.BGRA_EXT;
-					
-				} else
-				#end
-				{
-					
-					textureImage = new Image (null, 0, 0, __image.width, __image.height);
-					var rect = new LimeRectangle (0, 0, __image.width, __image.height);
-					var point = new Vector2 (0, 0);
-					
-					textureImage.copyChannel ( __image, rect, point, ImageChannel.RED, ImageChannel.BLUE);
-					textureImage.copyChannel ( __image, rect, point, ImageChannel.GREEN, ImageChannel.GREEN);
-					textureImage.copyChannel ( __image, rect, point, ImageChannel.BLUE, ImageChannel.RED);
-					textureImage.copyChannel ( __image, rect, point, ImageChannel.ALPHA, ImageChannel.ALPHA);
-					
-				}
+				__surface.flush ();
 				
 			}
+			
+			if (__image.buffer.bitsPerPixel == 1) {
+				
+				internalFormat = gl.ALPHA;
+				format = gl.ALPHA;
+				
+			} else {
+				
+				#if (desktop || ios)
+				internalFormat = gl.RGBA;
+				format = gl.BGRA_EXT;
+				#elseif sys
+				internalFormat = gl.BGRA_EXT;
+				format = gl.BGRA_EXT;
+				#else
+				internalFormat = gl.RGBA;
+				format = gl.RGBA;
+				#end
+				
+			}
+			
+			gl.bindTexture (gl.TEXTURE_2D, __texture);
+			
+			var textureImage = __image;
 			
 			if (!textureImage.premultiplied && textureImage.transparent) {
 				
@@ -1326,7 +1295,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixel (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.setPixel (x, y, color, ARGB);
+		__image.setPixel (x, y, color, ARGB32);
 		__usingFramebuffer = false;
 		
 	}
@@ -1366,7 +1335,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixel32 (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.setPixel32 (x, y, color, ARGB);
+		__image.setPixel32 (x, y, color, ARGB32);
 		__usingFramebuffer = false;
 		
 	}
@@ -1394,7 +1363,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixels (rect:Rectangle, byteArray:ByteArray):Void {
 		
 		if (!__isValid || rect == null) return;
-		__image.setPixels (rect.__toLimeRectangle (), byteArray, ARGB);
+		__image.setPixels (rect.__toLimeRectangle (), byteArray, ARGB32);
 		__usingFramebuffer = false;
 		
 	}
@@ -1480,16 +1449,17 @@ class BitmapData implements IBitmapDrawable {
 	 */
 	public function threshold (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, operation:String, threshold:Int, color:Int = 0x00000000, mask:Int = 0xFFFFFFFF, copySource:Bool = false):Int {
 		
-		if (sourceBitmapData == this && sourceRect.equals(rect) && destPoint.x == 0 && destPoint.y == 0) {
+		if (sourceBitmapData == null || sourceRect == null || destPoint == null || sourceRect.x > sourceBitmapData.width || sourceRect.y > sourceBitmapData.height || destPoint.x > width || destPoint.y > height) return 0;
+		
+		if (sourceBitmapData == this && sourceRect.equals (rect) && destPoint.x == 0 && destPoint.y == 0) {
 			
 			var hits = 0;
 			
-			threshold = __flipPixel (threshold);
-			color = __flipPixel (color);
-			
+			#if flash
 			var memory = new ByteArray ();
-			#if js
-			memory.length  = width * height * 4;
+			memory.length = width * height * 4;
+			#else
+			var memory = new ByteArray (width * height * 4);
 			#end
 			memory = getPixels (rect);
 			memory.position = 0;
@@ -1537,10 +1507,42 @@ class BitmapData implements IBitmapDrawable {
 			
 		} else {
 			
+			sourceRect = sourceRect.clone ();
+			
+			if (sourceRect.right > sourceBitmapData.width) {
+				
+				sourceRect.width = sourceBitmapData.width - sourceRect.x;
+				
+			}
+			
+			if (sourceRect.bottom > sourceBitmapData.height) {
+				
+				sourceRect.height = sourceBitmapData.height - sourceRect.y;
+				
+			}
+			
+			var targetRect = sourceRect.clone ();
+			targetRect.offsetPoint (destPoint);
+			
+			if (targetRect.right > width) {
+				
+				targetRect.width = width - targetRect.x;
+				
+			}
+			
+			if (targetRect.bottom > height) {
+				
+				targetRect.height = height - targetRect.y;
+				
+			}
+			
+			sourceRect.width = Math.min (sourceRect.width, targetRect.width);
+			sourceRect.height = Math.min (sourceRect.height, targetRect.height);
+			
 			var sx = Std.int (sourceRect.x);
 			var sy = Std.int (sourceRect.y);
-			var sw = Std.int (sourceBitmapData.width);
-			var sh = Std.int (sourceBitmapData.height);
+			var sw = Std.int (sourceRect.width);
+			var sh = Std.int (sourceRect.height);
 			
 			var dx = Std.int (destPoint.x);
 			var dy = Std.int (destPoint.y);
@@ -1553,34 +1555,33 @@ class BitmapData implements IBitmapDrawable {
 			
 			var hits = 0;
 			
-			threshold = __flipPixel (threshold);
-			color = __flipPixel (color);
-			
 			var canvasMemory = (sw * sh) * 4;
-			var sourceMemory = 0;
-			
-			if (copySource) {
-				
-				sourceMemory = (sw * sh) * 4;
-				
-			}
-			
+			var sourceMemory = (sw * sh) * 4;
 			var totalMemory = (canvasMemory + sourceMemory);
+			
+			#if flash
 			var memory = new ByteArray ();
-			#if js
 			memory.length = totalMemory;
+			#else
+			var memory = new ByteArray (totalMemory);
 			#end
+			
 			memory.position = 0;
-			var bitmapData = sourceBitmapData.clone ();
-			var pixels = bitmapData.getPixels (sourceRect);
-			memory.writeBytes (pixels);
-			memory.position = canvasMemory;
+			
+			var pixels = sourceBitmapData.getPixels (sourceRect);
 			
 			if (copySource) {
 				
 				memory.writeBytes (pixels);
 				
+			} else {
+				
+				memory.writeBytes (getPixels (targetRect));
+				
 			}
+			
+			memory.position = canvasMemory;
+			memory.writeBytes (pixels);
 			
 			memory.position = 0;
 			Memory.select (memory);
@@ -1594,7 +1595,7 @@ class BitmapData implements IBitmapDrawable {
 				for (xx in 0...dw) {
 					
 					position = ((xx + sx) + (yy + sy) * sw) * 4;
-					pixelValue = Memory.getI32 (position);
+					pixelValue = Memory.getI32 (canvasMemory + position);
 					pixelMask = cast pixelValue & mask;
 					
 					i = __ucompare (pixelMask, thresholdMask);
@@ -1612,19 +1613,14 @@ class BitmapData implements IBitmapDrawable {
 						Memory.setI32 (position, color);
 						hits++;
 						
-					} else if (copySource) {
-						
-						Memory.setI32 (position, Memory.getI32 (canvasMemory + position));
-						
 					}
 					
 				}
 				
 			}
 			
-			memory.position = 0;	
-			bitmapData.setPixels (sourceRect, memory);
-			copyPixels (bitmapData, bitmapData.rect, destPoint);
+			memory.position = 0;
+			setPixels (targetRect, memory);
 			Memory.select (null);
 			return hits;
 			
@@ -1731,22 +1727,21 @@ class BitmapData implements IBitmapDrawable {
 		
 		__flipMatrix (m);
 		
+		source.__worldTransform = m;
 		source.__worldColorTransform = colorTransform != null ? colorTransform : new ColorTransform ();
 		source.__blendMode = blendMode;
 		source.__cacheAsBitmap = false;
 		
-		source.__updateMatrices (m);
 		source.__updateChildren (false);
 		
 		source.__renderGL (renderSession);
 		
-		
 		source.__worldColorTransform = ctCache;
+		source.__worldTransform = matrixCache;
 		source.__blendMode = blendModeCache;
 		source.__cacheAsBitmap = cached;
 		
-		source.__updateMatrices ();
-		source.__updateChildren (false);
+		source.__updateChildren (true);
 		
 		spritebatch.finish ();
 		
@@ -1797,13 +1792,6 @@ class BitmapData implements IBitmapDrawable {
 		m.translate (0, height);
 		m.tx += tx;
 		m.ty -= ty;
-		
-	}
-	
-	
-	@:noCompletion private static inline function __flipPixel (pixel:Int):Int {
-		
-		return (pixel & 0xFF) << 24 | (pixel >>  8 & 0xFF) << 16 | (pixel >> 16 & 0xFF) <<  8 | (pixel >> 24 & 0xFF);
 		
 	}
 	
@@ -1885,6 +1873,12 @@ class BitmapData implements IBitmapDrawable {
 		width = image.width;
 		height = image.height;
 		rect = new Rectangle (0, 0, image.width, image.height);
+		
+		#if sys
+		image.format = BGRA32;
+		image.premultiplied = true;
+		#end
+		
 		__isValid = true;
 		
 	}
@@ -2052,17 +2046,6 @@ class BitmapData implements IBitmapDrawable {
 				
 			}
 			
-		}
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) public function __updateMatrices (?overrideTransform:Matrix = null):Void {
-		
-		if (overrideTransform == null) {
-			__worldTransform.identity();
-		} else {
-			__worldTransform = overrideTransform;
 		}
 		
 	}
