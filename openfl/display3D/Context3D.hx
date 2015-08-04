@@ -94,6 +94,7 @@ class Context3D {
 		
 		#if html5
 		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, 1);
+		GL.pixelStorei (GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
 		#end
 		
 	}
@@ -198,7 +199,11 @@ class Context3D {
 			case Context3DTextureFormat.ALPHA:
 				return { internalFormat:GL.ALPHA, format:GL.ALPHA, type:GL.UNSIGNED_BYTE };
 			case Context3DTextureFormat.BGRA:
+				#if html5
 				return { internalFormat:GL.RGBA, format:GL.RGBA, type:GL.UNSIGNED_BYTE };
+				#else
+				return { internalFormat:GL.BGRA_EXT, format:GL.BGRA_EXT, type:GL.UNSIGNED_BYTE };
+				#end
 			default:
 				return null;
 			
