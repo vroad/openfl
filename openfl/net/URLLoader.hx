@@ -166,6 +166,9 @@ class URLLoader extends EventDispatcher {
 	private var __data:String;
 	#end
 	
+	#if nodejs
+	private var __fs:Dynamic = untyped require("fs");
+	#end
 	
 	/**
 	 * Creates a URLLoader object.
@@ -324,6 +327,24 @@ class URLLoader extends EventDispatcher {
 		
 		#if (js && html5)
 		requestUrl (request.url, request.method, request.data, request.formatRequestHeaders ());
+		#elseif nodejs
+		__fs.readFile (request.url, function(err, data)
+		{
+			if (err != null)
+				throw err;
+			
+			var bytes:ByteArray = ByteArray.fromBytes(@:privateAccess new Bytes(data.byteLength, cast data));
+			switch (dataFormat) {
+				
+				case BINARY: this.data = bytes;
+				default: this.data = bytes.readUTFBytes (bytes.length);
+				
+			}
+			
+			var evt = new Event (Event.COMPLETE);
+			evt.currentTarget = this;
+			dispatchEvent (evt);
+		});
 		#else
 		if (request.url != null && request.url.indexOf ("http://") == -1 && request.url.indexOf ("https://") == -1) {
 			
