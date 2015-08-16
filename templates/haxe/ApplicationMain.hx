@@ -2,6 +2,7 @@
 
 
 @:access(lime.Assets)
+@:access(openfl.display.Stage)
 
 
 class ApplicationMain {
@@ -25,6 +26,7 @@ class ApplicationMain {
 		
 		#if !flash
 		var stage = new openfl.display.Stage (app.window.width, app.window.height, config.background);
+		stage.window = app.window;
 		stage.addChild (openfl.Lib.current);
 		app.addModule (stage);
 		#end
@@ -129,9 +131,17 @@ class ApplicationMain {
 			title: "::APP_TITLE::",
 			version: "::META_VERSION::",
 			vsync: ::WIN_VSYNC::,
-			width: Std.int (::WIN_WIDTH::),
+			width: Std.int (::WIN_WIDTH::)
 			
 		}
+		
+		#if hxtelemetry
+		var telemetry = new hxtelemetry.HxTelemetry.Config ();
+		telemetry.allocations = ::if (config.hxtelemetry != null)::("::config.hxtelemetry.allocations::" == "true")::else::true::end::;
+		telemetry.host = ::if (config.hxtelemetry != null)::"::config.hxtelemetry.host::"::else::"localhost"::end::;
+		telemetry.app_name = config.title;
+		Reflect.setField (config, "telemetry", telemetry);
+		#end
 		
 		#if (js && html5)
 		#if (munit || utest)

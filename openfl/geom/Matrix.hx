@@ -64,6 +64,8 @@ import lime.utils.Float32Array;
 class Matrix {
 	
 	
+	@:noCompletion private static var __temp = new Matrix ();
+	
 	/**
 	 * The value that affects the positioning of pixels along the <i>x</i> axis
 	 * when scaling or rotating an image.
@@ -134,8 +136,6 @@ class Matrix {
 		this.d = d;
 		this.tx = tx;
 		this.ty = ty;
-
-		__array = new Float32Array([a, b, c, d, tx, ty, 0, 0, 1]);
 		
 	}
 	
@@ -176,7 +176,7 @@ class Matrix {
 		var a1 = a * m.a + b * m.c;
 		b = a * m.b + b * m.d;
 		a = a1;
-
+		
 		var c1 = c * m.a + d * m.c;
 		d = c * m.b + d * m.d;
 		c = c1;
@@ -511,23 +511,6 @@ class Matrix {
 	}
 	
 	
-	public inline function mult (m:Matrix) {
-		
-		var result = new Matrix ();
-
-		result.a = a * m.a + b * m.c;
-		result.b = a * m.b + b * m.d;
-		result.c = c * m.a + d * m.c;
-		result.d = c * m.b + d * m.d;
-
-		result.tx = tx * m.a + ty * m.c + m.tx;
-		result.ty = tx * m.b + ty * m.d + m.ty;
-
-		return result;
-		
-	}
-	
-	
 	/**
 	 * Applies a rotation transformation to the Matrix object.
 	 *
@@ -688,7 +671,7 @@ class Matrix {
 	 */
 	public function transformPoint (pos:Point) {
 		
-		return new Point (__transformX (pos), __transformY (pos));
+		return new Point (__transformX (pos.x, pos.y), __transformY (pos.x, pos.y));
 		
 	}
 	
@@ -703,15 +686,19 @@ class Matrix {
 	 */
 	public function translate (dx:Float, dy:Float) {
 		
-		var m = new Matrix ();
-		m.tx = dx;
-		m.ty = dy;
-		this.concat (m);
+		tx += dx;
+		ty += dy;
 		
 	}
 	
 	
 	@:noCompletion private function toArray (transpose:Bool = false):Float32Array {
+		
+		if (__array == null) {
+			
+			__array = new Float32Array (9);
+			
+		}
 		
 		if (transpose) {
 			
@@ -763,24 +750,89 @@ class Matrix {
 	}
 	
 	
-	@:noCompletion public inline function __transformX (pos:Point):Float {
+	@:noCompletion public inline function __transformInversePoint (point:Point):Void {
 		
-		return pos.x * a + pos.y * c + tx;
+		var norm = a * d - b * c;
+		
+		if (norm == 0) {
+			
+			point.x = -tx;
+			point.y = -ty;
+			
+		} else {
+			
+			var px = (1.0 / norm) * (c * (ty - point.y) + d * (point.x - tx));
+			point.y = (1.0 / norm) * ( a * (point.y - ty) + b * (tx - point.x) );
+			point.x = px;
+			
+		}
 		
 	}
 	
 	
-	@:noCompletion public inline function __transformY (pos:Point):Float {
+	@:noCompletion public inline function __transformInverseX (px:Float, py:Float):Float {
 		
-		return pos.x * b + pos.y * d + ty;
+		var norm = a * d - b * c;
+		
+		if (norm == 0) {
+			
+			return -tx;
+			
+		} else {
+			
+			return (1.0 / norm) * (c * (ty - py) + d * (px - tx));
+			
+		}
 		
 	}
 	
 	
-	@:noCompletion public inline function __translateTransformed (pos:Point):Void {
+	@:noCompletion public inline function __transformInverseY (px:Float, py:Float):Float {
 		
-		tx = __transformX (pos);
-		ty = __transformY (pos);
+		var norm = a * d - b * c;
+		
+		if (norm == 0) {
+			
+			return -ty;
+			
+		} else {
+			
+			return (1.0 / norm) * (a * (py - ty) + b * (tx - px));
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion public inline function __transformPoint (point:Point):Void {
+		
+		var px = point.x;
+		var py = point.y;
+		
+		point.x = __transformX (px, py);
+		point.y = __transformY (px, py);
+		
+	}
+	
+	
+	@:noCompletion public inline function __transformX (px:Float, py:Float):Float {
+		
+		return px * a + py * c + tx;
+		
+	}
+	
+	
+	@:noCompletion public inline function __transformY (px:Float, py:Float):Float {
+		
+		return px * b + py * d + ty;
+		
+	}
+	
+	
+	@:noCompletion public inline function __translateTransformed (px:Float, py:Float):Void {
+		
+		tx = __transformX (px, py);
+		ty = __transformY (px, py);
 		
 		//__cleanValues ();
 		

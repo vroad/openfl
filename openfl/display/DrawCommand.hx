@@ -24,7 +24,7 @@ enum DrawCommand {
 	LineGradientStyle (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix, spreadMethod:Null<SpreadMethod>, interpolationMethod:Null<InterpolationMethod>, focalPointRatio:Null<Float>);
 	LineTo (x:Float, y:Float);
 	MoveTo (x:Float, y:Float);
-	DrawPathC(commands:Vector<Int>, data:Vector<Float>, winding:GraphicsPathWinding);
-	OverrideMatrix(matrix:Matrix);
+	DrawPathC (commands:Vector<Int>, data:Vector<Float>, winding:GraphicsPathWinding);
+	OverrideMatrix (matrix:Matrix);
 	
 }

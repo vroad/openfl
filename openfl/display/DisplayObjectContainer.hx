@@ -37,6 +37,7 @@ import openfl.geom.Rectangle;
 
 @:access(openfl.events.Event)
 @:access(openfl.display.Graphics)
+@:access(openfl.geom.Rectangle)
 
 
 class DisplayObjectContainer extends InteractiveObject {
@@ -165,7 +166,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			var event = new Event (Event.ADDED, true);
 			event.target = child;
-			child.dispatchEvent (event);
+			child.__dispatchEvent (event);
 			
 		}
 		
@@ -236,7 +237,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			var event = new Event (Event.ADDED, true);
 			event.target = child;
-			child.dispatchEvent (event);
+			child.__dispatchEvent (event);
 			
 		}
 		
@@ -442,7 +443,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			__removedChildren.push (child);
 			child.__setTransformDirty ();
 			child.__setRenderDirty ();
-			child.dispatchEvent (new Event (Event.REMOVED, true));
+			child.__dispatchEvent (new Event (Event.REMOVED, true));
 			
 		}
 		
@@ -659,6 +660,17 @@ class DisplayObjectContainer extends InteractiveObject {
 	}
 	
 	
+	@:noCompletion private override function __enterFrame ():Void {
+		
+		for (child in __children) {
+			
+			child.__enterFrame ();
+			
+		}
+		
+	}
+	
+	
 	@:noCompletion private override function __getBounds (rect:Rectangle, matrix:Matrix):Void {
 		
 		super.__getBounds (rect, matrix);
@@ -694,9 +706,9 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion private override function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
 		
-		if (!visible || (interactiveOnly && !mouseEnabled)) return false;
+		if (!visible || __isMask || (interactiveOnly && !mouseEnabled && !mouseChildren)) return false;
 		
-		if (scrollRect != null && !scrollRect.containsPoint(globalToLocal(new Point(x, y)))) return false;
+		if (scrollRect != null && !scrollRect.containsPoint (globalToLocal (new Point (x, y)))) return false;
 		
 		var i = __children.length;
 		if (interactiveOnly) {
@@ -730,7 +742,7 @@ class DisplayObjectContainer extends InteractiveObject {
 					
 					interactive = __children[i].__getInteractive (null);
 					
-					if (interactive || !hitTest) {
+					if (interactive || (mouseEnabled && !hitTest)) {
 						
 						if (__children[i].__hitTest (x, y, shapeFlag, stack, true)) {
 							
@@ -767,7 +779,6 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 		}
 		
-		
 		return false;
 		
 	}
@@ -797,7 +808,11 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 		}
 		
-		__removedChildren = [];
+		if (__removedChildren.length > 0) {
+			
+			__removedChildren.splice (0, __removedChildren.length);
+			
+		}
 		
 		if (__mask != null) {
 			
@@ -862,7 +877,11 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 		}
 		
-		__removedChildren = [];
+		if (__removedChildren.length > 0) {
+			
+			__removedChildren.splice (0, __removedChildren.length);
+			
+		}
 		
 		if (__mask != null) {
 			
@@ -935,7 +954,11 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 		}
 		
-		__removedChildren = [];
+		if (__removedChildren.length > 0) {
+			
+			__removedChildren.splice (0, __removedChildren.length);
+			
+		}
 		
 		if (__mask != null) {
 			
@@ -956,7 +979,8 @@ class DisplayObjectContainer extends InteractiveObject {
 		if (scrollRect != null) {
 			renderSession.spriteBatch.stop();
 			var m = __worldTransform.clone();
-			var clip = scrollRect.transform(m);
+			var clip = Rectangle.__temp;
+			scrollRect.__transform(clip, m);
 			clip.y = renderSession.renderer.height - clip.y - clip.height;
 			
 			renderSession.spriteBatch.start(clip);
@@ -995,7 +1019,11 @@ class DisplayObjectContainer extends InteractiveObject {
 			renderSession.spriteBatch.start();
 		}
 		
-		__removedChildren = [];
+		if (__removedChildren.length > 0) {
+			
+			__removedChildren.splice (0, __removedChildren.length);
+			
+		}
 		#end
 		
 	}
@@ -1007,7 +1035,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			if (this.stage != null) {
 				
-				dispatchEvent (new Event (Event.REMOVED_FROM_STAGE, false, false));
+				__dispatchEvent (new Event (Event.REMOVED_FROM_STAGE, false, false));
 				
 			}
 			
@@ -1015,7 +1043,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			if (stage != null) {
 				
-				dispatchEvent (new Event (Event.ADDED_TO_STAGE, false, false));
+				__dispatchEvent (new Event (Event.ADDED_TO_STAGE, false, false));
 				
 			}
 			

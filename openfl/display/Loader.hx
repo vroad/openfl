@@ -429,7 +429,16 @@ class Loader extends Sprite {
 		
 		worker.doWork.add (function (_) {
 			
-			BitmapData.fromFile (request.url, function (bitmapData) worker.sendComplete (bitmapData), function () worker.sendError (IOErrorEvent.IO_ERROR));
+			var path = request.url;
+			var index = path.indexOf ("?");
+			
+			if (index > -1) {
+				
+				path = path.substring (0, index);
+				
+			}
+			
+			BitmapData.fromFile (path, function (bitmapData) worker.sendComplete (bitmapData), function () worker.sendError (IOErrorEvent.IO_ERROR));
 			
 		});
 		
@@ -586,7 +595,7 @@ class Loader extends Sprite {
 			
 			var event = new Event (Event.UNLOAD);
 			event.currentTarget = this;
-			dispatchEvent (event);
+			__dispatchEvent (event);
 			
 		}
 		

@@ -382,7 +382,7 @@ import lime.utils.Int16Array;
 import lime.utils.Int32Array;
 import lime.utils.Int8Array;
 #if !codegen
-import lime.utils.JNI;
+import lime.system.JNI;
 #end
 import lime.utils.UInt16Array;
 import lime.utils.UInt32Array;

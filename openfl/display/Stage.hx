@@ -18,6 +18,7 @@ import lime.ui.GamepadButton;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.ui.Mouse;
+import lime.ui.Window;
 import openfl._internal.renderer.AbstractRenderer;
 import openfl._internal.renderer.cairo.CairoRenderer;
 import openfl._internal.renderer.canvas.CanvasRenderer;
@@ -524,6 +525,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 	 */
 	public var stageWidth (default, null):Int;
 	
+	public var window (default, null):Window;
+	
 	@:noCompletion private var __clearBeforeRender:Bool;
 	@:noCompletion private var __color:Int;
 	@:noCompletion private var __colorSplit:Array<Float>;
@@ -607,7 +610,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public override function globalToLocal (pos:Point):Point {
 		
-		return pos;
+		return pos.clone ();
 		
 	}
 	
@@ -675,7 +678,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public override function localToGlobal (pos:Point):Point {
 		
-		return pos;
+		return pos.clone ();
 		
 	}
 	
@@ -904,7 +907,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public function onWindowLeave ():Void {
 		
-		dispatchEvent (new Event (Event.MOUSE_LEAVE));
+		__dispatchEvent (new Event (Event.MOUSE_LEAVE));
 		
 	}
 	
@@ -971,6 +974,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		#end
 		
 		__renderable = true;
+		__enterFrame ();
 		__update (false, true);
 		
 		if (__renderer != null) {
@@ -1197,7 +1201,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		var target:InteractiveObject = null;
 		var targetPoint = new Point (x, y);
 		
-		if (__hitTest (x, y, false, stack, true)) {
+		if (__hitTest (x, y, true, stack, true)) {
 			
 			target = cast stack[stack.length - 1];
 			
@@ -1214,6 +1218,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 		}
 		
+		if (target == null) target = this;
 		__fireEvent (MouseEvent.__create (type, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 		
 		var clickType = switch (type) {
@@ -1275,7 +1280,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 				__mouseOutStack.remove (target);
 				
 				var localPoint = target.globalToLocal (targetPoint);
-				target.dispatchEvent (new MouseEvent (MouseEvent.MOUSE_OUT, false, false, localPoint.x, localPoint.y, cast target));
+				target.__dispatchEvent (new MouseEvent (MouseEvent.MOUSE_OUT, false, false, localPoint.x, localPoint.y, cast target));
 				
 			}
 			
@@ -1288,7 +1293,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 				if (target.hasEventListener (MouseEvent.MOUSE_OVER)) {
 					
 					var localPoint = target.globalToLocal (targetPoint);
-					target.dispatchEvent (new MouseEvent (MouseEvent.MOUSE_OVER, false, false, localPoint.x, localPoint.y, cast target));
+					target.__dispatchEvent (new MouseEvent (MouseEvent.MOUSE_OVER, false, false, localPoint.x, localPoint.y, cast target));
 					
 				}
 				
@@ -1335,42 +1340,17 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	@:noCompletion private function __onTouch (type:String, x:Float, y:Float, id:Int):Void {
 		
-		/*event.preventDefault ();
-		
-		var rect;
-		
-		if (__canvas != null) {
-			
-			rect = __canvas.getBoundingClientRect ();
-			
-		} else {
-			
-			rect = __div.getBoundingClientRect ();
-			
-		}
-		
-		var touch = event.changedTouches[0];
-		var point = new Point ((touch.pageX - rect.left) * (stageWidth / rect.width), (touch.pageY - rect.top) * (stageHeight / rect.height));
-		*/
-		var point = new Point (x, y);
+		var point = new Point (x * stageWidth, y * stageHeight);
 		
 		__mouseX = point.x;
 		__mouseY = point.y;
 		
 		var __stack = [];
 		
-		var mouseType = switch (type) {
-			
-			case TouchEvent.TOUCH_BEGIN: MouseEvent.MOUSE_DOWN;
-			case TouchEvent.TOUCH_MOVE: MouseEvent.MOUSE_MOVE;
-			case TouchEvent.TOUCH_END: MouseEvent.MOUSE_UP;
-			default: null;
-			
-		}
-		
 		if (__hitTest (x, y, false, __stack, true)) {
 			
 			var target = __stack[__stack.length - 1];
+			if (target == null) target = this;
 			var localPoint = target.globalToLocal (point);
 			
 			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, __mouseX, __mouseY, localPoint, cast target);
@@ -1378,11 +1358,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, 0, __mouseX, __mouseY, localPoint, cast target);
-			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
-			
 			__fireEvent (touchEvent, __stack);
-			__fireEvent (mouseEvent, __stack);
 			
 		} else {
 			
@@ -1391,17 +1367,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, 0, __mouseX, __mouseY, point, this);
-			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
-			
 			__fireEvent (touchEvent, [ stage ]);
-			__fireEvent (mouseEvent, [ stage ]);
-			
-		}
-		
-		if (type == TouchEvent.TOUCH_MOVE && __dragObject != null) {
-			
-			__drag (point);
 			
 		}
 		
@@ -1646,17 +1612,21 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	@:noCompletion private function set_displayState (value:StageDisplayState):StageDisplayState {
 		
-		switch (value) {
+		if (window != null) {
 			
-			case NORMAL:
+			switch (value) {
 				
-				//Lib.application.window.minimized = false;
-				Lib.application.window.fullscreen = false;
-			
-			default:
+				case NORMAL:
+					
+					//window.minimized = false;
+					window.fullscreen = false;
 				
-				//Lib.application.window.minimized = false;
-				Lib.application.window.fullscreen = true;
+				default:
+					
+					//window.minimized = false;
+					window.fullscreen = true;
+				
+			}
 			
 		}
 		
@@ -1707,14 +1677,26 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	@:noCompletion private function get_frameRate ():Float {
 		
-		return Lib.application.frameRate;
+		if (window != null) {
+			
+			return window.application.frameRate;
+			
+		}
+		
+		return 0;
 		
 	}
 	
 	
 	@:noCompletion private function set_frameRate (value:Float):Float {
 		
-		return Lib.application.frameRate = value;
+		if (window != null) {
+			
+			return window.application.frameRate = value;
+			
+		}
+		
+		return value;
 		
 	}
 

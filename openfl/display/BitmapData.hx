@@ -730,6 +730,8 @@ class BitmapData implements IBitmapDrawable {
 	#if (js && html5)
 	public static function fromCanvas (canvas:CanvasElement, transparent:Bool = true):BitmapData {
 		
+		if (canvas == null) return null;
+		
 		var bitmapData = new BitmapData (0, 0, transparent);
 		bitmapData.__fromImage (Image.fromCanvas (canvas));
 		bitmapData.__image.transparent = transparent;
@@ -749,6 +751,8 @@ class BitmapData implements IBitmapDrawable {
 	
 	
 	public static function fromImage (image:Image, transparent:Bool = true):BitmapData {
+		
+		if (image == null || image.buffer == null) return null;
 		
 		var bitmapData = new BitmapData (0, 0, transparent);
 		bitmapData.__fromImage (image);
@@ -1008,9 +1012,12 @@ class BitmapData implements IBitmapDrawable {
 			
 			var textureImage = __image;
 			
-			if (!textureImage.premultiplied && textureImage.transparent) {
+			if ((!textureImage.premultiplied && textureImage.transparent) #if (js && html5) || textureImage.format != RGBA32 #end) {
 				
 				textureImage = textureImage.clone ();
+				#if (js && html5)
+				textureImage.format = RGBA32;
+				#end
 				textureImage.premultiplied = true;
 				
 			}
@@ -1073,7 +1080,106 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return false;
 		
-		openfl.Lib.notImplemented ("BitmapData.hitTest");
+		if (Std.is (secondObject, Bitmap)) {
+			
+			secondObject = cast (secondObject, Bitmap).bitmapData;
+			
+		}
+		
+		if (Std.is (secondObject, Point)) {
+			
+			var secondPoint:Point = cast secondObject;
+			
+			var x = Std.int (secondPoint.x - firstPoint.x);
+			var y = Std.int (secondPoint.y - firstPoint.y);
+			
+			if (rect.contains (x, y)) {
+				
+				var pixel = getPixel32 (x, y);
+				
+				if ((pixel >> 24) & 0xFF >= firstAlphaThreshold) {
+					
+					return true;
+					
+				}
+				
+			}
+			
+		} else if (Std.is (secondObject, BitmapData)) {
+			
+			var secondBitmapData:BitmapData = cast secondObject;
+			var x, y;
+			
+			if (secondBitmapDataPoint == null) {
+				
+				x = 0;
+				y = 0;
+				
+			} else {
+				
+				x = Std.int (secondBitmapDataPoint.x - firstPoint.x);
+				y = Std.int (secondBitmapDataPoint.y - firstPoint.y);
+				
+			}
+			
+			if (rect.contains (x, y)) {
+				
+				var hitRect = Rectangle.__temp;
+				hitRect.setTo (x, y, Math.min (secondBitmapData.width, width - x), Math.min (secondBitmapData.height, height - y));
+				
+				var pixels = getPixels (hitRect);
+				
+				hitRect.offset (-x, -y);
+				var testPixels = secondBitmapData.getPixels (hitRect);
+				
+				var length = Std.int (hitRect.width * hitRect.height);
+				var pixel, testPixel;
+				
+				for (i in 0...length) {
+					
+					pixel = pixels.readUnsignedInt ();
+					testPixel = testPixels.readUnsignedInt ();
+					
+					if ((pixel >> 24) & 0xFF >= firstAlphaThreshold && (testPixel >> 24) & 0xFF >= secondAlphaThreshold) {
+						
+						return true;
+						
+					}
+					
+				}
+				
+				return false;
+				
+			}
+			
+		} else if (Std.is (secondObject, Rectangle)) {
+			
+			var secondRectangle = Rectangle.__temp;
+			secondRectangle.copyFrom (cast secondObject);
+			secondRectangle.offset (-firstPoint.x, -firstPoint.y);
+			secondRectangle.__contract (0, 0, width, height);
+			
+			if (secondRectangle.width > 0 && secondRectangle.height > 0) {
+				
+				var pixels = getPixels (secondRectangle);
+				var length = Std.int (pixels.length / 4);
+				var pixel;
+				
+				for (i in 0...length) {
+					
+					pixel = pixels.readUnsignedInt ();
+					
+					if ((pixel >> 24) & 0xFF >= firstAlphaThreshold) {
+						
+						return true;
+						
+					}
+					
+				}
+				
+			}
+			
+		}
 		
 		return false;
 		
@@ -1868,18 +1974,22 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion private function __fromImage (image:Image):Void {
 		
-		__image = image;
-		
-		width = image.width;
-		height = image.height;
-		rect = new Rectangle (0, 0, image.width, image.height);
-		
-		#if sys
-		image.format = BGRA32;
-		image.premultiplied = true;
-		#end
-		
-		__isValid = true;
+		if (image != null && image.buffer != null) {
+			
+			__image = image;
+			
+			width = image.width;
+			height = image.height;
+			rect = new Rectangle (0, 0, image.width, image.height);
+			
+			#if sys
+			image.format = BGRA32;
+			image.premultiplied = true;
+			#end
+			
+			__isValid = true;
+			
+		}
 		
 	}
 	
@@ -1966,7 +2076,7 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		context.drawImage (__image.buffer.src, 0, 0);
+		context.drawImage (__image.src, 0, 0);
 		#end
 		
 	}

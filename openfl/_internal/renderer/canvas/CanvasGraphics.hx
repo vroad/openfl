@@ -365,7 +365,7 @@ class CanvasGraphics {
 				case BeginBitmapFill (bitmap, matrix, repeat, smooth):
 					
 					context.fillStyle = createBitmapFill( bitmap, true );
-					hasFill =  true;
+					hasFill = true;
 					
 					if (matrix != null) {
 						
@@ -518,7 +518,7 @@ class CanvasGraphics {
 		#if (js && html5)
 		
 		var gradientFill = null;
-					
+		
 		switch (type) {
 			
 			case RADIAL:
@@ -529,7 +529,7 @@ class CanvasGraphics {
 			
 			case LINEAR:
 				
-				var matrix = matrix != null ? matrix.clone () : new Matrix ();
+				var matrix = matrix != null ? matrix : new Matrix ();
 				var point1 = matrix.transformPoint (new Point (-819.2, 0));
 				var point2 = matrix.transformPoint (new Point (819.2, 0));
 				
@@ -583,6 +583,7 @@ class CanvasGraphics {
 					//untyped (context).mozImageSmoothingEnabled = false;
 					//untyped (context).webkitImageSmoothingEnabled = false;
 					//context.imageSmoothingEnabled = false;
+					
 				}
 				
 				context = graphics.__context;
@@ -606,36 +607,36 @@ class CanvasGraphics {
 					switch (command) {
 						
 						case CubicCurveTo (_, _, _, _, _, _), CurveTo (_, _, _, _), LineTo (_, _), MoveTo (_, _):
+							
+							fillCommands.push (command);
+							strokeCommands.push (command);
 						
-						fillCommands.push (command);
-						strokeCommands.push (command);
-					
-					case EndFill:
+						case EndFill:
+							
+							endFill ();
+							endStroke ();
+							hasFill = false;
+							bitmapFill = null;
 						
-						endFill ();
-						endStroke ();
-						hasFill = false;
-						bitmapFill = null;
-					
-					case LineStyle (_, _, _, _, _, _, _, _), LineGradientStyle (_, _, _, _, _, _, _, _), LineBitmapStyle (_, _, _, _):
+						case LineStyle (_, _, _, _, _, _, _, _), LineGradientStyle (_, _, _, _, _, _, _, _), LineBitmapStyle (_, _, _, _):
+							
+							strokeCommands.push (command);
+							
+						case BeginBitmapFill (_, _, _, _), BeginFill (_, _), BeginGradientFill (_, _, _, _, _, _, _, _):
+							
+							endFill ();
+							endStroke ();
+							
+							fillCommands.push (command);
+							strokeCommands.push (command);
 						
-						strokeCommands.push (command);
-						
-					case BeginBitmapFill (_, _, _, _), BeginFill (_, _), BeginGradientFill (_, _, _, _, _, _, _, _):
-						
-						endFill ();
-						endStroke ();
-						
-						fillCommands.push (command);
-						strokeCommands.push (command);
-					
-					case DrawCircle (_, _, _), DrawEllipse (_, _, _, _), DrawRect (_, _, _, _), DrawRoundRect (_, _, _, _, _, _):
-						
-						fillCommands.push (command);
-						strokeCommands.push (command);
-						
-					case DrawTriangles (vertices, indices, uvtData, culling, _, _):
-						
+						case DrawCircle (_, _, _), DrawEllipse (_, _, _, _), DrawRect (_, _, _, _), DrawRoundRect (_, _, _, _, _, _):
+							
+							fillCommands.push (command);
+							strokeCommands.push (command);
+							
+						case DrawTriangles (vertices, indices, uvtData, culling, _, _):
+							
 							endFill ();
 							endStroke ();
 							
@@ -739,6 +740,7 @@ class CanvasGraphics {
 									
 									default:
 										
+									
 								}
 								
 								if (colorFill) {
@@ -793,7 +795,7 @@ class CanvasGraphics {
 								i += 3;
 								
 							}
-						
+							
 						case DrawTiles (sheet, tileData, smooth, flags, count):
 							
 							var useScale = (flags & Graphics.TILE_SCALE) > 0;

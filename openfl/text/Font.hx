@@ -59,7 +59,7 @@ class Font extends lime.text.Font {
 	 */
 	public static function enumerateFonts (enumerateDeviceFonts:Bool = false):Array<Font> {
 		
-		return [];
+		return __registeredFonts;
 		
 	}
 	
