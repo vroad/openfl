@@ -22,7 +22,7 @@ import openfl.utils.UInt8Array;
 
 @:access(openfl.text.TextField)
 
-
+#if 0
 class TextFieldGraphics {
 	
 	
@@ -505,3 +505,8 @@ class TextFieldGraphics {
 	
 	
 }
+#else
+class TextFieldGraphics
+{
+}
+#end

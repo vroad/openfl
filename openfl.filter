@@ -9,3 +9,4 @@
 -openfl.Vector
 -openfl.VectorData
 -openfl.VectorDataIterator
+-openfl._internal.renderer.TextFieldGraphics
