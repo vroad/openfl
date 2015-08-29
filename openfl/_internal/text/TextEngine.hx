@@ -332,6 +332,19 @@ class TextEngine {
 				
 			}
 			
+			#if lime_console
+				
+				// TODO(james4k): until we figure out our story for the above switch
+				// statement, always load arial unless a file is specified.
+				if (format == null
+					|| StringTools.startsWith (format.font,  "_")
+					|| format.font.indexOf(".") == -1
+				) {
+					fontList = [ "arial.ttf" ];
+				}
+				
+			#end
+			
 			if (fontList != null) {
 				
 				for (font in fontList) {
@@ -509,25 +522,23 @@ class TextEngine {
 			
 		}
 		
-		if (numLines == 1) {
-			
-			if (textHeight <= height - 2) {
-				
-				bottomScrollV = 1;
-				
-			}
-			
-			textHeight += currentLineLeading;
-			
-		}
-		
 		lineAscents.push (currentLineAscent);
 		lineDescents.push (currentLineDescent);
 		lineLeadings.push (currentLineLeading != null ? currentLineLeading : 0);
 		lineHeights.push (currentLineHeight);
 		lineWidths.push (currentLineWidth);
 		
-		if (textHeight <= height - 2) {
+		if (numLines == 1) {
+			
+			bottomScrollV = 1;
+			
+			if (currentLineLeading > 0) {
+				
+				textHeight += currentLineLeading;
+				
+			}
+			
+		} else if (textHeight <= height - 2) {
 			
 			bottomScrollV++;
 			
@@ -543,7 +554,7 @@ class TextEngine {
 			
 		}
 		
-		maxScrollV = numLines;
+		maxScrollV = numLines - bottomScrollV + 1;
 		
 	}
 	
@@ -695,11 +706,23 @@ class TextEngine {
 				
 				font = getFontInstance (currentFormat);
 				
-				ascent = (font.ascender / font.unitsPerEM) * currentFormat.size;
-				descent = Math.abs ((font.descender / font.unitsPerEM) * currentFormat.size);
-				leading = currentFormat.leading;
-				
-				heightValue = ascent + descent + leading;
+				if (font != null) {
+					
+					ascent = (font.ascender / font.unitsPerEM) * currentFormat.size;
+					descent = Math.abs ((font.descender / font.unitsPerEM) * currentFormat.size);
+					leading = currentFormat.leading;
+					
+					heightValue = ascent + descent + leading;
+					
+				} else {
+					
+					ascent = currentFormat.size;
+					descent = currentFormat.size * 0.185;
+					leading = currentFormat.leading;
+					
+					heightValue = ascent + descent + leading;
+					
+				}
 				
 				#end
 				
@@ -758,7 +781,7 @@ class TextEngine {
 					
 				}
 				
-			} else if (formatRange.end >= spaceIndex) {
+			} else if (formatRange.end >= spaceIndex && spaceIndex > -1) {
 				
 				layoutGroup = null;
 				wrap = false;
@@ -894,6 +917,7 @@ class TextEngine {
 					
 					if (formatRange.end <= previousSpaceIndex) {
 						
+						layoutGroup = null;
 						nextFormatRange ();
 						
 					}
@@ -907,6 +931,12 @@ class TextEngine {
 				}
 				
 			} else {
+				
+				if (textIndex >= formatRange.end) {
+					
+					break;
+					
+				}
 				
 				layoutGroup = new TextLayoutGroup (formatRange.format, textIndex, formatRange.end);
 				layoutGroup.advances = getAdvances (text, textIndex, formatRange.end);
@@ -922,16 +952,13 @@ class TextEngine {
 				
 				offsetX += layoutGroup.width;
 				
-				textIndex = formatRange.end + 1;
+				textIndex = formatRange.end;
 				
 				nextFormatRange ();
 				
 			}
 			
 		}
-		
-		lineIndex = 0;
-		offsetX = 0;
 		
 	}
 	
@@ -1054,6 +1081,7 @@ class TextEngine {
 			numLines = 1;
 			maxScrollH = 0;
 			maxScrollV = 1;
+			bottomScrollV = 1;
 			
 		} else {
 			

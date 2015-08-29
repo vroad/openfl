@@ -59,10 +59,21 @@ class CairoTextField {
 			cairo = graphics.__cairo;
 			
 			var options = new CairoFontOptions ();
-			//options.hintStyle = DEFAULT;
-			//options.hintMetrics = ON;
-			options.hintMetrics = ON;
-			options.antialias = GOOD;
+			
+			if (textEngine.antiAliasType == ADVANCED && textEngine.gridFitType == PIXEL) {
+				
+				options.hintStyle = NONE;
+				options.hintMetrics = OFF;
+				options.antialias = NONE;
+				
+			} else {
+				
+				options.hintStyle = DEFAULT;
+				options.hintMetrics = OFF;
+				options.antialias = GOOD;
+				
+			}
+			
 			cairo.setFontOptions (options);
 			
 		}
@@ -171,7 +182,7 @@ class CairoTextField {
 					
 					if (textEngine.__cairoFont == null) {
 						
-						textEngine.__cairoFont = new CairoFont (font);
+						textEngine.__cairoFont = new CairoFont (font, 0);
 						
 					}
 					
@@ -234,7 +245,7 @@ class CairoTextField {
 							} else {
 								
 								end = textField.getCharBoundaries (selectionEnd);
-									
+								
 							}
 							
 							if (start != null && end != null) {
@@ -246,7 +257,7 @@ class CairoTextField {
 								
 								// TODO: draw only once
 								
-								cairo.moveTo (group.offsetX + scrollX + start.x - 2, group.offsetY + group.ascent + scrollY);
+								cairo.moveTo (scrollX + start.x, group.offsetY + group.ascent + scrollY);
 								cairo.showText (text.substring (selectionStart, selectionEnd));
 								
 							}
@@ -261,7 +272,7 @@ class CairoTextField {
 			
 		}
 		
-		graphics.__bitmap.__image.dirty = true;
+		graphics.__bitmap.image.dirty = true;
 		textField.__dirty = false;
 		graphics.__dirty = false;
 		

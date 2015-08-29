@@ -579,6 +579,7 @@ class TextField extends InteractiveObject {
 		__graphics = new Graphics ();
 		__textEngine = new TextEngine (this);
 		__layoutDirty = true;
+		__tabEnabled = true;
 		
 		if (__defaultTextFormat == null) {
 			
@@ -610,7 +611,7 @@ class TextField extends InteractiveObject {
 	public function appendText (text:String):Void {
 		
 		__textEngine.text += text;
-		__textEngine.textFormatRanges[__textEngine.textFormatRanges.length - 1].end = text.length;
+		__textEngine.textFormatRanges[__textEngine.textFormatRanges.length - 1].end = __textEngine.text.length;
 		
 		__dirty = true;
 		__layoutDirty = true;
@@ -1049,6 +1050,10 @@ class TextField extends InteractiveObject {
 				range.start += offset;
 				i++;
 				
+			} else {
+				
+				i++;
+				
 			}
 			
 		}
@@ -1184,8 +1189,21 @@ class TextField extends InteractiveObject {
 		if (y > __textEngine.textHeight) y = __textEngine.textHeight;
 		
 		var firstGroup = true;
+		var group, nextGroup;
 		
-		for (group in __textEngine.layoutGroups) {
+		for (i in 0...__textEngine.layoutGroups.length) {
+			
+			group = __textEngine.layoutGroups[i];
+			
+			if (i < __textEngine.layoutGroups.length - 1) {
+				
+				nextGroup = __textEngine.layoutGroups[i + 1];
+				
+			} else {
+				
+				nextGroup = null;
+				
+			}
 			
 			if (firstGroup) {
 				
@@ -1195,9 +1213,9 @@ class TextField extends InteractiveObject {
 				
 			}
 			
-			if (y >= group.offsetY && y <= group.offsetY + group.height) {
+			if ((y >= group.offsetY && y <= group.offsetY + group.height) || nextGroup == null) {
 				
-				if (x >= group.offsetX /*&& x <= group.offsetX + group.width*/) {
+				if ((x >= group.offsetX && x <= group.offsetX + group.width) || (nextGroup == null || nextGroup.lineIndex != group.lineIndex)) {
 					
 					var advance = 0.0;
 					
@@ -1237,6 +1255,7 @@ class TextField extends InteractiveObject {
 	@:noCompletion private override function __hitTest (x:Float, y:Float, shapeFlag:Bool, stack:Array<DisplayObject>, interactiveOnly:Bool):Bool {
 		
 		if (!visible || __isMask || (interactiveOnly && !mouseEnabled)) return false;
+		if (mask != null && !mask.__hitTestMask (x, y)) return false;
 		
 		__getTransform ();
 		__updateLayout ();
@@ -1261,6 +1280,25 @@ class TextField extends InteractiveObject {
 	}
 	
 	
+	@:noCompletion private override function __hitTestMask (x:Float, y:Float):Bool {
+		
+		__getTransform ();
+		__updateLayout ();
+		
+		var px = __worldTransform.__transformInverseX (x, y);
+		var py = __worldTransform.__transformInverseY (x, y);
+		
+		if (__textEngine.bounds.contains (px, py)) {
+			
+			return true;
+			
+		}
+		
+		return false;
+		
+	}
+	
+	
 	@:noCompletion public override function __renderCairo (renderSession:RenderSession):Void {
 		
 		CairoTextField.render (this, renderSession);
@@ -1272,7 +1310,36 @@ class TextField extends InteractiveObject {
 	@:noCompletion public override function __renderCanvas (renderSession:RenderSession):Void {
 		
 		CanvasTextField.render (this, renderSession);
-		super.__renderCanvas (renderSession);
+		
+		if (__textEngine.antiAliasType == ADVANCED && __textEngine.gridFitType == PIXEL) {
+			
+			var smoothingEnabled = untyped (renderSession.context).imageSmoothingEnabled;
+			
+			if (smoothingEnabled) {
+				
+				untyped (renderSession.context).mozImageSmoothingEnabled = false;
+				//untyped (renderSession.context).webkitImageSmoothingEnabled = false;
+				untyped (renderSession.context).msImageSmoothingEnabled = false;
+				untyped (renderSession.context).imageSmoothingEnabled = false;
+				
+			}
+			
+			super.__renderCanvas (renderSession);
+			
+			if (smoothingEnabled) {
+				
+				untyped (renderSession.context).mozImageSmoothingEnabled = true;
+				//untyped (renderSession.context).webkitImageSmoothingEnabled = true;
+				untyped (renderSession.context).msImageSmoothingEnabled = true;
+				untyped (renderSession.context).imageSmoothingEnabled = true;
+				
+			}
+			
+		} else {
+			
+			super.__renderCanvas (renderSession);
+			
+		}
 		
 	}
 	
@@ -1295,7 +1362,7 @@ class TextField extends InteractiveObject {
 		#end
 		
 		#if !disable_gl_renderer
-		GLRenderer.renderBitmap (this, renderSession);
+		GLRenderer.renderBitmap (this, renderSession, __textEngine.antiAliasType != ADVANCED || __textEngine.gridFitType != PIXEL);
 		#end
 		
 		#else
@@ -1329,6 +1396,8 @@ class TextField extends InteractiveObject {
 		
 		if (stage != null) {
 			
+			#if !dom
+			
 			stage.window.enableTextEvents = true;
 			
 			if (!__inputEnabled) {
@@ -1346,6 +1415,8 @@ class TextField extends InteractiveObject {
 				__startCursorTimer ();
 				
 			}
+			
+			#end
 			
 		}
 		
@@ -1373,6 +1444,8 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function __stopTextInput ():Void {
 		
+		#if !dom
+		
 		if (__inputEnabled && stage != null) {
 			
 			stage.window.enableTextEvents = false;
@@ -1383,6 +1456,8 @@ class TextField extends InteractiveObject {
 			__stopCursorTimer ();
 			
 		}
+		
+		#end
 		
 	}
 	
@@ -1738,17 +1813,6 @@ class TextField extends InteractiveObject {
 				range.start = 0;
 				range.end = value.length;
 				
-				//#if (js && html5)
-				//if (text != value && __hiddenInput != null) {
-					//
-					//var selectionStart = __hiddenInput.selectionStart;
-					//var selectionEnd = __hiddenInput.selectionEnd;
-					//__hiddenInput.value = value;
-					//__hiddenInput.selectionStart = selectionStart;
-					//__hiddenInput.selectionEnd = selectionEnd;
-					//
-				//}	
-				//#end
 				return __textEngine.text = value;
 				
 			} else {
@@ -1820,17 +1884,6 @@ class TextField extends InteractiveObject {
 			
 		}
 		
-		//#if (js && html5)
-		//if (text != value && __hiddenInput != null) {
-			//
-			//var selectionStart = __hiddenInput.selectionStart;
-			//var selectionEnd = __hiddenInput.selectionEnd;
-			//__hiddenInput.value = value;
-			//__hiddenInput.selectionStart = selectionStart;
-			//__hiddenInput.selectionEnd = selectionEnd;
-			//
-		//}	
-		//#end
 		return __textEngine.text = value;
 		
 	}
@@ -2049,22 +2102,14 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function set_text (value:String):String {
 		
-		//#if (js && html5)
-		//if (text != value && __hiddenInput != null) {
-			//
-			//var selectionStart = __hiddenInput.selectionStart;
-			//var selectionEnd = __hiddenInput.selectionEnd;
-			//__hiddenInput.value = value;
-			//__hiddenInput.selectionStart = selectionStart;
-			//__hiddenInput.selectionEnd = selectionEnd;
-			//
-		//}	
-		//#end
-		
 		if (__isHTML || __textEngine.text != value) {
 			
 			__dirty = true;
 			__layoutDirty = true;
+			
+		} else {
+			
+			return value;
 			
 		}
 		
@@ -2140,11 +2185,7 @@ class TextField extends InteractiveObject {
 				addEventListener (FocusEvent.FOCUS_OUT, this_onFocusOut);
 				addEventListener (Event.ADDED_TO_STAGE, this_onAddedToStage);
 				
-				if (stage != null && stage.focus == this) {
-					
-					this_onFocusIn (null);
-					
-				}
+				this_onFocusIn (null);
 				
 			} else {
 				
@@ -2280,18 +2321,14 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private function this_onAddedToStage (event:Event):Void {
 		
-		if (stage != null && stage.focus == this) {
-			
-			this_onFocusIn (null);
-			
-		}
+		this_onFocusIn (null);
 		
 	}
 	
 	
 	@:noCompletion private function this_onFocusIn (event:FocusEvent):Void {
 		
-		if (selectable && type == INPUT) {
+		if (selectable && type == INPUT && stage != null && stage.focus == this) {
 			
 			__startTextInput ();
 			

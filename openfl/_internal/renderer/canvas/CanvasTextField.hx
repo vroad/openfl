@@ -167,6 +167,22 @@ class CanvasTextField {
 					graphics.__canvas.width = Math.ceil (bounds.width);
 					graphics.__canvas.height = Math.ceil (bounds.height);
 					
+					if (textEngine.antiAliasType != ADVANCED || textEngine.gridFitType != PIXEL) {
+						
+						untyped (graphics.__context).mozImageSmoothingEnabled = true;
+						//untyped (graphics.__context).webkitImageSmoothingEnabled = true;
+						untyped (graphics.__context).msImageSmoothingEnabled = true;
+						untyped (graphics.__context).imageSmoothingEnabled = true;
+						
+					} else {
+						
+						untyped (graphics.__context).mozImageSmoothingEnabled = false;
+						//untyped (graphics.__context).webkitImageSmoothingEnabled = false;
+						untyped (graphics.__context).msImageSmoothingEnabled = false;
+						untyped (graphics.__context).imageSmoothingEnabled = false;
+						
+					}
+					
 					if (textEngine.border || textEngine.background) {
 						
 						context.rect (0.5, 0.5, bounds.width - 1, bounds.height - 1);
@@ -283,7 +299,7 @@ class CanvasTextField {
 									
 									// TODO: fill only once
 									
-									context.fillText (text.substring (selectionStart, selectionEnd), group.offsetX + scrollX + start.x - 2, group.offsetY + offsetY + scrollY);
+									context.fillText (text.substring (selectionStart, selectionEnd), scrollX + start.x, group.offsetY + offsetY + scrollY);
 									
 								}
 								

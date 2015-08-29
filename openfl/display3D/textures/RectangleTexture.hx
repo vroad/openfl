@@ -45,7 +45,7 @@ import openfl.utils.UInt8Array;
 		
 		#else
 		
-		var p = @:privateAccess (bitmapData.__image).data;
+		var p = @:privateAccess bitmapData.image.data;
 		uploadFromUInt8Array(p);
 		
 		#end

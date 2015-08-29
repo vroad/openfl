@@ -361,7 +361,7 @@ class URLLoader extends EventDispatcher {
 				}
 				
 				var bytes = ByteArray.readFile (path);
-				worker.onComplete.dispatch (bytes);
+				worker.sendComplete (bytes);
 				
 			});
 			worker.onComplete.add (function (bytes) {
@@ -666,7 +666,7 @@ class URLLoader extends EventDispatcher {
 		worker.doWork.add (function (_) {
 			
 			var result = CURLEasy.perform (__curl);
-			worker.onComplete.dispatch (result);
+			worker.sendComplete (result);
 			
 		});
 		worker.onComplete.add (function (result) {

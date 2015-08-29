@@ -73,15 +73,42 @@ class DOMTextField {
 			
 			if (textField.__dirty || textField.__div == null) {
 				
-				if (textEngine.text != "" || textEngine.background || textEngine.border) {
+				if (textEngine.text != "" || textEngine.background || textEngine.border || textEngine.type == INPUT) {
 					
 					if (textField.__div == null) {
 						
 						textField.__div = cast Browser.document.createElement ("div");
 						DOMRenderer.initializeElement (textField, textField.__div, renderSession);
+						textField.__style.setProperty ("outline", "none", null);
+						
+						textField.__div.addEventListener ("input", function (event) {
+							
+							event.preventDefault ();
+							
+							// TODO: Set caret index, and replace only selection
+							
+							if (textField.htmlText != textField.__div.innerHTML) {
+								
+								textField.htmlText = textField.__div.innerHTML;
+								textField.__dirty = false;
+								
+							}
+							
+						}, true);
+						
+					}
+					
+					if (textEngine.selectable) {
+						
+						textField.__style.setProperty ("cursor", "text", null);
+						
+					} else {
+						
 						textField.__style.setProperty ("cursor", "inherit", null);
 						
 					}
+					
+					untyped (textField.__div).contentEditable = (textEngine.type == INPUT);
 					
 					var style = textField.__style;
 					
