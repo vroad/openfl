@@ -1809,7 +1809,7 @@ class ImportAll
 			//exports.openfl_Vector = openfl_Vector;
 
 			untyped __js__("exports.openfl__$internal_renderer_TextFieldGraphics = openfl__$internal_renderer_TextFieldGraphics");
-			untyped __js__("exports.openfl__$internal_renderer_cairo_CairoTextField = openfl__$internal_renderer_cairo_CairoTextField");
+			untyped __js__("exports.openfl__$internal_text_TextEngine = openfl__$internal_text_TextEngine");
 			untyped __js__("exports.openfl__$internal_aglsl_AGLSLCompiler = openfl__$internal_aglsl_AGLSLCompiler");
 			untyped __js__("exports.openfl_display3D__$shaders_AGLSLShaderUtils = openfl_display3D__$shaders_AGLSLShaderUtils");
 		}
