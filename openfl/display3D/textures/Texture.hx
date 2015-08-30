@@ -52,7 +52,7 @@ using openfl.display.BitmapData;
 		
 		#else
 		
-		var p = bitmapData.image.data
+		var p = bitmapData.image.data;
 		uploadFromUInt8Array(p, miplevel);
 		
 		#end
