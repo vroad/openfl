@@ -649,10 +649,6 @@ import openfl.Lib;
 	
 	
 	public function setRenderToBackBuffer ():Void {
-		
-		GL.disable (GL.DEPTH_TEST);
-		GL.disable (GL.STENCIL_TEST);
-		GL.disable (GL.SCISSOR_TEST);
 
 		if (framebuffer != null) {
 
@@ -669,9 +665,6 @@ import openfl.Lib;
 		GL.viewport(Std.int(scrollRect.x), Std.int(scrollRect.y), Std.int(scrollRect.width), Std.int(scrollRect.height));
 		renderToTexture = false;
 		updateScissorRectangle();
-
-		GL.viewport (Std.int (scrollRect.x), Std.int (scrollRect.y), Std.int (scrollRect.width), Std.int (scrollRect.height));
-
 	}
 	
 	
