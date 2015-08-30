@@ -75,7 +75,7 @@ class NetStream extends EventDispatcher {
 	}
 	
 	
-	public function play (url:String, ?_, ?_, ?_, ?_, ?_):Void {
+	public function play (url:String, ?_:Dynamic, ?_:Dynamic, ?_:Dynamic, ?_:Dynamic, ?_:Dynamic):Void {
 		
 		#if (js && html5)
 		__video.src = url;

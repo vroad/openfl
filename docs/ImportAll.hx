@@ -1655,6 +1655,7 @@ class ImportAll
 	{
 		untyped
 		{
+			exports.openfl_display_Application = openfl_display_Application;
 			exports.openfl_display_Bitmap = openfl_display_Bitmap;
 			exports.openfl_display_BitmapData = openfl_display_BitmapData;
 			exports.openfl_display_BitmapDataChannel = openfl_display_BitmapDataChannel;

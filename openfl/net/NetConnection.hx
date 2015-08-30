@@ -18,7 +18,7 @@ class NetConnection extends EventDispatcher {
 	}
 	
 	
-	public function connect (command:String, ?_, ?_, ?_, ?_, ?_):Void {
+	public function connect (command:String, ?_:Dynamic, ?_:Dynamic, ?_:Dynamic, ?_:Dynamic, ?_:Dynamic):Void {
 		
 		if (command != null) {
 			
