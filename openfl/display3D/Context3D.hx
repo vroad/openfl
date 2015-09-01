@@ -792,7 +792,7 @@ import openfl.Lib;
 		
 	}
 	
-	
+	@:access(openfl.display3D.textures.TextureBase)
 	private function setTextureParameters (texture:TextureBase, wrap:Context3DWrapMode, filter:Context3DTextureFilter, mipfilter:Context3DMipFilter):Void {
 		
 		if (!anisotropySupportTested) {
@@ -812,7 +812,7 @@ import openfl.Lib;
 			
 			anisotropySupportTested = true;
 			
-			GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, maxSupportedAnisotropy);
+			texture.setMaxAnisotrophy (maxSupportedAnisotropy);
 			maxSupportedAnisotropy = GL.getTexParameter (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT);
 			
 		}
@@ -823,13 +823,11 @@ import openfl.Lib;
 				
 				case Context3DWrapMode.CLAMP:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GL.CLAMP_TO_EDGE);
 				
 				case Context3DWrapMode.REPEAT:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.REPEAT);
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.REPEAT);
+					texture.setWrapMode (GL.REPEAT);
 				
 			}
 			
@@ -840,35 +838,35 @@ import openfl.Lib;
 				
 				case Context3DTextureFilter.LINEAR:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
+					texture.setMagFilter (GL.LINEAR);
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, 1);
+						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.NEAREST:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+					texture.setMagFilter (GL.NEAREST);
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, 1);
+						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.ANISOTROPIC2X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 2) ? maxSupportedAnisotropy : 2);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 2) ? maxSupportedAnisotropy : 2);
 				 
 				case Context3DTextureFilter.ANISOTROPIC4X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf(GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 4) ? maxSupportedAnisotropy : 4);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 4) ? maxSupportedAnisotropy : 4);
 				
 				case Context3DTextureFilter.ANISOTROPIC8X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf(GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 8) ? maxSupportedAnisotropy : 8);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 8) ? maxSupportedAnisotropy : 8);
 				
 				case Context3DTextureFilter.ANISOTROPIC16X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf(GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 16) ? maxSupportedAnisotropy : 16);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 16) ? maxSupportedAnisotropy : 16);
 				
 			}
 			
@@ -876,15 +874,15 @@ import openfl.Lib;
 				
 				case Context3DMipFilter.MIPLINEAR:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_LINEAR);
+					texture.setMinFilter (GL.LINEAR_MIPMAP_LINEAR);
 				
 				case Context3DMipFilter.MIPNEAREST:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.NEAREST_MIPMAP_NEAREST);
+					texture.setMinFilter (GL.NEAREST_MIPMAP_NEAREST);
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
+					texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 				
 			} 
 			
@@ -899,46 +897,45 @@ import openfl.Lib;
 			
 		} else if (Std.is (texture, RectangleTexture)) {
 			
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+			texture.setWrapMode (GL.CLAMP_TO_EDGE);
 			
 			switch (filter) {
 				
 				case Context3DTextureFilter.LINEAR:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
+					texture.setMagFilter (GL.LINEAR);
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, 1);
+						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.NEAREST:
 					
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+					texture.setMagFilter (GL.NEAREST);
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, 1);
+						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.ANISOTROPIC2X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 2) ? maxSupportedAnisotropy : 2);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 2) ? maxSupportedAnisotropy : 2);
 				
 				case Context3DTextureFilter.ANISOTROPIC4X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 4) ? maxSupportedAnisotropy : 4);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 4) ? maxSupportedAnisotropy : 4);
 				
 				case Context3DTextureFilter.ANISOTROPIC8X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 8) ? maxSupportedAnisotropy : 8);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 8) ? maxSupportedAnisotropy : 8);
 				
 				case Context3DTextureFilter.ANISOTROPIC16X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 16) ? maxSupportedAnisotropy : 16);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 16) ? maxSupportedAnisotropy : 16);
 				
 			}
 			
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
+			texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 			
 		} else if (Std.is (texture, CubeTexture)) {
 			
@@ -946,13 +943,11 @@ import openfl.Lib;
 				
 				case Context3DWrapMode.CLAMP:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GL.CLAMP_TO_EDGE);
 				
 				case Context3DWrapMode.REPEAT:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_WRAP_S, GL.REPEAT);
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_WRAP_T, GL.REPEAT);
+					texture.setWrapMode (GL.REPEAT);
 				
 			}
 			
@@ -960,35 +955,35 @@ import openfl.Lib;
 				
 				case Context3DTextureFilter.LINEAR:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
+					texture.setMagFilter (GL.LINEAR);
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_CUBE_MAP, TEXTURE_MAX_ANISOTROPY_EXT, 1);
+						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.NEAREST:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+					texture.setMagFilter (GL.NEAREST);
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_CUBE_MAP, TEXTURE_MAX_ANISOTROPY_EXT, 1);
+						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.ANISOTROPIC2X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_CUBE_MAP, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 2) ? maxSupportedAnisotropy : 2);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 2) ? maxSupportedAnisotropy : 2);
 				 
 				case Context3DTextureFilter.ANISOTROPIC4X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_CUBE_MAP, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 4) ? maxSupportedAnisotropy : 4);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 4) ? maxSupportedAnisotropy : 4);
 				
 				case Context3DTextureFilter.ANISOTROPIC8X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_CUBE_MAP, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 8) ? maxSupportedAnisotropy : 8);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 8) ? maxSupportedAnisotropy : 8);
 				
 				case Context3DTextureFilter.ANISOTROPIC16X:
 					
 					if (supportsAnisotropy)
-						GL.texParameterf (GL.TEXTURE_CUBE_MAP, TEXTURE_MAX_ANISOTROPY_EXT, (maxSupportedAnisotropy < 16) ? maxSupportedAnisotropy : 16);
+						texture.setMaxAnisotrophy ((maxSupportedAnisotropy < 16) ? maxSupportedAnisotropy : 16);
 				
 			}
 			
@@ -996,15 +991,15 @@ import openfl.Lib;
 				
 				case Context3DMipFilter.MIPLINEAR:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_LINEAR);
+					texture.setMinFilter (GL.LINEAR_MIPMAP_LINEAR);
 				
 				case Context3DMipFilter.MIPNEAREST:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MIN_FILTER, GL.NEAREST_MIPMAP_NEAREST);
+					texture.setMinFilter (GL.NEAREST_MIPMAP_NEAREST);
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					GL.texParameteri (GL.TEXTURE_CUBE_MAP, GL.TEXTURE_MIN_FILTER, filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
+					texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 				
 			}
 			

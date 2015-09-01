@@ -17,7 +17,10 @@ class TextureBase extends EventDispatcher {
 	public var internalFormat:Int;
 	public var format:Int;
 	public var type:Int;
-	
+	public var minFilter:Int;
+	public var magFilter:Int;
+	public var maxAnisoTrophy:Float;
+	public var wrapMode:Int;
 	
 	public function new (glTexture:GLTexture, width:Int = 0, height:Int = 0, internalFormat:Int = GL.RGBA, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
 		
@@ -29,6 +32,10 @@ class TextureBase extends EventDispatcher {
 		this.internalFormat = internalFormat;
 		this.format = format;
 		this.type = type;
+		this.minFilter = GL.NEAREST_MIPMAP_LINEAR;
+		this.magFilter = GL.LINEAR;
+		this.maxAnisoTrophy = 1.0;
+		this.wrapMode = GL.REPEAT;
 		
 	}
 	
@@ -69,6 +76,50 @@ class TextureBase extends EventDispatcher {
 		#end
 	}
 	
+	private function setMinFilter (filter:Int) {
+		
+		if (this.minFilter != filter) {
+			
+			minFilter = filter;
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter);
+			
+		}
+		
+	}
+	
+	private function setMagFilter (filter:Int) {
+		
+		if (this.magFilter != filter) {
+			
+			magFilter = filter;
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, filter);
+			
+		}
+		
+	}
+	
+	private function setMaxAnisotrophy (value:Float) {
+		
+		if (this.maxAnisoTrophy != value) {
+			
+			maxAnisoTrophy = value;
+			GL.texParameterf (GL.TEXTURE_2D, @:privateAccess Context3D.TEXTURE_MAX_ANISOTROPY_EXT, value);
+			
+		}
+		
+	}
+	
+	private function setWrapMode (mode:Int) {
+		
+		if (this.wrapMode != mode) {
+			
+			wrapMode = mode;
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, wrapMode);
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, wrapMode);
+			
+		}
+		
+	}
 }
 
 
