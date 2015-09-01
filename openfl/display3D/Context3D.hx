@@ -59,6 +59,8 @@ import openfl.Lib;
 	private var texturesCreated:Array<TextureBase>; // to keep track of stuff to dispose when calling dispose
 	private var vertexBuffersCreated:Array<VertexBuffer3D>; // to keep track of stuff to dispose when calling dispose
 	private var _yFlip:Float;
+	private var backBufferDepthAndStencil:Bool;
+	private var rttDepthAndStencil:Bool;
 	
 	public function new () {
 		
@@ -97,6 +99,9 @@ import openfl.Lib;
 		GL.pixelStorei (GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
 		#end
 		
+		backBufferDepthAndStencil = false;
+		rttDepthAndStencil = false;
+		
 	}
 	
 	
@@ -124,13 +129,8 @@ import openfl.Lib;
 	
 	public function configureBackBuffer (width:Int, height:Int, antiAlias:Int, enableDepthAndStencil:Bool = true):Void {
 		
-		if (enableDepthAndStencil) {
-			
-			// TODO check whether this is kept across frame
-			GL.enable (GL.DEPTH_TEST);
-			GL.enable (GL.STENCIL_TEST);
-			
-		}
+		backBufferDepthAndStencil = enableDepthAndStencil;
+		updateDepthAndStencilState();
 		
 		// TODO use antiAlias parameter
 		ogl.scrollRect = new Rectangle (0, 0, width, height);
@@ -141,6 +141,24 @@ import openfl.Lib;
 		
 	}
 	
+	private function updateDepthAndStencilState() {
+		
+		var depthAndStencil:Bool = renderToTexture ? rttDepthAndStencil : backBufferDepthAndStencil;
+		
+		if (depthAndStencil) {
+			
+			// TODO check whether this is kept across frame
+			GL.enable (GL.DEPTH_TEST);
+			GL.enable (GL.STENCIL_TEST);
+			
+		} else {
+			
+			GL.disable (GL.DEPTH_TEST);
+			GL.disable (GL.STENCIL_TEST);
+			
+		}
+		
+	}
 	
 	public function createCubeTexture (size:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):CubeTexture {
 		
@@ -665,6 +683,7 @@ import openfl.Lib;
 		GL.viewport(Std.int(scrollRect.x), Std.int(scrollRect.y), Std.int(scrollRect.width), Std.int(scrollRect.height));
 		renderToTexture = false;
 		updateScissorRectangle();
+		updateDepthAndStencilState();
 	}
 	
 	
@@ -700,16 +719,15 @@ import openfl.Lib;
 			GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
 			GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, renderbuffer);
 			
-			GL.enable (GL.DEPTH_TEST);
-			GL.enable (GL.STENCIL_TEST);
-			
 		}
 		
 		GL.viewport (0, 0, texture.width, texture.height);
 		renderToTexture = true;
+		rttDepthAndStencil = enableDepthAndStencil;
 		rttWidth = texture.width;
 		rttHeight = texture.height;
 		updateScissorRectangle();
+		updateDepthAndStencilState();
 	}
 	
 	
