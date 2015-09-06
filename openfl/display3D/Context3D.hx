@@ -102,6 +102,8 @@ import openfl.Lib;
 		backBufferDepthAndStencil = false;
 		rttDepthAndStencil = false;
 		
+		stencilCompareMode = GL.ALWAYS;
+		
 	}
 	
 	
@@ -785,9 +787,9 @@ import openfl.Lib;
 	
 	public function setStencilActions (?triangleFace:Int, ?compareMode:Int, ?actionOnBothPass:Int, ?actionOnDepthFail:Int, ?actionOnDepthPassStencilFail:Int):Void {
 		
-		this.stencilCompareMode = compareMode;
-		GL.stencilOp (actionOnBothPass, actionOnDepthFail, actionOnDepthPassStencilFail);
-		GL.stencilFunc (stencilCompareMode, stencilRef, stencilReadMask);
+		this.stencilCompareMode = compareMode != null ? compareMode : GL.ALWAYS;
+		GL.stencilOp (actionOnBothPass != null ? actionOnBothPass : GL.KEEP, actionOnDepthFail != null ? actionOnDepthFail : GL.KEEP, actionOnDepthPassStencilFail != null ? actionOnDepthPassStencilFail : GL.KEEP);
+		GL.stencilFunc (stencilCompareMode != null ? stencilCompareMode : GL.ALWAYS, stencilRef != null ? stencilRef : 0, stencilReadMask != null ? stencilReadMask : 1);
 		
 	}
 	
