@@ -53,9 +53,9 @@ import openfl.Lib;
 	private var rttHeight:Int;
 	private var scrollRect:Rectangle;
 	private var stencilbuffer:GLRenderbuffer;
-	private var stencilCompareMode:Int;
-	private var stencilRef:Int;
-	private var stencilReadMask:Int;
+	private var stencilCompareMode:Null<Int>;
+	private var stencilRef:Null<Int>;
+	private var stencilReadMask:Null<Int>;
 	private var texturesCreated:Array<TextureBase>; // to keep track of stuff to dispose when calling dispose
 	private var vertexBuffersCreated:Array<VertexBuffer3D>; // to keep track of stuff to dispose when calling dispose
 	private var _yFlip:Float;
