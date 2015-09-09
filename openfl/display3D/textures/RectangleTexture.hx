@@ -2,6 +2,7 @@ package openfl.display3D.textures; #if !flash
 
 
 import openfl.display.BitmapData;
+import openfl.display3D.Context3D;
 import openfl.gl.GL;
 import openfl.gl.GLTexture;
 import openfl.geom.Rectangle;
@@ -15,11 +16,11 @@ import openfl.utils.UInt8Array;
 	public var optimizeForRenderToTexture:Bool;
 	
 	
-	public function new (glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
+	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
 		
 		optimizeForRenderToTexture = optimize;
 		
-		super (glTexture, width, height, internalFormat, format, type);
+		super (context, glTexture, width, height, internalFormat, format, type);
 		
 		uploadFromUInt8Array(null);
 		

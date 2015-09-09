@@ -9,6 +9,7 @@ import openfl.gl.GLUniformLocation;
 
 @:final class Program3D {
 	
+	public var context:Context3D;
 	public var glProgram:GLProgram;
 	/*#! Haxiomic Addition for performance improvements */
 	public var glFCLocationMap:Array<GLUniformLocation>;
@@ -16,8 +17,9 @@ import openfl.gl.GLUniformLocation;
 	public var glFSLocationMap:Array<GLUniformLocation>; // sampler
 	public var glVALocationMap:Array<Int>;
 
-	public function new(program:GLProgram) {
+	public function new(context:Context3D, program:GLProgram) {
 		
+		this.context = context;
 		this.glProgram = program;
 		this.glFCLocationMap = new Array<GLUniformLocation> ();
 		this.glVCLocationMap = new Array<GLUniformLocation> ();
@@ -29,7 +31,7 @@ import openfl.gl.GLUniformLocation;
 	
 	public function dispose ():Void {
 		
-		GL.deleteProgram (glProgram);
+		context.__deleteProgram (this);
 		
 	}
 	

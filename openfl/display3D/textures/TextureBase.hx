@@ -1,6 +1,7 @@
 package openfl.display3D.textures; #if !flash
 
 
+import openfl.display3D.Context3D;
 import openfl.gl.GL;
 import openfl.gl.GLTexture;
 import openfl.gl.GLFramebuffer;
@@ -10,7 +11,7 @@ import openfl.utils.UInt8Array;
 
 class TextureBase extends EventDispatcher {
 	
-	
+	public var context:Context3D;
 	public var height:Int;
 	public var glTexture:GLTexture;
 	public var width:Int;
@@ -22,10 +23,11 @@ class TextureBase extends EventDispatcher {
 	public var maxAnisoTrophy:Float;
 	public var wrapMode:Int;
 	
-	public function new (glTexture:GLTexture, width:Int = 0, height:Int = 0, internalFormat:Int = GL.RGBA, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
+	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, internalFormat:Int = GL.RGBA, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
 		
 		super ();
 		
+		this.context = context;
 		this.width = width;
 		this.height = height;
 		this.glTexture = glTexture;
@@ -42,7 +44,7 @@ class TextureBase extends EventDispatcher {
 	
 	public function dispose ():Void {
 		
-		GL.deleteTexture (glTexture);
+		context.__deleteTexture (this);
 		
 	}
 	
