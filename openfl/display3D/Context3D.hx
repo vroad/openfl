@@ -53,9 +53,9 @@ import openfl.Lib;
 	private var rttHeight:Int;
 	private var scrollRect:Rectangle;
 	private var stencilbuffer:GLRenderbuffer;
-	private var stencilCompareMode:Null<Int>;
-	private var stencilRef:Null<Int>;
-	private var stencilReadMask:Null<Int>;
+	private var stencilCompareMode:Context3DCompareMode;
+	private var stencilRef:Int;
+	private var stencilReadMask:Int;
 	private var texturesCreated:Array<TextureBase>; // to keep track of stuff to dispose when calling dispose
 	private var vertexBuffersCreated:Array<VertexBuffer3D>; // to keep track of stuff to dispose when calling dispose
 	private var _yFlip:Float;
@@ -68,7 +68,9 @@ import openfl.Lib;
 		renderToTexture = false;
 		
 		_yFlip = 1;
-
+		
+		stencilRef = stencilReadMask = 0;
+		
 		vertexBuffersCreated = new Array ();
 		indexBuffersCreated = new Array ();
 		programsCreated = new Array ();
@@ -245,44 +247,44 @@ import openfl.Lib;
 	@:noCompletion public function __deleteTexture (texture:TextureBase):Void
 	{
 		
-		if (!texture.glTexture.isValid())
+		if (texture.glTexture == null)
 			return;
 		texturesCreated.remove (texture);
 		GL.deleteTexture (texture.glTexture);
-		texture.glTexture.invalidate ();
+		texture.glTexture = null;
 		
 	}
 	
 	@:noCompletion public function __deleteVertexBuffer (buffer:VertexBuffer3D):Void
 	{
 		
-		if (!buffer.glBuffer.isValid())
+		if (buffer.glBuffer == null)
 			return;
 		vertexBuffersCreated.remove (buffer);
 		GL.deleteBuffer (buffer.glBuffer);
-		buffer.glBuffer.invalidate();
+		buffer.glBuffer = null;
 		
 	}
 	
 	@:noCompletion public function __deleteIndexBuffer (buffer:IndexBuffer3D):Void
 	{
 		
-		if (!buffer.glBuffer.isValid())
+		if (buffer.glBuffer == null)
 			return;
 		indexBuffersCreated.remove (buffer);
 		GL.deleteBuffer (buffer.glBuffer);
-		buffer.glBuffer.invalidate();
+		buffer.glBuffer = null;
 		
 	}
 	
 	@:noCompletion public function __deleteProgram (program:Program3D):Void
 	{
 		
-		if (!program.glProgram.isValid())
+		if (program.glProgram == null)
 			return;
 		programsCreated.remove (program);
 		GL.deleteProgram (program.glProgram);
-		program.glProgram.invalidate();
+		program.glProgram = null;
 		
 	}
 	
@@ -830,11 +832,17 @@ import openfl.Lib;
 		
 	}
 	
-	public function setStencilActions (?triangleFace:Int, ?compareMode:Int, ?actionOnBothPass:Int, ?actionOnDepthFail:Int, ?actionOnDepthPassStencilFail:Int):Void {
+	public function setStencilActions (?triangleFace:Context3DTriangleFace, ?compareMode:Context3DCompareMode, ?actionOnBothPass:Context3DStencilAction, ?actionOnDepthFail:Context3DStencilAction, ?actionOnDepthPassStencilFail:Context3DStencilAction):Void {
 		
-		this.stencilCompareMode = compareMode != null ? compareMode : GL.ALWAYS;
-		GL.stencilOp (actionOnBothPass != null ? actionOnBothPass : GL.KEEP, actionOnDepthFail != null ? actionOnDepthFail : GL.KEEP, actionOnDepthPassStencilFail != null ? actionOnDepthPassStencilFail : GL.KEEP);
-		GL.stencilFunc (stencilCompareMode != null ? stencilCompareMode : GL.ALWAYS, stencilRef != null ? stencilRef : 0, stencilReadMask != null ? stencilReadMask : 1);
+		if (triangleFace == null) triangleFace = Context3DTriangleFace.FRONT_AND_BACK;
+		if (compareMode == null) compareMode = Context3DCompareMode.ALWAYS;
+		if (actionOnBothPass == null) actionOnBothPass = Context3DStencilAction.KEEP;
+		if (actionOnDepthFail == null) actionOnDepthFail = Context3DStencilAction.KEEP;
+		if (actionOnDepthPassStencilFail == null) actionOnDepthPassStencilFail = Context3DStencilAction.KEEP;
+		
+		this.stencilCompareMode = compareMode;
+		GL.stencilOp (actionOnBothPass, actionOnDepthFail, actionOnDepthPassStencilFail);
+		GL.stencilFunc (stencilCompareMode, stencilRef, stencilReadMask);
 		
 	}
 	
