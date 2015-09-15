@@ -1,6 +1,9 @@
 package openfl.display3D; #if !flash
 
 
+import lime.app.Application;
+import lime.app.Config;
+import lime.ui.Window;
 import openfl.display.BitmapData;
 import openfl.display.OpenGLView;
 import openfl.display3D.textures.CubeTexture;
@@ -61,6 +64,7 @@ import openfl.Lib;
 	private var _yFlip:Float;
 	private var backBufferDepthAndStencil:Bool;
 	private var rttDepthAndStencil:Bool;
+	private var window:Window;
 	
 	public function new () {
 		
@@ -87,8 +91,9 @@ import openfl.Lib;
 		}
 		
 		var stage = Lib.current.stage;
+		window = Application.current.window;
 		
-		ogl = new OpenGLView ();
+		ogl = new OpenGLView (window.config.depthBuffer, window.config.stencilBuffer);
 		ogl.scrollRect = new Rectangle (0, 0, stage.stageWidth, stage.stageHeight);
 		scrollRect = ogl.scrollRect.clone ();
 		ogl.width = stage.stageWidth;
@@ -152,8 +157,10 @@ import openfl.Lib;
 		if (depthAndStencil) {
 			
 			// TODO check whether this is kept across frame
-			GL.enable (GL.DEPTH_TEST);
-			GL.enable (GL.STENCIL_TEST);
+			if (window.config.depthBuffer)
+				GL.enable (GL.DEPTH_TEST);
+			if (window.config.stencilBuffer)
+				GL.enable (GL.STENCIL_TEST);
 			
 		} else {
 			
@@ -758,14 +765,13 @@ import openfl.Lib;
 		#if ios
 		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, 0x88F0, texture.width, texture.height);
 		#else
-		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, texture.internalFormat, texture.width, texture.height);
+		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
 		#end
 		GL.framebufferTexture2D (GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, texture.glTexture, 0);
 
 		if (enableDepthAndStencil)
 		{
 			
-			GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
 			GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, renderbuffer);
 			
 		}
@@ -841,7 +847,7 @@ import openfl.Lib;
 		if (actionOnDepthPassStencilFail == null) actionOnDepthPassStencilFail = Context3DStencilAction.KEEP;
 		
 		this.stencilCompareMode = compareMode;
-		GL.stencilOp (actionOnBothPass, actionOnDepthFail, actionOnDepthPassStencilFail);
+		GL.stencilOp (actionOnDepthFail, actionOnDepthPassStencilFail, actionOnBothPass);
 		GL.stencilFunc (stencilCompareMode, stencilRef, stencilReadMask);
 		
 	}

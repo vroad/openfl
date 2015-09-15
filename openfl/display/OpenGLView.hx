@@ -32,7 +32,7 @@ class OpenGLView extends DirectRenderer {
 	@:noCompletion private var __initialized:Bool;
 	
 	
-	public function new () {
+	public function new (depth:Bool = true, stencil:Bool = false) {
 		
 		super ("OpenGLView");
 		
@@ -44,7 +44,7 @@ class OpenGLView extends DirectRenderer {
 			__canvas.width = Lib.current.stage.stageWidth;
 			__canvas.height = Lib.current.stage.stageHeight;
 			
-			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha: false, antialias:false};
+			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha: false, antialias:false, depth:depth, stencil:stencil};
 			__context = cast __canvas.getContextWebGL(attributes);
 			
 			#if debug
