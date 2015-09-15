@@ -56,7 +56,7 @@ import openfl.Vector;
 	public function uploadFromVector (data:Vector<UInt>, startOffset:Int, count:Int):Void {
 		
 		var indices:Int16Array;
-		GL.bindBuffer (GL.ARRAY_BUFFER, glBuffer);
+		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, glBuffer);
 		
 		#if js
 		indices = new Int16Array (count);
@@ -73,7 +73,7 @@ import openfl.Vector;
 		indices = new Int16Array (data, startOffset, count);
 		#end
 		
-		GL.bufferData(GL.ARRAY_BUFFER, indices, bufferUsage);
+		GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, bufferUsage);
 		
 	}
 	
