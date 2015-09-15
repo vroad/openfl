@@ -359,7 +359,7 @@ import openfl.Lib;
 		var location:GLUniformLocation = currentProgram.yFlipLoc();
 		GL.uniform1f (location, this._yFlip);
 
-		if (!drawing) {
+		if (!drawing && !renderToTexture) {
 			
 			throw new Error ("Need to clear before drawing if the buffer has not been cleared since the last present() call.");
 			
