@@ -1,7 +1,8 @@
 package openfl.display; #if !flash #if !openfl_legacy
 
-
+#if (cpp || neko)
 import lime.system.BackgroundWorker;
+#end
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
@@ -425,6 +426,7 @@ class Loader extends Sprite {
 		
 		#end
 		
+		#if (cpp || neko)
 		var worker = new BackgroundWorker ();
 		
 		worker.doWork.add (function (_) {
@@ -445,6 +447,30 @@ class Loader extends Sprite {
 		worker.onError.add (BitmapData_onError);
 		worker.onComplete.add (BitmapData_onLoad);
 		worker.run ();
+		#elseif nodejs
+		
+		var path = request.url;
+		var index = path.indexOf ("?");
+		
+		if (index > -1) {
+		
+			path = path.substring (0, index);
+		
+		}
+		
+		BitmapData.fromFile (path, function (bitmapData) {
+		
+			var evt = new Event (Event.COMPLETE);
+			content = contentLoaderInfo.content = new Bitmap (bitmapData);
+			contentLoaderInfo.dispatchEvent (evt);
+		
+		}, function() {
+			
+			var evt = new Event (IOErrorEvent.IO_ERROR);
+			contentLoaderInfo.dispatchEvent (evt);
+			
+		});
+		#end
 		
 	}
 	
@@ -537,6 +563,8 @@ class Loader extends Sprite {
 	 */
 	public function loadBytes (buffer:ByteArray):Void {
 		
+		#if (cpp || neko)
+		
 		var worker = new BackgroundWorker ();
 		
 		worker.doWork.add (function (_) {
@@ -547,6 +575,18 @@ class Loader extends Sprite {
 		
 		worker.onComplete.add (BitmapData_onLoad);
 		worker.run ();
+		
+		#elseif nodejs
+		
+		BitmapData.fromBytes (buffer, function (bitmapData) {
+		
+			var evt = new Event (Event.COMPLETE);
+			content = contentLoaderInfo.content = new Bitmap (bitmapData);
+			contentLoaderInfo.dispatchEvent (evt);
+		
+		});
+		
+		#end
 		
 	}
 	
