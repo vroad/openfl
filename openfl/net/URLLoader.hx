@@ -858,7 +858,7 @@ class URLLoader extends EventDispatcher {
 }
 
 
-typedef XMLHttpRequestProgressEvent = Dynamic;
+@:noCompletion @:dox(hide) typedef XMLHttpRequestProgressEvent = Dynamic;
 
 
 #else

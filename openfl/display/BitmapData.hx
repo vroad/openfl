@@ -969,7 +969,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function getBuffer (gl:GLRenderContext):GLBuffer {
+	@:noCompletion @:dox(hide) public function getBuffer (gl:GLRenderContext):GLBuffer {
 		
 		if (__buffer == null) {
 			
@@ -1116,7 +1116,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function getSurface ():CairoImageSurface {
+	@:noCompletion @:dox(hide) public function getSurface ():CairoImageSurface {
 		
 		if (!__isValid) return null;
 		
@@ -1131,7 +1131,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function getTexture (gl:GLRenderContext):GLTexture {
+	@:noCompletion @:dox(hide) public function getTexture (gl:GLRenderContext):GLTexture {
 		
 		if (!__isValid) return null;
 		
@@ -1168,7 +1168,7 @@ class BitmapData implements IBitmapDrawable {
 				
 			} else {
 				
-				#if (desktop || ios)
+				#if ((desktop || ios) && !rpi)
 				internalFormat = gl.RGBA;
 				format = gl.BGRA_EXT;
 				#elseif sys
