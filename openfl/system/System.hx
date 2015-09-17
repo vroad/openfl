@@ -195,6 +195,10 @@ import cpp.vm.Gc;
 		return untyped __global__.__hxcpp_gc_used_bytes ();
 		#elseif (js && html5)
 		return untyped __js__ ("window.performance.memory");
+		#elseif nodejs
+		return untyped os.totalmem ();
+		#else
+		return -1;
 		#end
 		
 	}
