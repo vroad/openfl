@@ -6,6 +6,7 @@ import lime.app.Config;
 import lime.ui.Window;
 import openfl.display.BitmapData;
 import openfl.display.OpenGLView;
+import openfl.display.Stage3D;
 import openfl.display3D.textures.CubeTexture;
 import openfl.display3D.textures.RectangleTexture;
 import openfl.display3D.textures.Texture;
@@ -66,7 +67,7 @@ import openfl.Lib;
 	private var rttDepthAndStencil:Bool;
 	private var window:Window;
 	
-	public function new () {
+	public function new (stage3D:Stage3D) {
 		
 		disposed = false;
 		renderToTexture = false;
@@ -94,10 +95,10 @@ import openfl.Lib;
 		window = Application.current.window;
 		
 		ogl = new OpenGLView (window.config.depthBuffer, window.config.stencilBuffer);
-		ogl.scrollRect = new Rectangle (0, 0, stage.stageWidth, stage.stageHeight);
-		scrollRect = ogl.scrollRect.clone ();
-		ogl.width = stage.stageWidth;
-		ogl.height = stage.stageHeight;
+		var width:Float = stage.stageWidth;
+		var height:Float = stage.stageHeight;
+		ogl.scrollRect = new Rectangle (0, 0, stage3D.x + width , stage3D.y + height);
+		scrollRect = new Rectangle (stage3D.x, stage3D.y, width, height);
 		
 		stage.addChildAt(ogl, 0);
 		
@@ -142,11 +143,42 @@ import openfl.Lib;
 		updateDepthAndStencilState();
 		
 		// TODO use antiAlias parameter
-		ogl.scrollRect = new Rectangle (0, 0, width, height);
-		ogl.width = width;
-		ogl.height = height;
-		scrollRect = ogl.scrollRect.clone ();
-		GL.viewport (Std.int (scrollRect.x), Std.int (scrollRect.y), Std.int (scrollRect.width), Std.int (scrollRect.height));
+		setBackBufferViewPort (null, null, width, height);
+		updateScissorRectangle ();
+		
+	}
+	
+	private function setBackBufferViewPort (?x:Int, ?y:Int, ?width:Int, ?height:Int) {
+		
+		if (x == null) x = Std.int (scrollRect.x);
+		if (y == null) y = Std.int (scrollRect.y);
+		if (width == null) width = Std.int (scrollRect.width);
+		if (height == null) height = Std.int (scrollRect.height);
+		
+		scrollRect.x = x;
+		scrollRect.y = y;
+		scrollRect.width = width;
+		scrollRect.height = height;
+		ogl.width = x + width;
+		ogl.height = y + height;
+		
+		updateBackBufferViewPort ();
+		
+	}
+	
+	private function updateBackBufferViewPort () {
+		
+		if (!renderToTexture) {
+			
+			GL.viewport (Std.int (scrollRect.x), Std.int (scrollRect.y), Std.int (scrollRect.width), Std.int (scrollRect.height));
+			
+		}
+		
+	}
+	
+	@:noCompletion public function __moveStage3D (stage3D:Stage3D) {
+		
+		setBackBufferViewPort (Std.int (stage3D.x), Std.int (stage3D.y), null, null);
 		
 	}
 	
@@ -736,8 +768,8 @@ import openfl.Lib;
 
 		}
 		
-		GL.viewport(Std.int(scrollRect.x), Std.int(scrollRect.y), Std.int(scrollRect.width), Std.int(scrollRect.height));
 		renderToTexture = false;
+		updateBackBufferViewPort ();
 		updateScissorRectangle();
 		updateDepthAndStencilState();
 	}
