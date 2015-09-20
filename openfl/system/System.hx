@@ -92,6 +92,11 @@ import cpp.vm.Gc;
 	public static var vmVersion (get, null):String;
 	
 	
+	#if nodejs
+	private static var __os:Dynamic = untyped require ('os');
+	#end
+	
+	
 	/**
 	 * Closes Flash Player.
 	 *
@@ -196,7 +201,7 @@ import cpp.vm.Gc;
 		#elseif (js && html5)
 		return untyped __js__ ("window.performance.memory");
 		#elseif nodejs
-		return untyped os.totalmem ();
+		return untyped __os.totalmem ();
 		#else
 		return -1;
 		#end
