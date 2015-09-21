@@ -17,7 +17,7 @@ import openfl.gl.GLUniformLocation;
 	public var glFSLocationMap:Array<GLUniformLocation>; // sampler
 	public var glVALocationMap:Array<Int>;
 
-	public function new(context:Context3D, program:GLProgram) {
+	public function new (context:Context3D, program:GLProgram) {
 		
 		this.context = context;
 		this.glProgram = program;

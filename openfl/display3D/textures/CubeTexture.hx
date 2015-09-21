@@ -16,12 +16,14 @@ using openfl.display.BitmapData;
 	
 	public var size : Int;
 	public var _textures:Array<GLTexture>;
+	public var hasMipmap:Bool;
 	
 	
 	public function new (context:Context3D, glTexture:GLTexture, size:Int) {
 		
 		super (context, glTexture, size, size);
 		this.size = size;
+		this.hasMipmap = false;
 		
 		this._textures = [];
 		

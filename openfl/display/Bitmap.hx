@@ -130,7 +130,7 @@ class Bitmap extends DisplayObject {
 		if (!visible || __isMask || bitmapData == null) return false;
 		if (mask != null && !mask.__hitTestMask (x, y)) return false;
 		
-		__getTransform ();
+		__getWorldTransform ();
 		
 		var px = __worldTransform.__transformInverseX (x, y);
 		var py = __worldTransform.__transformInverseY (x, y);
@@ -156,7 +156,7 @@ class Bitmap extends DisplayObject {
 		
 		if (bitmapData == null) return false;
 		
-		__getTransform ();
+		__getWorldTransform ();
 		
 		var px = __worldTransform.__transformInverseX (x, y);
 		var py = __worldTransform.__transformInverseY (x, y);
@@ -209,21 +209,9 @@ class Bitmap extends DisplayObject {
 	
 	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
 		#if !disable_gl_renderer
-		if (scrollRect != null) {
-			renderSession.spriteBatch.stop();
-			var m = __worldTransform.clone();
-			var clip = Rectangle.__temp;
-			scrollRect.__transform(clip, m);
-			clip.y = renderSession.renderer.height - clip.y - clip.height;
-			renderSession.spriteBatch.start(clip);
-		}
-		
+		__preRenderGL (renderSession);
 		GLBitmap.render (this, renderSession);
-		
-		if (scrollRect != null) {
-			renderSession.spriteBatch.stop();
-			renderSession.spriteBatch.start();
-		}
+		__postRenderGL (renderSession);
 		
 		#end
 	}
@@ -231,7 +219,7 @@ class Bitmap extends DisplayObject {
 	
 	@:noCompletion @:dox(hide) public override function __updateMask (maskGraphics:Graphics):Void {
 		
-		maskGraphics.__commands.push (OverrideMatrix (this.__worldTransform));
+		maskGraphics.__commands.overrideMatrix (this.__worldTransform);
 		maskGraphics.beginFill (0);
 		maskGraphics.drawRect (0, 0, bitmapData.width, bitmapData.height);
 		
@@ -271,7 +259,12 @@ class Bitmap extends DisplayObject {
 		
 		if (bitmapData != null) {
 			
-			scaleY = value / bitmapData.height;
+			if (value != bitmapData.height) {
+				
+				scaleY = value / bitmapData.height;
+				
+			}
+			
 			return value;
 			
 		}
@@ -298,7 +291,12 @@ class Bitmap extends DisplayObject {
 		
 		if (bitmapData != null) {
 			
-			scaleX = value / bitmapData.width;
+			if (value != bitmapData.width) {
+				
+				scaleX = value / bitmapData.width;
+				
+			}
+			
 			return value;
 			
 		}

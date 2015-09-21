@@ -63,6 +63,9 @@ class SpriteBatch {
 	
 	var lastEnableColor:Bool = true;
 	
+	var matrix:Matrix = new Matrix();
+	var uvs:TextureUvs = new TextureUvs();
+	
 	
 	public function new(gl:GLRenderContext, maxSprites:Int = 2000) {
 		this.maxSprites = maxSprites;
@@ -141,7 +144,7 @@ class SpriteBatch {
 	
 	public function start(?clipRect:Rectangle = null) {
 		if (!drawing) {
-			throw "Call Spritebatch.begin() before start()";
+			stop();
 		}
 		dirty = true;
 		this.clipRect = clipRect;
@@ -238,9 +241,11 @@ class SpriteBatch {
 		var cosTheta = 1.0, sinTheta = 0.0;
 		var a = 0.0, b = 0.0, c = 0.0, d = 0.0, tx = 0.0, ty = 0.0;
 		var ox = 0.0, oy = 0.0;
-		var matrix = new Matrix();
+		
+		matrix.identity();
+		
 		var oMatrix = object.__worldTransform;
-		var uvs = new TextureUvs();
+		uvs.reset();
 		
 		var bIndex = 0;
 		
@@ -490,10 +495,10 @@ class SpriteBatch {
 		
 		if (clipRect != null) {
 			gl.enable(gl.SCISSOR_TEST);
-			gl.scissor(Math.floor(clipRect.x), 
-						Math.floor(clipRect.y),
-						Math.floor(clipRect.width),
-						Math.floor(clipRect.height)
+			gl.scissor(Math.ceil(clipRect.x), 
+						Math.ceil(clipRect.y),
+						Math.ceil(clipRect.width),
+						Math.ceil(clipRect.height)
 					);
 		}
 		

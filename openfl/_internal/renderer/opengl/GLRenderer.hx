@@ -8,7 +8,6 @@ import lime.graphics.ImageChannel;
 import lime.graphics.opengl.GL;
 import lime.graphics.opengl.GLFramebuffer;
 import lime.graphics.GLRenderContext;
-import lime.math.Rectangle;
 import lime.math.Vector2;
 import lime.utils.ByteArray;
 import openfl._internal.renderer.AbstractRenderer;
@@ -26,6 +25,7 @@ import openfl.display.Stage;
 import openfl.errors.Error;
 import openfl.geom.Matrix;
 import openfl.geom.Point;
+import openfl.geom.Rectangle;
 import openfl.text.TextField;
 
 #if (js && html5)
@@ -80,6 +80,7 @@ class GLRenderer extends AbstractRenderer {
 		this.preserveDrawingBuffer = preserveDrawingBuffer;
 		this.width = width;
 		this.height = height;
+		this.viewport = new Rectangle ();
 		
 		this.options = {
 			alpha: transparent,
@@ -121,7 +122,6 @@ class GLRenderer extends AbstractRenderer {
 		renderSession.gl = this.gl;
 		renderSession.drawCount = 0;
 		renderSession.shaderManager = this.shaderManager;
-		renderSession.maskManager = this.maskManager;
 		renderSession.filterManager = this.filterManager;
 		renderSession.blendModeManager = this.blendModeManager;
 		renderSession.spriteBatch = this.spriteBatch;
@@ -178,6 +178,7 @@ class GLRenderer extends AbstractRenderer {
 			vpHeight = height;
 			gl.viewport(x, y, width, height);
 			setOrtho(x, y, width, height);
+			viewport.setTo(x, y, width, height);
 		}
 	}
 	
@@ -321,7 +322,7 @@ class GLRenderer extends AbstractRenderer {
 		var bitmap = shape.__graphics.__bitmap;
 		
 		matrix.translate (shape.__graphics.__bounds.x, shape.__graphics.__bounds.y);
-		matrix.concat (shape.__worldTransform);
+		matrix.concat (shape.__renderTransform);
 		
 		renderSession.spriteBatch.renderBitmapData (bitmap, smooth, matrix, shape.__worldColorTransform, shape.__worldAlpha, shape.__blendMode, ALWAYS);
 		

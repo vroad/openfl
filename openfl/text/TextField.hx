@@ -669,7 +669,7 @@ class TextField extends InteractiveObject {
 	 */
 	public function getCharIndexAtPoint (x:Float, y:Float):Int {
 		
-		if (x <= 2 || x > width + 4 || y <= 0 || y > width + 4) return -1;
+		if (x <= 2 || x > width + 4 || y <= 0 || y > height + 4) return -1;
 		
 		__updateLayout ();
 		
@@ -756,7 +756,7 @@ class TextField extends InteractiveObject {
 		
 		__updateLayout ();
 		
-		if (x <= 2 || x > width + 4 || y <= 0 || y > width + 4) return -1;
+		if (x <= 2 || x > width + 4 || y <= 0 || y > height + 4) return -1;
 		
 		for (i in 0...scrollV - 1) {
 			
@@ -1257,7 +1257,7 @@ class TextField extends InteractiveObject {
 		if (!visible || __isMask || (interactiveOnly && !mouseEnabled)) return false;
 		if (mask != null && !mask.__hitTestMask (x, y)) return false;
 		
-		__getTransform ();
+		__getWorldTransform ();
 		__updateLayout ();
 		
 		var px = __worldTransform.__transformInverseX (x, y);
@@ -1282,7 +1282,7 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion private override function __hitTestMask (x:Float, y:Float):Bool {
 		
-		__getTransform ();
+		__getWorldTransform ();
 		__updateLayout ();
 		
 		var px = __worldTransform.__transformInverseX (x, y);
@@ -1353,6 +1353,8 @@ class TextField extends InteractiveObject {
 	
 	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
 		
+		__preRenderGL(renderSession);
+		
 		#if !disable_cairo_graphics
 		
 		#if lime_cairo
@@ -1372,6 +1374,8 @@ class TextField extends InteractiveObject {
 		#end
 		
 		#end
+		
+		__postRenderGL(renderSession);
 		
 	}
 	
@@ -2289,7 +2293,7 @@ class TextField extends InteractiveObject {
 		
 		if (stage.focus == this) {
 			
-			__getTransform ();
+			__getWorldTransform ();
 			__updateLayout ();
 			
 			var px = __worldTransform.__transformInverseX (x, y);

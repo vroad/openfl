@@ -2,8 +2,10 @@ package openfl.display; #if !flash #if !openfl_legacy
 
 
 import lime.graphics.cairo.Cairo;
+import lime.graphics.Image;
 import openfl._internal.renderer.cairo.CairoGraphics;
 import openfl._internal.renderer.canvas.CanvasGraphics;
+import openfl._internal.renderer.DrawCommandBuffer;
 import openfl._internal.renderer.opengl.utils.FilterTexture;
 import openfl.errors.ArgumentError;
 import openfl._internal.renderer.opengl.utils.GraphicsRenderer;
@@ -18,7 +20,6 @@ import openfl.display.GraphicsStroke;
 import openfl.display.Tilesheet;
 import openfl.geom.Matrix;
 import openfl.geom.Point;
-import lime.graphics.Image;
 import openfl.geom.Rectangle;
 import openfl.Vector;
 
@@ -43,6 +44,7 @@ import js.html.CanvasRenderingContext2D;
  * <p>The Graphics class is final; it cannot be subclassed.</p>
  */
 
+@:access(openfl.geom.Matrix)
 @:access(openfl.geom.Rectangle)
 
 
@@ -71,16 +73,16 @@ import js.html.CanvasRenderingContext2D;
 	
 	@:noCompletion @:dox(hide) public var __hardware:Bool;
 	@:noCompletion private var __bounds:Rectangle;
-	@:noCompletion private var __commands:Array<DrawCommand> = [];
+	@:noCompletion private var __commands:DrawCommandBuffer;
 	@:noCompletion private var __dirty (default, set):Bool = true;
 	@:noCompletion private var __glStack:Array<GLStack> = [];
 	@:noCompletion private var __drawPaths:Array<DrawPath>;
-	@:noCompletion private var __halfStrokeWidth:Float;
 	@:noCompletion private var __image:Image;
 	@:noCompletion private var __positionX:Float;
 	@:noCompletion private var __positionY:Float;
+	@:noCompletion private var __strokePadding:Float;
 	@:noCompletion private var __transformDirty:Bool;
-	@:noCompletion private var __visible:Bool = true;
+	@:noCompletion private var __visible:Bool;
 	@:noCompletion private var __cachedTexture:FilterTexture;
 	@:noCompletion private var __owner:DisplayObject;
 	
@@ -96,8 +98,8 @@ import js.html.CanvasRenderingContext2D;
 	
 	public function new () {
 		
-		__commands = new Array ();
-		__halfStrokeWidth = 0;
+		__commands = new DrawCommandBuffer ();
+		__strokePadding = 0;
 		__positionX = 0;
 		__positionY = 0;
 		__hardware = true;
@@ -147,7 +149,7 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function beginBitmapFill (bitmap:BitmapData, matrix:Matrix = null, repeat:Bool = true, smooth:Bool = false) {
 		
-		__commands.push (BeginBitmapFill (bitmap, matrix != null ? matrix.clone () : null, repeat, smooth));
+		__commands.beginBitmapFill(bitmap, matrix != null ? matrix.clone () : null, repeat, smooth);
 		
 		__visible = true;
 		
@@ -170,7 +172,7 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function beginFill (color:Int = 0, alpha:Float = 1):Void {
 		
-		__commands.push (BeginFill (color & 0xFFFFFF, alpha));
+		__commands.beginFill (color & 0xFFFFFF, alpha);
 		
 		if (alpha > 0) __visible = true;
 		
@@ -244,7 +246,7 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function beginGradientFill (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix = null, spreadMethod:Null<SpreadMethod> = null, interpolationMethod:Null<InterpolationMethod> = null, focalPointRatio:Null<Float> = null):Void {
 		
-		__commands.push (BeginGradientFill (type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio));
+		__commands.beginGradientFill (type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio);
 		__hardware = false;
 		
 		for (alpha in alphas) {
@@ -268,8 +270,8 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function clear ():Void {
 		
-		__commands = new Array ();
-		__halfStrokeWidth = 0;
+		__commands.clear();
+		__strokePadding = 0;
 		
 		if (__bounds != null) {
 			
@@ -294,7 +296,7 @@ import js.html.CanvasRenderingContext2D;
 		__bounds = sourceGraphics.__bounds.clone ();
 		__commands = sourceGraphics.__commands.copy ();
 		__dirty = true;
-		__halfStrokeWidth = sourceGraphics.__halfStrokeWidth;
+		__strokePadding = sourceGraphics.__strokePadding;
 		__positionX = sourceGraphics.__positionX;
 		__positionY = sourceGraphics.__positionY;
 		__transformDirty = true;
@@ -305,8 +307,8 @@ import js.html.CanvasRenderingContext2D;
 	
 	public function cubicCurveTo (controlX1:Float, controlY1:Float, controlX2:Float, controlY2:Float, anchorX:Float, anchorY:Float):Void {
 		
-		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
-		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		__inflateBounds (__positionX - __strokePadding, __positionY - __strokePadding);
+		__inflateBounds (__positionX + __strokePadding, __positionY + __strokePadding);
 		
 		var ix1, iy1, ix2, iy2;
 		
@@ -362,15 +364,15 @@ import js.html.CanvasRenderingContext2D;
 			
 		}
 		
-		__inflateBounds (ix1 - __halfStrokeWidth, iy1 - __halfStrokeWidth);
-		__inflateBounds (ix1 + __halfStrokeWidth, iy1 + __halfStrokeWidth);
-		__inflateBounds (ix2 - __halfStrokeWidth, iy2 - __halfStrokeWidth);
-		__inflateBounds (ix2 + __halfStrokeWidth, iy2 + __halfStrokeWidth);
+		__inflateBounds (ix1 - __strokePadding, iy1 - __strokePadding);
+		__inflateBounds (ix1 + __strokePadding, iy1 + __strokePadding);
+		__inflateBounds (ix2 - __strokePadding, iy2 - __strokePadding);
+		__inflateBounds (ix2 + __strokePadding, iy2 + __strokePadding);
 		
 		__positionX = anchorX;
 		__positionY = anchorY;
 		
-		__commands.push (CubicCurveTo (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY));
+		__commands.cubicCurveTo (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
 		
 		__hardware = false;
 		__dirty = true;
@@ -410,8 +412,8 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function curveTo (controlX:Float, controlY:Float, anchorX:Float, anchorY:Float) {
 		
-		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
-		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		__inflateBounds (__positionX - __strokePadding, __positionY - __strokePadding);
+		__inflateBounds (__positionX + __strokePadding, __positionY + __strokePadding);
 		
 		var ix, iy;
 		
@@ -437,13 +439,13 @@ import js.html.CanvasRenderingContext2D;
 			
 		}
 		
-		__inflateBounds (ix - __halfStrokeWidth, iy - __halfStrokeWidth);
-		__inflateBounds (ix + __halfStrokeWidth, iy + __halfStrokeWidth);
+		__inflateBounds (ix - __strokePadding, iy - __strokePadding);
+		__inflateBounds (ix + __strokePadding, iy + __strokePadding);
 		
 		__positionX = anchorX;
 		__positionY = anchorY;
 		
-		__commands.push (CurveTo (controlX, controlY, anchorX, anchorY));
+		__commands.curveTo (controlX, controlY, anchorX, anchorY);
 		
 		__hardware = false;
 		__dirty = true;
@@ -469,10 +471,10 @@ import js.html.CanvasRenderingContext2D;
 		
 		if (radius <= 0) return;
 		
-		__inflateBounds (x - radius - __halfStrokeWidth, y - radius - __halfStrokeWidth);
-		__inflateBounds (x + radius + __halfStrokeWidth, y + radius + __halfStrokeWidth);
+		__inflateBounds (x - radius - __strokePadding, y - radius - __strokePadding);
+		__inflateBounds (x + radius + __strokePadding, y + radius + __strokePadding);
 		
-		__commands.push (DrawCircle (x, y, radius));
+		__commands.drawCircle (x, y, radius);
 		
 		__hardware = false;
 		__dirty = true;
@@ -500,10 +502,10 @@ import js.html.CanvasRenderingContext2D;
 		
 		if (width <= 0 || height <= 0) return;
 		
-		__inflateBounds (x - __halfStrokeWidth, y - __halfStrokeWidth);
-		__inflateBounds (x + width + __halfStrokeWidth, y + height + __halfStrokeWidth);
+		__inflateBounds (x - __strokePadding, y - __strokePadding);
+		__inflateBounds (x + width + __strokePadding, y + height + __strokePadding);
 		
-		__commands.push (DrawEllipse (x, y, width, height));
+		__commands.drawEllipse (x, y, width, height);
 		
 		__hardware = false;
 		__dirty = true;
@@ -653,12 +655,12 @@ import js.html.CanvasRenderingContext2D;
 					
 					lineTo (data[dataIndex], data[dataIndex + 1]);
 					dataIndex += 2;
-
+				
 				case GraphicsPathCommand.WIDE_MOVE_TO:
 					
 					moveTo(data[dataIndex + 2], data[dataIndex + 3]); break;
 					dataIndex += 4;
-
+				
 				case GraphicsPathCommand.WIDE_LINE_TO:
 					
 					lineTo(data[dataIndex + 2], data[dataIndex + 3]); break;
@@ -704,10 +706,10 @@ import js.html.CanvasRenderingContext2D;
 		
 		if (width <= 0 || height <= 0) return;
 		
-		__inflateBounds (x - __halfStrokeWidth, y - __halfStrokeWidth);
-		__inflateBounds (x + width + __halfStrokeWidth, y + height + __halfStrokeWidth);
+		__inflateBounds (x - __strokePadding, y - __strokePadding);
+		__inflateBounds (x + width + __strokePadding, y + height + __strokePadding);
 		
-		__commands.push (DrawRect (x, y, width, height));
+		__commands.drawRect (x, y, width, height);
 		
 		__dirty = true;
 		
@@ -744,10 +746,10 @@ import js.html.CanvasRenderingContext2D;
 		
 		if (width <= 0 || height <= 0) return;
 		
-		__inflateBounds (x - __halfStrokeWidth, y - __halfStrokeWidth);
-		__inflateBounds (x + width + __halfStrokeWidth, y + height + __halfStrokeWidth);
+		__inflateBounds (x - __strokePadding, y - __strokePadding);
+		__inflateBounds (x + width + __strokePadding, y + height + __strokePadding);
 		
-		__commands.push (DrawRoundRect (x, y, width, height, rx, ry));
+		__commands.drawRoundRect (x, y, width, height, rx, ry);
 		
 		__hardware = false;
 		__dirty = true;
@@ -764,13 +766,212 @@ import js.html.CanvasRenderingContext2D;
 	
 	public function drawTiles (sheet:Tilesheet, tileData:Array<Float>, smooth:Bool = false, flags:Int = 0, count:Int = -1):Void {
 		
-		// Checking each tile for extents did not include rotation or scale, and could overflow the maximum canvas
-		// size of some mobile browsers. Always use the full stage size for drawTiles instead?
+		var useScale = (flags & Tilesheet.TILE_SCALE) > 0;
+		var useRotation = (flags & Tilesheet.TILE_ROTATION) > 0;
+		var useRGB = (flags & Tilesheet.TILE_RGB) > 0;
+		var useAlpha = (flags & Tilesheet.TILE_ALPHA) > 0;
+		var useTransform = (flags & Tilesheet.TILE_TRANS_2x2) > 0;
+		var useRect = (flags & Tilesheet.TILE_RECT) > 0;
+		var useOrigin = (flags & Tilesheet.TILE_ORIGIN) > 0;
 		
-		__inflateBounds (0, 0);
-		__inflateBounds (Lib.current.stage.stageWidth, Lib.current.stage.stageHeight);
+		var rect = openfl.geom.Rectangle.__temp;
+		var matrix = Matrix.__temp;
 		
-		__commands.push (DrawTiles (sheet, tileData, smooth, flags, count));
+		var numValues = 3;
+		var totalCount = count;
+		
+		if (count < 0) {
+			
+			totalCount = tileData.length;
+			
+		}
+		
+		if (useTransform || useScale || useRotation || useRGB || useAlpha) {
+			
+			var scaleIndex = 0;
+			var rotationIndex = 0;
+			var transformIndex = 0;
+			
+			if (useRect) { numValues = useOrigin ? 8 : 6; }
+			if (useScale) { scaleIndex = numValues; numValues++; }
+			if (useRotation) { rotationIndex = numValues; numValues++; }
+			if (useTransform) { transformIndex = numValues; numValues += 4; }
+			if (useRGB) { numValues += 3; }
+			if (useAlpha) { numValues++; }
+			
+			var itemCount = Std.int (totalCount / numValues);
+			var index = 0;
+			var cacheID = -1;
+			
+			var x, y, id, scale, rotation, tileWidth, tileHeight, originX, originY;
+			var tile = null;
+			var tilePoint = null;
+			
+			while (index < totalCount) {
+				
+				x = tileData[index];
+				y = tileData[index + 1];
+				id = (!useRect #if neko && tileData[index + 2] != null #end) ? Std.int (tileData[index + 2]) : -1;
+				scale = 1.0;
+				rotation = 0.0;
+				
+				if (useScale) {
+					
+					scale = tileData[index + scaleIndex];
+					
+				}
+				
+				if (useRotation) {
+					
+					rotation = tileData[index + rotationIndex];
+					
+				}
+				
+				if (id < 0) {
+					
+					tile = null;
+					
+				} else {
+					
+					if (!useRect && cacheID != id) {
+						
+						cacheID = id;
+						tile = sheet.__tileRects[id];
+						tilePoint = sheet.__centerPoints[id];
+						
+					} else if (useRect) {
+						
+						tile = sheet.__rectTile;
+						tile.setTo (tileData[index + 2], tileData[index + 3], tileData[index + 4], tileData[index + 5]);
+						tilePoint = sheet.__point;
+						
+						if (useOrigin) {
+							
+							tilePoint.setTo (tileData[index + 6] / tile.width, tileData[index + 7] / tile.height);
+							
+						} else {
+							
+							tilePoint.setTo (0, 0);
+							
+						}
+						
+					}
+					
+				}
+				
+				if (tile != null) {
+					
+					if (useTransform) {
+						
+						rect.setTo (0, 0, tile.width, tile.height);
+						matrix.setTo (tileData[index + transformIndex], tileData[index + transformIndex + 1], tileData[index + transformIndex + 2], tileData[index + transformIndex + 3], 0, 0);
+						
+						originX = tilePoint.x * tile.width;
+						originY = tilePoint.y * tile.height;
+						
+						matrix.translate (x - matrix.__transformX (originX, originY), y - matrix.__transformY (originX, originY));
+						
+						rect.__transform (rect, matrix);
+						
+						__inflateBounds (rect.x, rect.y);
+						__inflateBounds (rect.right, rect.bottom);
+						
+					} else {
+						
+						tileWidth = tile.width * scale;
+						tileHeight = tile.height * scale;
+						
+						x -= tilePoint.x * tileWidth;
+						y -= tilePoint.y * tileHeight;
+						
+						if (rotation != 0) {
+							
+							rect.setTo (0, 0, tileWidth, tileHeight);
+							
+							matrix.identity ();
+							matrix.rotate (rotation);
+							matrix.translate (x, y);
+							
+							rect.__transform (rect, matrix);
+							
+							__inflateBounds (rect.x, rect.y);
+							__inflateBounds (rect.right, rect.bottom);
+							
+						} else {
+							
+							__inflateBounds (x, y);
+							__inflateBounds (x + tileWidth, y + tileHeight);
+							
+						}
+						
+					}
+					
+				}
+				
+				index += numValues;
+				
+			}
+			
+		} else {
+			
+			var x, y, id, tile, centerPoint, originX, originY;
+			var rect = openfl.geom.Rectangle.__temp;
+			var index = 0;
+			
+			while (index < totalCount) {
+				
+				x = tileData[index++];
+				y = tileData[index++];
+				
+				#if neko
+				if (useRect) {
+					id = -1;
+				} else {
+					id = (tileData[index] != null) ? Std.int (tileData[index]) : 0;
+					index++;
+				}
+				#else
+				id = (!useRect) ? Std.int (tileData[index++]) : -1;
+				#end
+				
+				originX = 0.0;
+				originY = 0.0;
+				
+				if (useRect) {
+					
+					rect.setTo (tileData[index++], tileData[index++], tileData[index++], tileData[index++]);
+					
+					if (useOrigin) {
+						
+						originX = tileData[index++];
+						originY = tileData[index++];
+						
+					}
+					
+					__inflateBounds (x - originX, y - originY);
+					__inflateBounds (x - originX + rect.width, y - originY + rect.height);
+					
+				} else {
+					
+					tile = sheet.__tileRects[id];
+					
+					if (tile != null) {
+						
+						centerPoint = sheet.__centerPoints[id];
+						originX = centerPoint.x * tile.width;
+						originY = centerPoint.y * tile.height;
+						
+						__inflateBounds (x - originX, y - originY);
+						__inflateBounds (x - originX + tile.width, y - originY + tile.height);
+						
+					}
+					
+				}
+				
+			}
+		}
+		
+		__commands.drawTiles (sheet, tileData, smooth, flags, count);
 		
 		__dirty = true;
 		__visible = true;
@@ -796,7 +997,7 @@ import js.html.CanvasRenderingContext2D;
 	 *                parameter can be set to any value defined by the
 	 *                TriangleCulling class.
 	 */
-	public function drawTriangles (vertices:Vector<Float>, ?indices:Vector<Int> = null, ?uvtData:Vector<Float> = null, ?culling:TriangleCulling = null, ?colors:Vector<Int>, blendMode:Int = 0):Void {
+	public function drawTriangles (vertices:Vector<Float>, ?indices:Vector<Int> = null, ?uvtData:Vector<Float> = null, ?culling:TriangleCulling = null, ?colors:Vector<Int>, blendMode:Int = 0):Void{
 		
 		var vlen = Std.int (vertices.length / 2);
 		
@@ -841,7 +1042,7 @@ import js.html.CanvasRenderingContext2D;
 		}
 		
 		__inflateBounds (maxX, maxY);
-		__commands.push (DrawTriangles(vertices, indices, uvtData, culling, colors, blendMode));
+		__commands.drawTriangles(vertices, indices, uvtData, culling, colors, blendMode);
 		
 		__dirty = true;
 		__visible = true;
@@ -862,7 +1063,7 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function endFill ():Void {
 		
-		__commands.push (EndFill);
+		__commands.endFill();
 		
 	}
 	
@@ -898,7 +1099,7 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function lineBitmapStyle (bitmap:BitmapData, matrix:Matrix = null, repeat:Bool = true, smooth:Bool = false):Void {
 		
-		__commands.push (LineBitmapStyle (bitmap, matrix != null ? matrix.clone () : null, repeat, smooth));
+		__commands.lineBitmapStyle (bitmap, matrix != null ? matrix.clone () : null, repeat, smooth);
 		
 	}
 	
@@ -955,9 +1156,9 @@ import js.html.CanvasRenderingContext2D;
 	 *                            image shows a gradient with a
 	 *                            <code>focalPointRatio</code> of -0.75:
 	 */
-	public function lineGradientStyle (type:GradientType, colors:Array<Dynamic>, alphas:Array<Dynamic>, ratios:Array<Dynamic>, matrix:Matrix = null, spreadMethod:SpreadMethod = null, interpolationMethod:InterpolationMethod = null, focalPointRatio:Null<Float> = null):Void {
+	public function lineGradientStyle (type:GradientType, colors:Array<Int>, alphas:Array<Float>, ratios:Array<Float>, matrix:Matrix = null, spreadMethod:SpreadMethod = null, interpolationMethod:InterpolationMethod = null, focalPointRatio:Null<Float> = null):Void {
 		
-		__commands.push (LineGradientStyle (type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio));	
+		__commands.lineGradientStyle (type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio);	
 		
 	}
 	
@@ -1103,8 +1304,21 @@ import js.html.CanvasRenderingContext2D;
 	 */
 	public function lineStyle (thickness:Null<Float> = null, color:Null<Int> = null, alpha:Null<Float> = null, pixelHinting:Null<Bool> = null, scaleMode:LineScaleMode = null, caps:CapsStyle = null, joints:JointStyle = null, miterLimit:Null<Float> = null):Void {
 		
-		__halfStrokeWidth = thickness > __halfStrokeWidth ? thickness/2 : __halfStrokeWidth;
-		__commands.push (LineStyle (thickness, color, alpha, pixelHinting, scaleMode, caps, joints, miterLimit));
+		if (thickness != null) {
+			
+			if (joints == JointStyle.MITER) {
+				
+				if (thickness > __strokePadding) __strokePadding = thickness;
+				
+			} else {
+				
+				if (thickness / 2 > __strokePadding) __strokePadding = thickness / 2;
+				
+			}
+			
+		}
+		
+		__commands.lineStyle (thickness, color, alpha, pixelHinting, scaleMode, caps, joints, miterLimit);
 		
 		if (thickness != null) __visible = true;
 		
@@ -1131,16 +1345,16 @@ import js.html.CanvasRenderingContext2D;
 		
 		// TODO: Should we consider the origin instead, instead of inflating in all directions?
 		
-		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
-		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		__inflateBounds (__positionX - __strokePadding, __positionY - __strokePadding);
+		__inflateBounds (__positionX + __strokePadding, __positionY + __strokePadding);
 		
 		__positionX = x;
 		__positionY = y;
 		
-		__inflateBounds (__positionX - __halfStrokeWidth, __positionY - __halfStrokeWidth);
-		__inflateBounds (__positionX + __halfStrokeWidth, __positionY + __halfStrokeWidth);
+		__inflateBounds (__positionX - __strokePadding, __positionY - __strokePadding);
+		__inflateBounds (__positionX + __strokePadding * 2, __positionY + __strokePadding);
 		
-		__commands.push (LineTo (x, y));
+		__commands.lineTo (x, y);
 		
 		__hardware = false;
 		__dirty = true;
@@ -1163,7 +1377,7 @@ import js.html.CanvasRenderingContext2D;
 		__positionX = x;
 		__positionY = y;
 		
-		__commands.push (MoveTo (x, y));
+		__commands.moveTo (x, y);
 		
 	}
 	
@@ -1284,6 +1498,7 @@ import js.html.CanvasRenderingContext2D;
 	
 	
 }
+
 
 #else
 typedef Graphics = openfl._legacy.display.Graphics;

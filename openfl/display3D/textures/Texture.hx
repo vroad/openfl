@@ -19,7 +19,6 @@ using openfl.display.BitmapData;
 	public var optimizeForRenderToTexture:Bool;
 	public var hasMipmap:Bool;
 	
-	
 	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
 		
 		optimizeForRenderToTexture = optimize;

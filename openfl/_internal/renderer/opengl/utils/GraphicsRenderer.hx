@@ -752,11 +752,17 @@ class GraphicsRenderer {
 	}
 	
 	public static function render (object:DisplayObject, renderSession:RenderSession):Void {
+		
 		var graphics = object.__graphics;
+		var bounds = graphics.__bounds;
 		var spritebatch = renderSession.spriteBatch;
 		var dirty = graphics.__dirty;
-		if (graphics.__commands.length <= 0) {
+		
+		if (!graphics.__visible || graphics.__commands.length == 0 || bounds == null || bounds.width == 0 || bounds.height == 0) {
+			
+			graphics.__glStack.splice (0, graphics.__glStack.length);
 			return;
+			
 		}
 		
 		if (dirty) {
@@ -1488,7 +1494,7 @@ class GLBucketData {
 			
 			if (glVerts.length <= lastVertsSize) {
 				vertexArray.bind();
-				var end = glLength * 4 * stride;
+				var end = glLength * stride;
 				if (glLength > 0 && lastVertsSize > end) {
 					var view = glVerts.subarray(0, end);
 					vertexArray.upload(view);

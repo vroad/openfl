@@ -723,8 +723,17 @@ class BitmapData implements IBitmapDrawable {
 		
 		#elseif (js && html5)
 		
+		if (colorTransform != null) {
+			
+			var copy = new BitmapData (Reflect.getProperty (source, "width"), Reflect.getProperty (source, "height"), true, 0);
+			copy.draw (source);
+			copy.colorTransform (copy.rect, colorTransform);
+			source = copy;
+			
+		}
+		
 		ImageCanvasUtil.convertToCanvas (image);
-		ImageCanvasUtil.sync (image);
+		ImageCanvasUtil.sync (image, true);
 		
 		var buffer = image.buffer;
 		
@@ -775,6 +784,15 @@ class BitmapData implements IBitmapDrawable {
 		buffer.data = null;
 		
 		#else
+		
+		if (colorTransform != null) {
+			
+			var copy = new BitmapData (Reflect.getProperty (source, "width"), Reflect.getProperty (source, "height"), true, 0);
+			copy.draw (source);
+			copy.colorTransform (copy.rect, colorTransform);
+			source = copy;
+			
+		}
 		
 		//var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
 		//__drawGL (renderSession, width, height, source, matrix, colorTransform, blendMode, clipRect, smoothing, !__usingFramebuffer, false, true);
@@ -2310,7 +2328,7 @@ class BitmapData implements IBitmapDrawable {
 		#if (js && html5)
 		if (!__isValid) return;
 		
-		ImageCanvasUtil.sync (image);
+		ImageCanvasUtil.sync (image, false);
 		
 		var context = renderSession.context;
 		
@@ -2354,7 +2372,7 @@ class BitmapData implements IBitmapDrawable {
 	@:noCompletion private function __sync ():Void {
 		
 		#if (js && html5)
-		ImageCanvasUtil.sync (image);
+		ImageCanvasUtil.sync (image, false);
 		#end
 		
 	}
@@ -2443,6 +2461,9 @@ class BitmapData implements IBitmapDrawable {
 	public var y2:Float = 0;
 	public var y3:Float = 0;
 	
+	public inline function reset():Void {
+		x0 = x1 = x2 = x3 = y0 = y1 = y2 = y3 = 0;
+	}
 	
 	public function new () {
 		

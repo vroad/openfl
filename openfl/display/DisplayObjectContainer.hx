@@ -157,6 +157,8 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			if (stage != null) {
 				
+				// TODO: Dispatch ADDED_TO_STAGE after ADDED (but parent and stage must be set)
+				
 				child.__setStageReference (stage);
 				
 			}
@@ -227,6 +229,8 @@ class DisplayObjectContainer extends InteractiveObject {
 			child.parent = this;
 			
 			if (stage != null) {
+				
+				// TODO: Dispatch ADDED_TO_STAGE after ADDED (but parent and stage must be set)
 				
 				child.__setStageReference (stage);
 				
@@ -432,6 +436,8 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (child != null && child.parent == this) {
 			
+			child.__dispatchEvent (new Event (Event.REMOVED, true));
+			
 			if (stage != null) {
 				
 				child.__setStageReference (null);
@@ -443,7 +449,6 @@ class DisplayObjectContainer extends InteractiveObject {
 			__removedChildren.push (child);
 			child.__setTransformDirty ();
 			child.__setRenderDirty ();
-			child.__dispatchEvent (new Event (Event.REMOVED, true));
 			
 		}
 		
@@ -841,7 +846,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (scrollRect != null) {
 			
-			renderSession.maskManager.popMask ();
+			renderSession.maskManager.popRect ();
 			
 		}
 		
@@ -910,7 +915,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (scrollRect != null) {
 			
-			renderSession.maskManager.popMask ();
+			renderSession.maskManager.popRect ();
 			
 		}
 		
@@ -995,28 +1000,8 @@ class DisplayObjectContainer extends InteractiveObject {
 		#if !disable_gl_renderer
 		if (!__renderable || __worldAlpha <= 0) return;
 		
-		if (scrollRect != null) {
-			renderSession.spriteBatch.stop();
-			var m = __worldTransform.clone();
-			var clip = Rectangle.__temp;
-			scrollRect.__transform(clip, m);
-			clip.y = renderSession.renderer.height - clip.y - clip.height;
-			
-			renderSession.spriteBatch.start(clip);
-		}
-		
-		
-		var masked = __mask != null && __maskGraphics != null && __maskGraphics.__commands.length > 0;
-		
-		if (masked) {
-			
-			renderSession.spriteBatch.stop ();
-			renderSession.maskManager.pushMask (this);
-			renderSession.spriteBatch.start ();
-			
-		}
-		
-		super.__renderGL (renderSession);
+		__preRenderGL (renderSession);
+		__drawGraphicsGL (renderSession);
 		
 		for (child in __children) {
 			
@@ -1024,19 +1009,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 		}
 		
-		if (masked) {
-			
-			renderSession.spriteBatch.stop ();
-			//renderSession.maskManager.popMask (this);
-			renderSession.maskManager.popMask ();
-			renderSession.spriteBatch.start ();
-			
-		}
-		
-		if (scrollRect != null) {
-			renderSession.spriteBatch.stop();
-			renderSession.spriteBatch.start();
-		}
+		__postRenderGL (renderSession);
 		
 		if (__removedChildren.length > 0) {
 			
