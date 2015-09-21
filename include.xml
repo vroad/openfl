@@ -27,12 +27,6 @@
 	<haxedef name="lime-hybrid" if="lime-hybrid" unless="display" />
 	<haxedef name="openfl-next" if="openfl-next" />
 	
-	<section if="openfl-next || webgl">
-		
-		<window stencil-buffer="true" />
-		
-	</section>
-	
 	<unset name="custom-backend" />
 	
 	<section unless="no-custom-backend">
