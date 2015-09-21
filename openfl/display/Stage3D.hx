@@ -22,6 +22,9 @@ class Stage3D extends EventDispatcher {
 	public function new () {
 		
 		super ();
+		visible = true;
+		x = 0;
+		y = 0;
 		
 	}
 	
