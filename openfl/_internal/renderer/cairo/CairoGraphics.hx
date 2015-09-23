@@ -277,7 +277,7 @@ class CairoGraphics {
 					case LINE_STYLE:
 						
 						var c = data.readLineStyle ();
-						strokeCommands.lineStyle (c.thickness, c.color, c.alpha, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
+						strokeCommands.lineStyle (c.thickness, c.color, 1, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
 					
 					case LINE_GRADIENT_STYLE:
 						
@@ -346,8 +346,8 @@ class CairoGraphics {
 						} else {
 							
 							var c = data.readBeginFill ();
-							fillCommands.beginFill (c.color, c.alpha);
-							strokeCommands.beginFill (c.color, c.alpha);
+							fillCommands.beginFill (c.color, 1);
+							strokeCommands.beginFill (c.color, 1);
 							
 						}
 					
@@ -1206,7 +1206,7 @@ class CairoGraphics {
 			
 			if (graphics.__cairo == null) {
 				
-				var bitmap = new BitmapData (Math.floor (bounds.width), Math.floor (bounds.height), true);
+				var bitmap = new BitmapData (Math.floor (bounds.width), Math.floor (bounds.height), true, 0);
 				var surface = bitmap.getSurface ();
 				graphics.__cairo = new Cairo (surface);
 				surface.destroy ();
@@ -1217,13 +1217,12 @@ class CairoGraphics {
 			
 			cairo = graphics.__cairo;
 			
-			cairo.operator = SOURCE;
-			cairo.setSourceRGBA (1, 1, 1, 0);
+			cairo.operator = CLEAR;
 			cairo.paint ();
 			cairo.operator = OVER;
 			
-			fillCommands.clear();
-			strokeCommands.clear();
+			fillCommands.clear ();
+			strokeCommands.clear ();
 			
 			hasFill = false;
 			hasStroke = false;

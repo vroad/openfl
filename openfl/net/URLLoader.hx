@@ -163,7 +163,7 @@ class URLLoader extends EventDispatcher {
 	
 	#if lime_curl
 	private var __curl:CURL;
-	private var __data:String;
+	private var __data:ByteArray;
 	#end
 	
 	#if nodejs
@@ -187,7 +187,7 @@ class URLLoader extends EventDispatcher {
 		dataFormat = URLLoaderDataFormat.TEXT;
 		
 		#if lime_curl
-		__data = "";
+		__data = new ByteArray ();
 		__curl = CURLEasy.init ();
 		#end
 		
@@ -576,7 +576,7 @@ class URLLoader extends EventDispatcher {
 			for (p in Reflect.fields (data)) {
 				
 				if (tmp.length != 0) tmp += "&";
-				tmp += StringTools.urlEncode (p) + "=" + StringTools.urlEncode (Reflect.field (data, p));
+				tmp += StringTools.urlEncode (p) + "=" + StringTools.urlEncode (Std.string (Reflect.field (data, p)));
 				
 			}
 			
@@ -602,7 +602,7 @@ class URLLoader extends EventDispatcher {
 		var uri = prepareData(data);
 		uri.position = 0;
 		
-		__data = "";
+		__data = new ByteArray ();
 		bytesLoaded = 0;
 		bytesTotal = 0;
 		
@@ -618,6 +618,12 @@ class URLLoader extends EventDispatcher {
 			case GET:
 				
 				CURLEasy.setopt(__curl, HTTPGET, true);
+				
+				if (uri.length > 0) {
+					
+					CURLEasy.setopt (__curl, URL, url + "?" + uri.readUTFBytes (uri.length));
+					
+				}
 			
 			case POST:
 				
@@ -675,10 +681,16 @@ class URLLoader extends EventDispatcher {
 			
 			if (result == CURLCode.OK) {
 				
-				switch(dataFormat) {
+				switch (dataFormat) {
 					
-					case BINARY: this.data = ByteArray.fromBytes (Bytes.ofString (__data));
-					default: this.data = __data;
+					case BINARY:
+						
+						this.data = __data;
+					
+					default:
+						
+						__data.position = 0;
+						this.data = __data.readUTFBytes (__data.length);
 					
 				}
 				
@@ -700,15 +712,15 @@ class URLLoader extends EventDispatcher {
 	}
 	
 	
-	private function writeFunction (output:String, size:Int, nmemb:Int):Int {
+	private function writeFunction (output:Bytes, size:Int, nmemb:Int):Int {
 		
-		__data += output;
+		__data.writeBytes (ByteArray.fromBytes (output));
 		return size * nmemb;
 		
 	}
 	
 	
-	private function headerFunction (output:String, size:Int, nmemb:Int):Int {
+	private function headerFunction (output:Bytes, size:Int, nmemb:Int):Int {
 		
 		// TODO
 		return size * nmemb;
@@ -738,9 +750,10 @@ class URLLoader extends EventDispatcher {
 	}
 
 	
-	private function readFunction (max:Int, input:ByteArray):String {
+	private function readFunction (max:Int, input:ByteArray):Bytes {
 		
-		return input == null ? "" : input.readUTFBytes (Std.int (Math.min (max, input.length - input.position)));
+		
+		return input;
 		
 	}
 	

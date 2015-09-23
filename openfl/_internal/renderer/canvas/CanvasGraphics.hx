@@ -85,9 +85,11 @@ class CanvasGraphics {
 		bitmap.__sync ();
 		return context.createPattern (bitmap.image.src, bitmapRepeat ? "repeat" : "no-repeat");
 		
-		#end
+		#else
 		
 		return null;
+		
+		#end
 		
 	}
 	
@@ -228,11 +230,7 @@ class CanvasGraphics {
 		
 		#if (js && html5)
 		
-		if (!graphics.__visible || graphics.__commands.length == 0 || bounds == null || bounds.width <= 0 || bounds.height <= 0) {
-			
-			//graphics.__canvas = null;
-			//graphics.__context = null;
-			//graphics.__bitmap = null;
+		if (graphics.__commands.length == 0 || bounds == null || bounds.width <= 0 || bounds.height <= 0) {
 			
 			return false;
 			
@@ -252,8 +250,8 @@ class CanvasGraphics {
 			
 			context = graphics.__context;
 			
-			fillCommands.clear();
-			strokeCommands.clear();
+			fillCommands.clear ();
+			strokeCommands.clear ();
 			
 			hasFill = false;
 			hasStroke = false;
@@ -305,7 +303,7 @@ class CanvasGraphics {
 					case LINE_STYLE:
 						
 						var c = data.readLineStyle ();
-						strokeCommands.lineStyle (c.thickness, c.color, c.alpha, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
+						strokeCommands.lineStyle (c.thickness, c.color, 1, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
 					
 					case END_FILL:
 						
@@ -364,8 +362,8 @@ class CanvasGraphics {
 						} else {
 							
 							var c = data.readBeginFill ();
-							fillCommands.beginFill (c.color, c.alpha);
-							strokeCommands.beginFill (c.color, c.alpha);
+							fillCommands.beginFill (c.color, 1);
+							strokeCommands.beginFill (c.color, 1);
 							
 						}
 					
@@ -812,7 +810,10 @@ class CanvasGraphics {
 		
 		#if (js && html5)
 		
-		var directRender = (graphics.__hardware && renderSession.context != null);
+		// TODO: Handle world transform if we want to use direct render
+		
+		//var directRender = (graphics.__hardware && renderSession.context != null);
+		var directRender = false;
 		
 		if (graphics.__dirty || directRender) {
 			
