@@ -93,7 +93,7 @@ import cpp.vm.Gc;
 	
 	
 	#if nodejs
-	private static var __os:Dynamic = untyped require ('os');
+	private static var __process:Dynamic = untyped require ('process');
 	#end
 	
 	
@@ -201,7 +201,7 @@ import cpp.vm.Gc;
 		#elseif (js && html5)
 		return untyped __js__ ("window.performance.memory");
 		#elseif nodejs
-		return untyped __os.totalmem ();
+		return untyped __process.memoryUsage().heapTotal;
 		#else
 		return -1;
 		#end
