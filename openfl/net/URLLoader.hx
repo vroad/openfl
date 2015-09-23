@@ -5,6 +5,7 @@ import haxe.io.Bytes;
 import lime.app.Event;
 import lime.system.BackgroundWorker;
 import lime.utils.ByteArray;
+import lime.utils.BytesUtil;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import openfl.events.HTTPStatusEvent;
@@ -753,7 +754,7 @@ class URLLoader extends EventDispatcher {
 	private function readFunction (max:Int, input:ByteArray):Bytes {
 		
 		
-		return input;
+		return BytesUtil.getBytesFromByteArray (input);
 		
 	}
 	
