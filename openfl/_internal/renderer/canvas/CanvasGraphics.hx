@@ -771,6 +771,10 @@ class CanvasGraphics {
 				
 				context.lineTo (startX - offsetX, startY - offsetY);
 				
+			} else if (closeGap && positionX == startX && positionY == startY) {
+				
+				context.closePath ();
+				
 			}
 			
 			if (!hitTesting) context.stroke ();

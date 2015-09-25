@@ -797,7 +797,6 @@ class BitmapData implements IBitmapDrawable {
 		//var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
 		//__drawGL (renderSession, width, height, source, matrix, colorTransform, blendMode, clipRect, smoothing, !__usingFramebuffer, false, true);
 		
-		var buffer = image.buffer;
 		var surface = getSurface ();
 		var cairo = new Cairo (surface);
 		
@@ -832,7 +831,6 @@ class BitmapData implements IBitmapDrawable {
 		}
 		
 		surface.flush ();
-		cairo.destroy ();
 		
 		image.dirty = true;
 		
@@ -1994,9 +1992,6 @@ class BitmapData implements IBitmapDrawable {
 			object.__updateChildren (true);
 			object.__transformDirty = true;
 			
-			surface.destroy ();
-			cairo.destroy ();
-			
 			image.dirty = true;
 			
 		} else if (Std.is (source, BitmapData)) {
@@ -2027,10 +2022,6 @@ class BitmapData implements IBitmapDrawable {
 			cairo.antialias = NONE;
 			cairo.source = pattern;
 			cairo.paint ();
-			
-			pattern.destroy ();
-			surface.destroy ();
-			cairo.destroy ();
 			
 			image.dirty = true;
 			
@@ -2309,7 +2300,6 @@ class BitmapData implements IBitmapDrawable {
 			
 			cairo.source = pattern;
 			cairo.paint ();
-			pattern.destroy ();
 			
 		}
 		
