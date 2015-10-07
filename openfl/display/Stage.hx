@@ -20,6 +20,8 @@ import lime.utils.GLUtils;
 import lime.ui.Gamepad;
 import lime.ui.GamepadAxis;
 import lime.ui.GamepadButton;
+import lime.ui.Joystick;
+import lime.ui.JoystickHatPosition;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.ui.Mouse;
@@ -35,6 +37,7 @@ import openfl.errors.Error;
 import openfl.events.Event;
 import openfl.events.EventPhase;
 import openfl.events.FocusEvent;
+import openfl.events.FullScreenEvent;
 import openfl.events.KeyboardEvent;
 import openfl.events.MouseEvent;
 import openfl.events.TextEvent;
@@ -544,6 +547,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	@:noCompletion private var __color:Int;
 	@:noCompletion private var __colorSplit:Array<Float>;
 	@:noCompletion private var __colorString:String;
+	@:noCompletion private var __deltaTime:Int;
 	@:noCompletion private var __dirty:Bool;
 	@:noCompletion private var __displayState:StageDisplayState;
 	@:noCompletion private var __dragBounds:Rectangle;
@@ -599,6 +603,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		this.name = null;
 		
+		__deltaTime = 0;
 		__displayState = NORMAL;
 		__mouseX = 0;
 		__mouseY = 0;
@@ -717,6 +722,55 @@ class Stage extends DisplayObjectContainer implements IModule {
 	@:noCompletion @:dox(hide) public function onGamepadDisconnect (gamepad:Gamepad):Void {
 		
 		GameInput.__onGamepadDisconnect (gamepad);
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickAxisMove (joystick:Joystick, axis:Int, value:Float):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickButtonDown (joystick:Joystick, button:Int):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickButtonUp (joystick:Joystick, button:Int):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickConnect (joystick:Joystick):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickDisconnect (joystick:Joystick):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickHatMove (joystick:Joystick, hat:Int, position:JoystickHatPosition):Void {
+		
+		
+		
+	}
+	
+	
+	@:noCompletion @:dox(hide) public function onJoystickTrackballMove (joystick:Joystick, trackball:Int, value:Float):Void {
+		
+		
 		
 	}
 	
@@ -1086,7 +1140,9 @@ class Stage extends DisplayObjectContainer implements IModule {
 		#end
 		
 		__renderable = true;
-		__enterFrame ();
+		
+		__enterFrame (__deltaTime);
+		__deltaTime = 0;
 		__update (false, true);
 		
 		if (__renderer != null) {
@@ -1118,7 +1174,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	@:noCompletion @:dox(hide) public function update (deltaTime:Int):Void {
 		
-		
+		__deltaTime = deltaTime;
 		
 	}
 	
@@ -1747,13 +1803,25 @@ class Stage extends DisplayObjectContainer implements IModule {
 				
 				case NORMAL:
 					
-					//window.minimized = false;
-					window.fullscreen = false;
+					if (window.fullscreen) {
+						
+						//window.minimized = false;
+						window.fullscreen = false;
+						
+						dispatchEvent (new FullScreenEvent (FullScreenEvent.FULL_SCREEN, false, false, false, true));
+						
+					}
 				
 				default:
 					
-					//window.minimized = false;
-					window.fullscreen = true;
+					if (!window.fullscreen) {
+						
+						//window.minimized = false;
+						window.fullscreen = true;
+						
+						dispatchEvent (new FullScreenEvent (FullScreenEvent.FULL_SCREEN, false, false, true, true));
+						
+					}
 				
 			}
 			

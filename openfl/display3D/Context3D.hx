@@ -794,7 +794,7 @@ import openfl.Lib;
 		}
 		
 		GL.bindRenderbuffer (GL.RENDERBUFFER, renderbuffer);
-		#if ios
+		#if (ios || tvos)
 		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, 0x88F0, texture.width, texture.height);
 		#else
 		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
