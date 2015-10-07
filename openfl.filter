@@ -6,6 +6,7 @@
 -openfl.geom.Matrix3D
 -openfl.geom.Point
 -openfl.geom.Vector3D
+-openfl.utils.Dictionary
 -openfl.Vector
 -openfl.VectorData
 -openfl.VectorDataIterator

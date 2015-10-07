@@ -67,7 +67,7 @@ abstract Dictionary<K, V> (IMap<K, V>) {
 		
 	}
 	
-	
+	#if !codegen
 	@:from static inline function fromStringMap<V> (map:StringMap<V>):Map<String, V> {
 		
 		return cast map;
@@ -87,7 +87,7 @@ abstract Dictionary<K, V> (IMap<K, V>) {
 		return cast map;
 		
 	}
-	
+	#end
 	
 }
 
