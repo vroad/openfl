@@ -5,9 +5,6 @@ package openfl.display; #if !flash
  * The StageAlign class provides constant values to use for the
  * <code>Stage.align</code> property.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_StageAlign") extern
-#end
 enum StageAlign {
 	
 	/**

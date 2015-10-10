@@ -5,9 +5,6 @@ package openfl.display; #if !flash #if !openfl_legacy
  * The LineScaleMode class provides values for the <code>scaleMode</code>
  * parameter in the <code>Graphics.lineStyle()</code> method.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_LineScaleMode") extern
-#end
 enum LineScaleMode {
 	
 	/**

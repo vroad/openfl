@@ -5,9 +5,6 @@ package openfl.display; #if !flash
  * The StageDisplayState class provides values for the
  * <code>Stage.displayState</code> property.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_StageDisplayState") extern
-#end
 enum StageDisplayState {
 	
 	/**

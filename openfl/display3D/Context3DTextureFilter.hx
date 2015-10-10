@@ -1,8 +1,6 @@
 package openfl.display3D; #if !flash
 
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display3D_Context3DTextureFilter") extern
-#end
+
 enum Context3DTextureFilter {
 	
 	ANISOTROPIC2X;

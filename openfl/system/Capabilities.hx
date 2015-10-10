@@ -412,7 +412,7 @@ import js.Browser;
 	@:noCompletion private static function get_pixelAspectRatio ():Float { return 1; }
 	@:noCompletion private static function get_screenDPI ():Float {
 		
-		#if html5
+		#if (js && html5)
 		
 		if (screenDPI > 0) return screenDPI;
 		

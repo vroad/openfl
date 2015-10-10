@@ -5,9 +5,6 @@ package openfl.text; #if !flash
  * The AntiAliasType class provides values for anti-aliasing in the
  * flash.text.TextField class.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_text_AntiAliasType") extern
-#end
 enum AntiAliasType {
 	
 	/**

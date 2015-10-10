@@ -12,7 +12,6 @@ import openfl._internal.renderer.RenderSession;
 import openfl.display.BitmapData;
 import openfl.display.CapsStyle;
 import openfl.display.DisplayObject;
-import openfl.display.DrawCommand;
 import openfl._internal.renderer.DrawCommandBuffer;
 import openfl._internal.renderer.DrawCommandReader;
 import openfl._internal.renderer.DrawCommandType;

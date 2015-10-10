@@ -8,9 +8,6 @@ package openfl.display; #if !flash
  * <code>Graphics.lineGradientStyle()</code> methods. This parameter
  * determines the RGB space to use when rendering the gradient.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_InterpolationMethod") extern
-#end
 enum InterpolationMethod {
 	
 	/**

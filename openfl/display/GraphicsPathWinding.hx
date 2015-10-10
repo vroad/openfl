@@ -11,11 +11,7 @@ package openfl.display; #if !flash
  * <p> When paths intersect or overlap, the winding direction determines the
  * rules for filling the areas created by the intersection or overlap:</p>
  */
-@:fakeEnum(String) 
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_GraphicsPathWinding") extern
-#end
-enum GraphicsPathWinding {
+@:fakeEnum(String) enum GraphicsPathWinding {
 	
 	EVEN_ODD;
 	NON_ZERO;

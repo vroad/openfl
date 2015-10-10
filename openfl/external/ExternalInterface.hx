@@ -7,7 +7,7 @@ import openfl.Lib;
 /**
  * The ExternalInterface class is an application programming interface that
  * enables straightforward communication between ActionScript and the SWF
- * containerâ€? for example, an HTML page with JavaScript or a desktop
+ * container? for example, an HTML page with JavaScript or a desktop
  * application that uses Flash Player to display a SWF file.
  *
  * <p>Using the ExternalInterface class, you can call an ActionScript function
@@ -21,7 +21,7 @@ import openfl.Lib;
  * and operating system:</p>
  *
  * <p>The ExternalInterface class requires the user's web browser to support
- * either ActiveX<sup>Â®</sup> or the NPRuntime API that is exposed by some
+ * either ActiveX<sup>R</sup> or the NPRuntime API that is exposed by some
  * browsers for plug-in scripting. Even if a browser and operating system
  * combination are not listed above, they should support the ExternalInterface
  * class if they support the NPRuntime API. See <a
@@ -220,10 +220,10 @@ import openfl.Lib;
 	 *                     container. Using a non-alphanumeric function name
 	 *                     causes a runtime error(error 2155). You can use a
 	 *                     <code>try..catch</code> block to handle the error.
-	 * @return The response received from the container. If the call failedâ€?
+	 * @return The response received from the container. If the call failed?
 	 *         for example, if there is no such function in the container, the
 	 *         interface is not available, a recursion occurred(with a Netscape
-	 *         or Opera browser), or there is a security issueâ€?
+	 *         or Opera browser), or there is a security issue?
 	 *         <code>null</code> is returned and an error is thrown.
 	 * @throws Error         The container does not support outgoing calls.
 	 *                       Outgoing calls are supported only in Internet

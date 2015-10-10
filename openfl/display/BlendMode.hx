@@ -11,9 +11,6 @@ package openfl.display; #if !flash #if !openfl_legacy
  * method of the openfl.display.BitmapData class</li>
  * </ul>
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_BlendMode") extern
-#end
 enum BlendMode {
 	
 	/**

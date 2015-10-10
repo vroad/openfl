@@ -4,9 +4,6 @@ package openfl.text; #if !flash #if !openfl_legacy
 /**
  * The FontStyle class provides values for the TextRenderer class.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_text_FontStyle") extern
-#end
 enum FontStyle {
 	
 	/**

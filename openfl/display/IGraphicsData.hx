@@ -7,11 +7,8 @@ interface IGraphicsData {
 	
 }
 
-@:fakeEnum(Int)
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_GraphicsDataType") extern
-#end
-enum GraphicsDataType {
+
+@:fakeEnum(Int) enum GraphicsDataType {
 	
 	STROKE;
 	SOLID;

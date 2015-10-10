@@ -1,8 +1,6 @@
 package openfl.system; #if !flash
 
-#if openfl_shared
-@:jsRequire("openfl", "openfl_system_TouchscreenType") extern
-#end
+
 enum TouchscreenType {
 	
 	FINGER;

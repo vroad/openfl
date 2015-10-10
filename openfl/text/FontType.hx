@@ -6,9 +6,6 @@ package openfl.text; #if !flash #if !openfl_legacy
  * <code>"embedded"</code> and <code>"device"</code> for the
  * <code>fontType</code> property of the Font class.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_text_FontType") extern
-#end
 enum FontType {
 	
 	/**

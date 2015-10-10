@@ -5,9 +5,6 @@ package openfl.text; #if !flash #if !openfl_legacy
  * The TextFormatAlign class provides values for text alignment in the
  * TextFormat class.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_text_TextFormatAlign") extern
-#end
 enum TextFormatAlign {
 	
 	/**

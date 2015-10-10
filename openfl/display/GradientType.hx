@@ -7,9 +7,6 @@ package openfl.display; #if !flash
  * <code>lineGradientStyle()</code> methods of the openfl.display.Graphics
  * class.
  */
-#if openfl_shared
-@:jsRequire("openfl", "openfl_display_GradientType") extern
-#end
 enum GradientType {
 	
 	/**
