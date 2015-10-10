@@ -11,7 +11,7 @@ import openfl.display.Bitmap;
 class CanvasBitmap {
 	
 	
-	public static inline function render (bitmap:Bitmap, renderSession:RenderSession):Void {
+	public static function render (bitmap:Bitmap, renderSession:RenderSession):Void {
 		
 		#if (js && html5)
 		if (!bitmap.__renderable || bitmap.__worldAlpha <= 0) return;

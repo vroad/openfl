@@ -10,7 +10,7 @@ import openfl.display.DisplayObject;
 class CanvasShape {
 	
 	
-	public static inline function render (shape:DisplayObject, renderSession:RenderSession):Void {
+	public static function render (shape:DisplayObject, renderSession:RenderSession):Void {
 		
 		#if (js && html5)
 		if (!shape.__renderable || shape.__worldAlpha <= 0) return;

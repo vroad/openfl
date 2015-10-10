@@ -17,7 +17,7 @@ import js.Browser;
 class DOMShape {
 	
 	
-	public static inline function render (shape:DisplayObject, renderSession:RenderSession):Void {
+	public static function render (shape:DisplayObject, renderSession:RenderSession):Void {
 		
 		#if (js && html5)
 		var graphics = shape.__graphics;

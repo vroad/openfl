@@ -17,7 +17,7 @@ import openfl.display.Bitmap;
 class CairoBitmap {
 	
 	
-	public static inline function render (bitmap:Bitmap, renderSession:RenderSession):Void {
+	public static function render (bitmap:Bitmap, renderSession:RenderSession):Void {
 		
 		if (!bitmap.__renderable || bitmap.__worldAlpha <= 0) return;
 		
