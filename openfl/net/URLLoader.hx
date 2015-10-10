@@ -334,7 +334,7 @@ class URLLoader extends EventDispatcher {
 			if (err != null)
 				throw err;
 			
-			var bytes:ByteArray = ByteArray.fromBytes(@:privateAccess new Bytes(data.byteLength, cast data));
+			var bytes:ByteArray = ByteArray.fromBytes (BytesUtil.createBytes (data.byteLength, data));
 			switch (dataFormat) {
 				
 				case BINARY: this.data = bytes;

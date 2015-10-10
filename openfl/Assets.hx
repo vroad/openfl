@@ -189,7 +189,7 @@ class Assets {
 	}
 	
 	
-	private static function getLibrary (name:String):lime.AssetLibrary {
+	private static function getLibrary (name:String):lime.Assets.AssetLibrary {
 		
 		return LimeAssets.getLibrary (name);
 		
@@ -629,7 +629,7 @@ class Assets {
 	 * @param	handler		(Deprecated) A callback function when the load is completed
 	 * @return		Returns a Future<AssetLibrary>
 	 */
-	public static function loadLibrary (name:String, handler:lime.AssetLibrary->Void = null):Future<lime.AssetLibrary> {
+	public static function loadLibrary (name:String, handler:lime.Assets.AssetLibrary->Void = null):Future<lime.Assets.AssetLibrary> {
 		
 		var future = LimeAssets.loadLibrary (name);
 		
@@ -876,7 +876,7 @@ class Assets {
 }
 
 
-@:dox(hide) class AssetLibrary extends lime.AssetLibrary {
+@:dox(hide) class AssetLibrary extends lime.Assets.AssetLibrary {
 	
 	
 	public function new () {

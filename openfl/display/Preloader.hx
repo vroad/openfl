@@ -4,7 +4,6 @@ package openfl.display;
 import haxe.io.Path;
 import lime.app.Preloader in LimePreloader;
 import lime.Assets;
-import lime.AssetType;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
 import openfl.media.Sound;

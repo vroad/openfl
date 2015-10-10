@@ -61,28 +61,20 @@ import openfl.display3D.textures.RectangleTexture;
 import openfl.display3D.textures.Texture;
 import openfl.display3D.textures.TextureBase;
 import openfl.display3D.Context3D;
-#if !codegen
 import openfl.display3D.Context3DBlendFactor;
-#end
 //#if (haxe_ver >= "3.2")
 import openfl.display3D.Context3DBufferUsage;
 //#end
 import openfl.display3D.Context3DClearMask;
-#if !codegen
 import openfl.display3D.Context3DCompareMode;
-#end
 import openfl.display3D.Context3DMipFilter;
 import openfl.display3D.Context3DProfile;
 import openfl.display3D.Context3DProgramType;
 import openfl.display3D.Context3DRenderMode;
-#if !codegen
 import openfl.display3D.Context3DStencilAction;
-#end
 import openfl.display3D.Context3DTextureFilter;
 import openfl.display3D.Context3DTextureFormat;
-#if !codegen
 import openfl.display3D.Context3DTriangleFace;
-#end
 import openfl.display3D.Context3DVertexBufferFormat;
 import openfl.display3D.Context3DWrapMode;
 import openfl.display3D.IndexBuffer3D;
@@ -191,9 +183,7 @@ import openfl.text.TextLineMetrics;
 import openfl.ui.GameInput;
 import openfl.ui.GameInputControl;
 import openfl.ui.GameInputDevice;
-#if !codegen
 import openfl.ui.KeyLocation;
-#end
 import openfl.ui.Keyboard;
 import openfl.ui.Mouse;
 import openfl.ui.Multitouch;

@@ -2,7 +2,6 @@
 -cp docs
 -cp extern
 -main ImportAll
--cp C:/HaxeToolkit/haxe/lib/lime/git
 -cp C:/HaxeToolkit/haxe/lib/lime/git/hxclasses
 -D lime=2.4.3
 --macro allowPackage("sys")
