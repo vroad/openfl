@@ -367,16 +367,26 @@ class URLLoader extends EventDispatcher {
 			});
 			worker.onComplete.add (function (bytes) {
 				
-				switch (dataFormat) {
+				if (bytes != null) {
 					
-					case BINARY: this.data = bytes;
-					default: this.data = bytes.readUTFBytes (bytes.length);
+					switch (dataFormat) {
+						
+						case BINARY: this.data = bytes;
+						default: this.data = bytes.readUTFBytes (bytes.length);
+						
+					}
+					
+					var evt = new Event (Event.COMPLETE);
+					evt.currentTarget = this;
+					dispatchEvent (evt);
+					
+				} else {
+					
+					var evt = new IOErrorEvent (IOErrorEvent.IO_ERROR);
+					evt.currentTarget = this;
+					dispatchEvent (evt);
 					
 				}
-				
-				var evt = new Event (Event.COMPLETE);
-				evt.currentTarget = this;
-				dispatchEvent (evt);
 				
 			});
 			worker.run ();
@@ -656,15 +666,16 @@ class URLLoader extends EventDispatcher {
 			
 		}
 		
+		CURLEasy.setopt (__curl, FOLLOWLOCATION, true);
+		CURLEasy.setopt (__curl, AUTOREFERER, true);
 		CURLEasy.setopt (__curl, HTTPHEADER, headers);
 		
 		CURLEasy.setopt (__curl, PROGRESSFUNCTION, progressFunction);
-		
 		CURLEasy.setopt (__curl, WRITEFUNCTION, writeFunction);
 		CURLEasy.setopt (__curl, HEADERFUNCTION, headerFunction);
 		
 		CURLEasy.setopt (__curl, SSL_VERIFYPEER, false);
-		CURLEasy.setopt (__curl, SSL_VERIFYHOST, false);
+		CURLEasy.setopt (__curl, SSL_VERIFYHOST, 0);
 		CURLEasy.setopt (__curl, USERAGENT, "libcurl-agent/1.0");
 		CURLEasy.setopt (__curl, CONNECTTIMEOUT, 30);
 		CURLEasy.setopt (__curl, TRANSFERTEXT, dataFormat == BINARY ? 0 : 1);
