@@ -977,7 +977,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
-		if (window.renderer != null) {
+		if (window.renderer != null && window.renderer.context != null) {
 			
 			switch (window.renderer.context) {
 				
