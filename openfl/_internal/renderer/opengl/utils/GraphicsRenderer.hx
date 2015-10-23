@@ -1,5 +1,4 @@
 package openfl._internal.renderer.opengl.utils;
-#if !disable_gl_renderer
 
 
 import haxe.EnumFlags;
@@ -1611,8 +1610,3 @@ enum GraphicType {
 	var DEFAULT = 0;
 	var STENCIL = 1;
 }
-
-#else
-class DrawPath {}
-class GLStack {}
-#end

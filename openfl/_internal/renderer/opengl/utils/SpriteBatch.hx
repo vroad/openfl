@@ -1,5 +1,4 @@
 package openfl._internal.renderer.opengl.utils;
-#if !disable_gl_renderer
 
 import lime.graphics.GLRenderContext;
 import openfl._internal.renderer.opengl.shaders2.*;
@@ -686,7 +685,3 @@ private class State {
 		colorTransform = null;
 	}
 }
-
-#else
-class SpriteBatch {}
-#end

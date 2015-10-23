@@ -1047,7 +1047,6 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
 		
-		#if !disable_gl_renderer
 		if (!__renderable || __worldAlpha <= 0) return;
 		
 		if (__cacheAsBitmap) {
@@ -1071,7 +1070,6 @@ class DisplayObjectContainer extends InteractiveObject {
 			__removedChildren.splice (0, __removedChildren.length);
 			
 		}
-		#end
 		
 	}
 	

@@ -1,5 +1,4 @@
 package openfl._internal.renderer.opengl.utils;
-#if !disable_gl_renderer
 
 import lime.graphics.GLRenderContext;
 import openfl._internal.renderer.opengl.GLRenderer;
@@ -535,5 +534,3 @@ enum FillType {
 	Texture(bitmap:BitmapData, matrix:Matrix, repeat:Bool, smooth:Bool);
 	Gradient;
 }
-
-#end

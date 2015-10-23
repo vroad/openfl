@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl.utils;
-#if !disable_gl_renderer
+
 
 import lime.graphics.GLRenderContext;
 import openfl.display.BlendMode;
@@ -120,6 +120,3 @@ typedef GLBlendMode = {
 	var ONE_MINUS_CONSTANT_ALPHA = GL.ONE_MINUS_CONSTANT_ALPHA;
 	var SRC_ALPHA_SATURATE = GL.SRC_ALPHA_SATURATE;
 }
-#else
-class BlendModeManager {}
-#end

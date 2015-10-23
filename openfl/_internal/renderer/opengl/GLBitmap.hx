@@ -1,5 +1,5 @@
 package openfl._internal.renderer.opengl;
-#if !disable_gl_renderer
+
 
 import lime.graphics.GLRenderContext;
 import lime.graphics.Image;
@@ -223,4 +223,3 @@ class GLBitmap {
 	}
 	
 }
-#end

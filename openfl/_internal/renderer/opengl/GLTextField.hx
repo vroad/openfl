@@ -13,13 +13,11 @@ class GLTextField {
 	
 	public static function render (textField:TextField, renderSession:RenderSession) {
 		
-		#if !disable_gl_renderer
 		if (!textField.__renderable || textField.__worldAlpha <= 0) return;
 
 		TextFieldGraphics.render (textField);
 		
 		GraphicsRenderer.render (textField, renderSession);
-		#end
 		
 	}
 	

@@ -1,5 +1,4 @@
 package openfl._internal.renderer.opengl;
-#if !disable_gl_renderer
 
 import lime.graphics.cairo.Cairo;
 import lime.graphics.cairo.CairoSurface;
@@ -389,4 +388,3 @@ class GLRenderer extends AbstractRenderer {
 	
 	
 }
-#end

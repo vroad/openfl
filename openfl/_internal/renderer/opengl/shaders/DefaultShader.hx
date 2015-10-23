@@ -1,5 +1,4 @@
 package openfl._internal.renderer.opengl.shaders;
-#if !disable_gl_renderer
 
 
 import lime.graphics.opengl.GLProgram;
@@ -300,4 +299,3 @@ class DefaultShader extends AbstractShader {
 	
 	
 }
-#end

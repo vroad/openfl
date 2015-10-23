@@ -166,7 +166,6 @@ class OpenGLView extends DirectRenderer {
 	#if !flash
 	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
 		
-		#if !disable_gl_renderer
 		if (stage != null && __renderable) {
 			
 			var rect = null;
@@ -186,7 +185,6 @@ class OpenGLView extends DirectRenderer {
 			renderSession.shaderManager.setShader(null);
 			renderSession.blendModeManager.setBlendMode(null);
 		}
-		#end
 		
 	}
 	#end

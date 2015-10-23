@@ -2047,8 +2047,6 @@ class BitmapData implements IBitmapDrawable {
 	
 	@:noCompletion @:dox(hide) private function __drawGL (renderSession:RenderSession, source:IBitmapDrawable, ?matrix:Matrix = null, ?colorTransform:ColorTransform = null, ?blendMode:BlendMode = null, ?clipRect:Rectangle = null, ?smoothing:Bool = false, ?drawSelf:Bool = false, ?clearBuffer:Bool = false, ?readPixels:Bool = false, ?powerOfTwo:Bool = true) {
 		
-		#if !disable_gl_renderer
-		
 		__pingPongTexture = GLBitmap.pushFramebuffer(renderSession, __pingPongTexture, rect, smoothing, transparent, clearBuffer, powerOfTwo);
 		GLBitmap.drawBitmapDrawable(renderSession, drawSelf ? this : null, source, matrix, colorTransform, blendMode, clipRect);
 		GLBitmap.popFramebuffer(renderSession, readPixels ? image : null);
@@ -2058,8 +2056,6 @@ class BitmapData implements IBitmapDrawable {
 		
 		__isValid = true;
 		__usingPingPongTexture = true;
-
-		#end
 		
 	}
 	

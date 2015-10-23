@@ -1368,15 +1368,11 @@ class TextField extends InteractiveObject {
 		CanvasTextField.render (this, renderSession);
 		#end
 		
-		#if !disable_gl_renderer
 		GLRenderer.renderBitmap (this, renderSession, __textEngine.antiAliasType != ADVANCED || __textEngine.gridFitType != PIXEL);
-		#end
 		
 		#else
 		
-		#if !disable_gl_renderer
 		//GLTextField.render (this, renderSession);
-		#end
 		
 		#end
 		
