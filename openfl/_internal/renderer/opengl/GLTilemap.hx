@@ -52,10 +52,12 @@ class GLTilemap {
 			
 			var fragmentSource = 
 				
-				#if (!desktop || rpi)
-				"precision mediump float;" +
-				#end
-				"varying vec2 vTexCoord;
+				
+				"
+				#ifdef GL_ES
+				precision mediump float;
+				#endif
+				varying vec2 vTexCoord;
 				uniform sampler2D uImage0;
 				
 				void main (void) {
