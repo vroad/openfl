@@ -46,7 +46,6 @@ import openfl.Lib;
 	private var disposed:Bool;
 	private var renderToTexture : Bool;
 	private var drawing:Bool; // to mimic Stage3d behavior of not allowing calls to drawTriangles between present and clear
-	private var framebuffer:GLFramebuffer;
 	private var indexBuffersCreated:Array<IndexBuffer3D>; // to keep track of stuff to dispose when calling dispose
 	private var ogl:OpenGLView;
 	private var programsCreated:Array<Program3D>; // to keep track of stuff to dispose when calling dispose
@@ -290,6 +289,7 @@ import openfl.Lib;
 			return;
 		texturesCreated.remove (texture);
 		GL.deleteTexture (texture.glTexture);
+		GL.deleteFramebuffer (texture.framebuffer);
 		texture.glTexture = null;
 		
 	}
@@ -367,13 +367,6 @@ import openfl.Lib;
 		
 		texturesCreated = null;
 		
-		if (framebuffer != null) {
-			
-			GL.deleteFramebuffer (framebuffer);
-			framebuffer = null;
-			
-		}
-		
 		if (renderbuffer != null) {
 			
 			GL.deleteRenderbuffer (renderbuffer);
@@ -431,12 +424,6 @@ import openfl.Lib;
 		
 		GL.bindBuffer (GL.ARRAY_BUFFER, null);
 		GL.disable (GL.CULL_FACE);
-		
-		if (framebuffer != null) {
-
-			GL.bindFramebuffer (GL.FRAMEBUFFER, null);
-
-		}
 		
 		if (renderbuffer != null) {
 
@@ -756,11 +743,7 @@ import openfl.Lib;
 	
 	public function setRenderToBackBuffer ():Void {
 
-		if (framebuffer != null) {
-
-			GL.bindFramebuffer (GL.FRAMEBUFFER, null);
-
-		}
+		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
 		
 		if (renderbuffer != null) {
 
@@ -779,13 +762,13 @@ import openfl.Lib;
 		
 		// TODO : currently does not work (framebufferStatus always return zero)
 		
-		if (framebuffer == null) {
+		if (texture.framebuffer == null) {
 			
-			framebuffer = GL.createFramebuffer ();
+			texture.framebuffer = GL.createFramebuffer ();
 			
 		}
 		
-		GL.bindFramebuffer (GL.FRAMEBUFFER, framebuffer);
+		GL.bindFramebuffer (GL.FRAMEBUFFER, texture.framebuffer);
 		
 		if (renderbuffer == null && enableDepthAndStencil) {
 			

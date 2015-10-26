@@ -22,6 +22,7 @@ class TextureBase extends EventDispatcher {
 	public var magFilter:Int;
 	public var maxAnisoTrophy:Float;
 	public var wrapMode:Int;
+	public var framebuffer:GLFramebuffer;
 	
 	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, internalFormat:Int = GL.RGBA, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
 		

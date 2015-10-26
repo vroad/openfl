@@ -28,6 +28,12 @@ using openfl.display.BitmapData;
 		
 		uploadFromUInt8Array(null);
 		
+		if (optimizeForRenderToTexture) {
+			
+			framebuffer = GL.createFramebuffer ();
+			
+		}
+		
 	}
 	
 	
