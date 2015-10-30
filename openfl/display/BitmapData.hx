@@ -758,10 +758,11 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		source.__updateTransforms(matrix);
+		var matrixCache = source.__worldTransform;
+		source.__updateTransforms(matrix != null ? matrix : new Matrix ());
 		source.__updateChildren (false);
 		source.__renderCanvas (renderSession);
-		source.__updateTransforms();
+		source.__updateTransforms(matrixCache);
 		source.__updateChildren (true);
 		
 		if (!smoothing) {
@@ -817,10 +818,11 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		source.__updateTransforms(matrix);
+		var matrixCache = source.__worldTransform;
+		source.__updateTransforms(matrix != null ? matrix : new Matrix ());
 		source.__updateChildren (false);
 		source.__renderCairo (renderSession);
-		source.__updateTransforms();
+		source.__updateTransforms(matrixCache);
 		source.__updateChildren (true);
 		
 		if (clipRect != null) {
@@ -872,7 +874,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid || rect == null) return;
 		
-		if ((color & 0xFF000000) == 0) {
+		if (transparent && (color & 0xFF000000) == 0) {
 			
 			color = 0;
 			
@@ -1054,8 +1056,12 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return new Rectangle (0, 0, width, height);
 		
-		var color = (color:ARGB);
-		if (color.a == 0) color = 0;
+		if (!transparent || ((mask >> 24) & 0xFF) > 0) {
+			
+			var color = (color:ARGB);
+			if (color.a == 0) color = 0;
+			
+		}
 		
 		var rect = image.getColorBoundsRect (mask, color, findColor, ARGB32);
 		return new Rectangle (rect.x, rect.y, rect.width, rect.height);

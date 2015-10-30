@@ -289,7 +289,11 @@ import openfl.Lib;
 			return;
 		texturesCreated.remove (texture);
 		GL.deleteTexture (texture.glTexture);
-		GL.deleteFramebuffer (texture.framebuffer);
+		if (texture.framebuffer != null) {
+			
+			GL.deleteFramebuffer (texture.framebuffer);
+			
+		}
 		texture.glTexture = null;
 		
 	}
