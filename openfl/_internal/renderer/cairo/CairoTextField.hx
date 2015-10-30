@@ -65,17 +65,17 @@ class CairoTextField {
 			
 			var options = new CairoFontOptions ();
 			
-			if (textEngine.antiAliasType == ADVANCED && textEngine.gridFitType == PIXEL) {
+			if (textEngine.antiAliasType == ADVANCED) {
 				
-				options.hintStyle = CairoHintStyle.NONE;
-				options.hintMetrics = CairoHintMetrics.OFF;
-				options.antialias = CairoAntialias.NONE;
+				options.hintStyle = CairoHintStyle.DEFAULT;
+				options.hintMetrics = CairoHintMetrics.DEFAULT;
+				options.antialias = CairoAntialias.GOOD;
 				
 			} else {
 				
 				options.hintStyle = CairoHintStyle.DEFAULT;
-				options.hintMetrics = CairoHintMetrics.OFF;
-				options.antialias = CairoAntialias.GOOD;
+				options.hintMetrics = CairoHintMetrics.DEFAULT;
+				options.antialias = CairoAntialias.NONE;
 				
 			}
 			
