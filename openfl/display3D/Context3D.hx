@@ -572,19 +572,14 @@ import openfl.Lib;
 			
 		}
 		
-		if (Std.is (texture, Texture)) {
+		if (Std.instance (texture, Texture) != null || Std.instance (texture, RectangleTexture) != null) {
 			
-			GL.bindTexture (GL.TEXTURE_2D, cast (texture, Texture).glTexture);
+			GL.bindTexture (GL.TEXTURE_2D, texture.glTexture);
 			GL.uniform1i (location, textureIndex);
 			
-		} else if (Std.is (texture, RectangleTexture)) {
+		} else if (Std.instance (texture, CubeTexture) != null ) {
 			
-			GL.bindTexture (GL.TEXTURE_2D, cast (texture, RectangleTexture).glTexture);
-			GL.uniform1i (location, textureIndex);
-			
-		} else if (Std.is (texture, CubeTexture) ) {
-			
-			GL.bindTexture (GL.TEXTURE_CUBE_MAP, cast (texture, CubeTexture).glTexture );
+			GL.bindTexture (GL.TEXTURE_CUBE_MAP, texture.glTexture );
 			GL.uniform1i (location, textureIndex);
 			
 		} else {
@@ -924,7 +919,7 @@ import openfl.Lib;
 						
 		}
 		
-		if (Std.is (texture, Texture)) {
+		if (Std.instance (texture, Texture) != null) {
 			
 			switch (wrap) {
 				
@@ -1002,7 +997,7 @@ import openfl.Lib;
 				
 			}
 			
-		} else if (Std.is (texture, RectangleTexture)) {
+		} else if (Std.instance (texture, RectangleTexture) != null) {
 			
 			texture.setWrapMode (GL.CLAMP_TO_EDGE);
 			
@@ -1044,7 +1039,7 @@ import openfl.Lib;
 			
 			texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
 			
-		} else if (Std.is (texture, CubeTexture)) {
+		} else if (Std.instance (texture, CubeTexture) != null) {
 			
 			switch (wrap) {
 				
