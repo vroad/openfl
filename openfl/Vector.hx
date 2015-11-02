@@ -202,7 +202,7 @@ typedef VectorData<T> = Array<T>;
 typedef VectorDataIterator<T> = Iterator<T>;
 
 
-#elseif (!cpp || display)
+#elseif ((!cpp && !js) || display)
 
 
 abstract Vector<T>(VectorData<T>) {
@@ -761,6 +761,10 @@ abstract Vector<T>(VectorData<T>) {
 	
 }
 
+
+#elseif js
+
+typedef Vector<T> = Array<T>;
 
 #else
 
