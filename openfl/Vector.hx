@@ -217,6 +217,8 @@ abstract Vector<T>(VectorData<T>) {
 		this = new VectorData<T> ();
 		#if cpp
 		this.data = untyped (new Array<T>()).__SetSizeExact(length);
+		#elseif js
+		this.data = untyped __new__(Array, length);
 		#else
 		this.data = new haxe.ds.Vector<T> (length);
 		#end
@@ -232,7 +234,7 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.length = (a != null) ? this.length + a.length : this.length;
 		vectorData.fixed = false;
 		
-		#if cpp
+		#if (cpp || js)
 		vectorData.data = this.data.slice (0, this.length).concat (a.data);
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (vectorData.length);
@@ -250,14 +252,14 @@ abstract Vector<T>(VectorData<T>) {
 	public function copy ():Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		vectorData.length = length;
-		vectorData.fixed = fixed;
-		#if cpp
+		#if (cpp || js)
 		vectorData.data = this.data.copy ();
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (length);
 		haxe.ds.Vector.blit (this.data, 0, vectorData.data, 0, this.length);
 		#end
+		vectorData.length = length;
+		vectorData.fixed = fixed;
 		return cast vectorData;
 		
 	}
@@ -306,8 +308,9 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public function push (x:T):Int {
+	public #if js inline #end function push (x:T):Int {
 		
+		#if !js
 		if (!this.fixed) {
 			
 			this.length++;
@@ -330,6 +333,10 @@ abstract Vector<T>(VectorData<T>) {
 		
 		return this.length;
 		
+		#else
+		return this.data.push (x);
+		#end
+		
 	}
 	
 	
@@ -337,6 +344,9 @@ abstract Vector<T>(VectorData<T>) {
 		
 		#if cpp
 		untyped (this.data).__SetSizeExact (this.length);
+		this.data.reverse ();
+		#elseif js
+		untyped (this.data).length = this.length;
 		this.data.reverse ();
 		#else
 		var data = new haxe.ds.Vector<T> (this.length);
@@ -355,7 +365,7 @@ abstract Vector<T>(VectorData<T>) {
 			
 			this.length--;
 			
-			#if cpp
+			#if (cpp || js)
 			return this.data.shift ();
 			#else
 			var value = this.data[0];
@@ -380,6 +390,8 @@ abstract Vector<T>(VectorData<T>) {
 				
 				#if cpp
 				untyped (this.data).__SetSizeExact (this.length + 10);
+				#elseif js
+				untyped (this.data).length = this.length + 10;
 				#else
 				var data = new haxe.ds.Vector<T> (this.length + 10);
 				haxe.ds.Vector.blit (this.data, 0, data, 1, this.data.length);
@@ -388,13 +400,13 @@ abstract Vector<T>(VectorData<T>) {
 				
 			} else {
 				
-				#if !cpp
+				#if (!cpp && !js)
 				haxe.ds.Vector.blit (this.data, 0, this.data, 1, this.length - 1);
 				#end
 				
 			}
 			
-			#if cpp
+			#if (cpp || js)
 			this.data.unshift (x);
 			#else
 			this.data[0] = x;
@@ -416,7 +428,7 @@ abstract Vector<T>(VectorData<T>) {
 		var vectorData = new VectorData<T> ();
 		vectorData.length = end - pos;
 		vectorData.fixed = true;
-		#if cpp
+		#if (cpp || js)
 		vectorData.data = this.data.slice (pos, end);
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (length);
@@ -429,7 +441,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public function sort (f:T -> T -> Int):Void {
 		
-		#if cpp
+		#if (cpp || js)
 		this.data.sort (f);
 		#else
 		var array = this.data.toArray ();
@@ -450,7 +462,7 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.length = len;
 		vectorData.fixed = false;
 		
-		#if cpp
+		#if (cpp || js)
 		vectorData.data = this.data.splice (pos, len);
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (len);
@@ -460,7 +472,7 @@ abstract Vector<T>(VectorData<T>) {
 		if (len > 0) {
 			
 			this.length -= len;
-			#if !cpp
+			#if (!cpp && !js)
 			haxe.ds.Vector.blit (this.data, pos + len, this.data, pos, this.length - pos);
 			#end
 			
@@ -474,7 +486,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public inline function toString ():String {
 		
-		#if cpp
+		#if (cpp || js)
 		return this.data.toString ();
 		#else
 		return this.data.toArray ().toString ();
@@ -529,13 +541,13 @@ abstract Vector<T>(VectorData<T>) {
 	public static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		vectorData.length = a.length;
-		vectorData.fixed = true;
-		#if cpp
-		vectorData.data = cast a.copy ();
+		#if (cpp || js)
+		vectorData.data = cast a;
 		#else
 		vectorData.data = haxe.ds.Vector.fromArrayCopy (a);
 		#end
+		vectorData.length = a.length;
+		vectorData.fixed = true;
 		return cast vectorData;
 		
 	}
@@ -555,8 +567,9 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:arrayAccess public function set (key:Int, value:T):T {
+	@:noCompletion @:dox(hide) @:arrayAccess public #if js inline #end function set (key:Int, value:T):T {
 		
+		#if !js
 		if (!this.fixed) {
 			
 			if (key >= this.length) {
@@ -565,13 +578,18 @@ abstract Vector<T>(VectorData<T>) {
 			
 			if (this.data.length < this.length) {
 				
+				#if cpp
+				untyped (this.data).__SetSizeExact (value);
+				#else
 				var data = new haxe.ds.Vector<T> (this.data.length + 10);
 				haxe.ds.Vector.blit (cast this.data, 0, data, 0, this.data.length);
 				this.data = cast data;
+				#end
 				
 			}
 			
 		}
+		#end
 		
 		return this.data[key] = value;
 		
@@ -581,13 +599,13 @@ abstract Vector<T>(VectorData<T>) {
 	@:noCompletion @:dox(hide) @:from public static function fromArray<T> (value:Array<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		vectorData.length = value.length;
-		vectorData.fixed = true;
-		#if cpp
-		vectorData.data = value.copy ();
+		#if (cpp || js)
+		vectorData.data = cast value;
 		#else
 		vectorData.data = haxe.ds.Vector.fromArrayCopy (value);
 		#end
+		vectorData.length = value.length;
+		vectorData.fixed = true;
 		return cast vectorData;
 		
 	}
@@ -595,8 +613,8 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion @:dox(hide) @:to public function toArray<T> ():Array<T> {
 		
-		#if cpp
-		return cast this.data;
+		#if (cpp || js)
+		return this.data;
 		#else
 		var value = new Array ();
 		for (i in 0...this.data.length) {
@@ -611,17 +629,13 @@ abstract Vector<T>(VectorData<T>) {
 	@:noCompletion @:dox(hide) @:from public static function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		vectorData.length = value.length;
-		vectorData.fixed = true;
-		#if cpp
-		vectorData.data = new Array ();
-		untyped (vectorData.data).__SetSize (value.length);
-		for (i in 0...value.length) {
-			vectorData.data[i] = value[i];
-		}
+		#if (cpp || js)
+		vectorData.data = cast value;
 		#else
 		vectorData.data = value;
 		#end
+		vectorData.length = value.length;
+		vectorData.fixed = true;
 		return cast vectorData;
 		
 	}
@@ -629,8 +643,8 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion @:dox(hide) @:to public inline function toHaxeVector<T> ():haxe.ds.Vector<T> {
 		
-		#if cpp
-		return haxe.ds.Vector.fromArrayCopy (this.data);
+		#if (cpp || js)
+		return cast this.data;
 		#else
 		return this.data;
 		#end
@@ -666,8 +680,9 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion private function set_length (value:Int):Int {
+	@:noCompletion private #if js inline #end function set_length (value:Int):Int {
 		
+		#if !js
 		if (!fixed) {
 			
 			if (value > this.length) {
@@ -687,6 +702,9 @@ abstract Vector<T>(VectorData<T>) {
 		}
 		
 		return value;
+		#else
+		return this.length = value;
+		#end
 		
 	}
 	
@@ -711,21 +729,42 @@ abstract Vector<T>(VectorData<T>) {
 @:dox(hide) class VectorData<T> {
 	
 	
-	#if cpp
+	#if (cpp || js)
 	public var data:Array<T>;
 	#else
 	public var data:haxe.ds.Vector<T>;
 	#end
 	public var fixed:Bool;
-	public var length:Int;
+	public var length(get, set):Int;
 	
 	
 	public function new () {
 		
+		#if !js
 		length = 0;
+		#end
 		
 	}
 	
+	
+	@:noCompletion private inline function get_length ():Int
+	{
+		#if js
+		return this.data.length;
+		#else
+		return this.length;
+		#end
+	}
+	
+	
+	@:noCompletion private inline function set_length(value:Int):Int
+	{
+		#if js
+		return untyped (this.data).length = value;
+		#else
+		return this.length = value;
+		#end
+	}
 	
 }
 
