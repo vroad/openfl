@@ -27,7 +27,6 @@ import openfl._internal.renderer.opengl.GLBitmap;
 import openfl._internal.renderer.opengl.utils.PingPongTexture;
 import openfl._internal.renderer.opengl.utils.SpriteBatch;
 import openfl._internal.renderer.RenderSession;
-import openfl._internal.utils.VectorUtil;
 import openfl.errors.IOError;
 import openfl.errors.TypeError;
 import openfl.filters.BitmapFilter;
@@ -1252,7 +1251,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		var pixels = getPixels (rect);
 		var length = Std.int (pixels.length / 4);
-		var result = VectorUtil.createVector (length, true);
+		var result = new Vector<UInt> (length, true);
 		
 		for (i in 0...length) {
 			
