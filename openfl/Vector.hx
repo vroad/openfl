@@ -212,7 +212,7 @@ abstract Vector<T>(VectorData<T>) {
 	public var fixed (get, set):Bool;
 	
 	
-	public inline function new (?length:Int = 0, ?fixed:Bool = false):Void {
+	public function new (?length:Int = 0, ?fixed:Bool = false):Void {
 		
 		this = new VectorData<T> ();
 		#if cpp
@@ -226,7 +226,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function concat (?a:VectorData<T>):Vector<T> {
+	public function concat (?a:VectorData<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
 		vectorData.length = (a != null) ? this.length + a.length : this.length;
@@ -247,7 +247,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function copy ():Vector<T> {
+	public function copy ():Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
 		vectorData.length = length;
@@ -270,7 +270,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function join (sep:String):String {
+	public function join (sep:String):String {
 		
 		var output = "";
 		
@@ -286,7 +286,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function pop ():Null<T> {
+	public function pop ():Null<T> {
 		
 		var value = null;
 		
@@ -306,7 +306,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function push (x:T):Int {
+	public function push (x:T):Int {
 		
 		if (!this.fixed) {
 			
@@ -333,7 +333,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function reverse ():Void {
+	public function reverse ():Void {
 		
 		#if cpp
 		untyped (this.data).__SetSizeExact (this.length);
@@ -349,7 +349,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function shift ():Null<T> {
+	public function shift ():Null<T> {
 		
 		if (!this.fixed && this.length > 0) {
 			
@@ -370,7 +370,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function unshift (x:T):Void {
+	public function unshift (x:T):Void {
 		
 		if (!this.fixed) {
 			
@@ -405,7 +405,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function slice (?pos:Int = 0, ?end:Int = 0):Vector<T> {
+	public function slice (?pos:Int = 0, ?end:Int = 0):Vector<T> {
 		
 		if (pos < 0) pos += this.length;
 		if (end <= 0) end += this.length;
@@ -427,7 +427,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function sort (f:T -> T -> Int):Void {
+	public function sort (f:T -> T -> Int):Void {
 		
 		#if cpp
 		this.data.sort (f);
@@ -440,7 +440,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function splice (pos:Int, len:Int):Vector<T> {
+	public function splice (pos:Int, len:Int):Vector<T> {
 		
 		if (pos < 0) pos += this.length;
 		if (pos + len > this.length) len = this.length - pos;
@@ -483,7 +483,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function indexOf (x:T, ?from:Int = 0):Int {
+	public function indexOf (x:T, ?from:Int = 0):Int {
 		
 		var value = -1;
 		
@@ -503,7 +503,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function lastIndexOf (x:T, ?from:Int = 0):Int {
+	public function lastIndexOf (x:T, ?from:Int = 0):Int {
 		
 		var value = -1;
 		var i = this.length - 1;
@@ -526,7 +526,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
+	public static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
 		vectorData.length = a.length;
@@ -555,7 +555,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:arrayAccess public inline function set (key:Int, value:T):T {
+	@:noCompletion @:dox(hide) @:arrayAccess public function set (key:Int, value:T):T {
 		
 		if (!this.fixed) {
 			
@@ -578,7 +578,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:from public static inline function fromArray<T> (value:Array<T>):Vector<T> {
+	@:noCompletion @:dox(hide) @:from public static function fromArray<T> (value:Array<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
 		vectorData.length = value.length;
@@ -593,7 +593,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:to public inline function toArray<T> ():Array<T> {
+	@:noCompletion @:dox(hide) @:to public function toArray<T> ():Array<T> {
 		
 		#if cpp
 		return cast this.data;
@@ -608,7 +608,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:from public static inline function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
+	@:noCompletion @:dox(hide) @:from public static function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
 		vectorData.length = value.length;
@@ -666,7 +666,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion private inline function set_length (value:Int):Int {
+	@:noCompletion private function set_length (value:Int):Int {
 		
 		if (!fixed) {
 			
