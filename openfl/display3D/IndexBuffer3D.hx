@@ -66,9 +66,6 @@ import openfl.Vector;
 			indices[i] = data[i];
 			
 		}
-		#if nodejs
-		indices.buffer;
-		#end
 		#else
 		indices = new Int16Array (data, startOffset, count);
 		#end
