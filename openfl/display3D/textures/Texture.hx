@@ -70,7 +70,7 @@ using openfl.display.BitmapData;
 		
 		#if js
 		
-		uploadFromUInt8Array(data != null ? data.byteView.subarray(byteArrayOffset, data.byteView.length) : null, miplevel);
+		uploadFromUInt8Array(data != null ? data.b.subarray(byteArrayOffset, data.b.length) : null, miplevel);
 		
 		#else
 		
