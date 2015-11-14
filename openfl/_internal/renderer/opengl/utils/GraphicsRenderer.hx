@@ -8,7 +8,7 @@ import lime.utils.Float32Array;
 import lime.utils.UInt16Array;
 import lime.utils.UInt32Array;
 import openfl._internal.renderer.opengl.shaders2.*;
-import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefUniform;
+import openfl._internal.renderer.opengl.shaders2.DefUniform;
 import openfl._internal.renderer.opengl.shaders2.DrawTrianglesShader.DrawTrianglesAttrib;
 import openfl._internal.renderer.opengl.shaders2.DrawTrianglesShader.DrawTrianglesUniform;
 import openfl._internal.renderer.opengl.shaders2.FillShader.FillAttrib;
@@ -1601,7 +1601,7 @@ enum GraphicType {
 	Circle;
 	Ellipse;
 	DrawTriangles(vertices:Vector<Float>, indices:Vector<Int>, uvtData:Vector<Float>, culling:TriangleCulling, colors:Vector<Int>, blendMode:Int);
-	DrawTiles (sheet:Tilesheet, tileData:Array<Float>, smooth:Bool, flags:Int, shader:FlashShader, count:Int);
+	DrawTiles (sheet:Tilesheet, tileData:Array<Float>, smooth:Bool, flags:Int, shader:openfl.display.Shader /* FlashShader */, count:Int);
 	OverrideMatrix (matrix:Matrix);
 
 }

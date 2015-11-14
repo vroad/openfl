@@ -51,6 +51,7 @@ class MacroShader
 			currentPos = field.pos;
 			switch(field.kind) {
 			case FVar(_, expr):
+				if (expr == null) continue;
 				switch(expr.expr) {
 					
 				case EConst(CString(value)):
@@ -346,6 +347,10 @@ class MacroShader
 	}
 	
 }	
+
+#else
+
+class MacroShader {}
 
 #end
 	

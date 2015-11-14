@@ -1,8 +1,8 @@
 package openfl._internal.renderer.opengl.shaders2;
 
 import lime.graphics.GLRenderContext;
-import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefAttrib;
-import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefUniform;
+import openfl._internal.renderer.opengl.shaders2.DefAttrib;
+import openfl._internal.renderer.opengl.shaders2.DefUniform;
 
 class PrimitiveShader extends Shader {
 
@@ -10,14 +10,14 @@ class PrimitiveShader extends Shader {
 		super(gl);
 		
 		vertexSrc  = [
-			'attribute vec2 ${Attrib.Position};',
-			'attribute vec4 ${Attrib.Color};',
+			'attribute vec2 ${PrimitiveAttrib.Position};',
+			'attribute vec4 ${PrimitiveAttrib.Color};',
 			
-			'uniform mat3 ${Uniform.TranslationMatrix};',
-			'uniform mat3 ${Uniform.ProjectionMatrix};',
-			'uniform vec4 ${Uniform.ColorMultiplier};',
-			'uniform vec4 ${Uniform.ColorOffset};',
-			'uniform float ${Uniform.Alpha};',
+			'uniform mat3 ${PrimitiveUniform.TranslationMatrix};',
+			'uniform mat3 ${PrimitiveUniform.ProjectionMatrix};',
+			'uniform vec4 ${PrimitiveUniform.ColorMultiplier};',
+			'uniform vec4 ${PrimitiveUniform.ColorOffset};',
+			'uniform float ${PrimitiveUniform.Alpha};',
 			
 			'varying vec4 vColor;',
 			
@@ -31,8 +31,8 @@ class PrimitiveShader extends Shader {
 			'}',	
 			
 			'void main(void) {',
-			'   gl_Position = vec4((${Uniform.ProjectionMatrix} * ${Uniform.TranslationMatrix} * vec3(${Attrib.Position}, 1.0)).xy, 0.0, 1.0);',
-			'   vColor = colorTransform(${Attrib.Color}, ${Uniform.Alpha}, ${Uniform.ColorMultiplier}, ${Uniform.ColorOffset});',
+			'   gl_Position = vec4((${PrimitiveUniform.ProjectionMatrix} * ${PrimitiveUniform.TranslationMatrix} * vec3(${PrimitiveAttrib.Position}, 1.0)).xy, 0.0, 1.0);',
+			'   vColor = colorTransform(${PrimitiveAttrib.Color}, ${PrimitiveUniform.Alpha}, ${PrimitiveUniform.ColorMultiplier}, ${PrimitiveUniform.ColorOffset});',
 			'}'
 		];
 		
@@ -54,29 +54,26 @@ class PrimitiveShader extends Shader {
 	override private function init(force:Bool = false) {
 		super.init(force);
 		
-		getAttribLocation(Attrib.Position);
-		getAttribLocation(Attrib.Color);
-		getUniformLocation(Uniform.TranslationMatrix);
-		getUniformLocation(Uniform.ProjectionMatrix);
-		getUniformLocation(Uniform.Alpha);
-		getUniformLocation(Uniform.ColorMultiplier);
-		getUniformLocation(Uniform.ColorOffset);
+		getAttribLocation(PrimitiveAttrib.Position);
+		getAttribLocation(PrimitiveAttrib.Color);
+		getUniformLocation(PrimitiveUniform.TranslationMatrix);
+		getUniformLocation(PrimitiveUniform.ProjectionMatrix);
+		getUniformLocation(PrimitiveUniform.Alpha);
+		getUniformLocation(PrimitiveUniform.ColorMultiplier);
+		getUniformLocation(PrimitiveUniform.ColorOffset);
 	}
 	
 }
 
-@:enum private abstract Attrib(String) to String from String {
+@:enum abstract PrimitiveAttrib(String) to String from String {
 	var Position = DefAttrib.Position;
 	var Color = DefAttrib.Color;
 }
 
-@:enum private abstract Uniform(String) from String to String {
+@:enum abstract PrimitiveUniform(String) from String to String {
 	var TranslationMatrix = "openfl_uTranslationMatrix";
 	var ProjectionMatrix = DefUniform.ProjectionMatrix;
 	var Alpha = DefUniform.Alpha;
 	var ColorMultiplier = DefUniform.ColorMultiplier;
 	var ColorOffset = DefUniform.ColorOffset;
 }
-
-typedef PrimitiveAttrib =  Attrib;
-typedef PrimitiveUniform =  Uniform;

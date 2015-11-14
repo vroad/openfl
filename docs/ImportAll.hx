@@ -100,7 +100,9 @@ import openfl.events.GameInputEvent;
 import openfl.events.HTTPStatusEvent;
 import openfl.events.IEventDispatcher;
 import openfl.events.IOErrorEvent;
+#if !codegen
 import openfl.events.JoystickEvent;
+#end
 import openfl.events.KeyboardEvent;
 import openfl.events.MouseEvent;
 import openfl.events.NetStatusEvent;
@@ -1626,7 +1628,6 @@ import Xml;
 
 #if codegen
 import openfl.display3D._shaders.AGLSLShaderUtils;
-import openfl._internal.renderer.TextFieldGraphics;
 import openfl._internal.aglsl.AGALTokenizer;
 import openfl._internal.aglsl.AGLSLCompiler;
 import openfl._internal.aglsl.AGLSLParser;
@@ -1637,6 +1638,7 @@ import openfl._internal.aglsl.Mapping;
 import openfl._internal.aglsl.OpLUT;
 import openfl._internal.aglsl.Sampler;
 import openfl._internal.aglsl.Token; 
+import openfl._internal.macros.MacroShader;
 #end
 
 #if codegen
@@ -1737,7 +1739,7 @@ class ImportAll
 			exports.openfl_events_HTTPStatusEvent = openfl_events_HTTPStatusEvent;
 			exports.openfl_events_IEventDispatcher = openfl_events_IEventDispatcher;
 			exports.openfl_events_IOErrorEvent = openfl_events_IOErrorEvent;
-			exports.openfl_events_JoystickEvent = openfl_events_JoystickEvent;
+			//exports.openfl_events_JoystickEvent = openfl_events_JoystickEvent;
 			exports.openfl_events_KeyboardEvent = openfl_events_KeyboardEvent;
 			exports.openfl_events_MouseEvent = openfl_events_MouseEvent;
 			exports.openfl_events_NetStatusEvent = openfl_events_NetStatusEvent;
@@ -1838,8 +1840,6 @@ class ImportAll
 			exports.openfl_Memory = openfl_Memory;
 			//exports.openfl_Vector = openfl_Vector;
 
-			untyped __js__("exports.openfl__$internal_renderer_TextFieldGraphics = openfl__$internal_renderer_TextFieldGraphics");
-			untyped __js__("exports.openfl__$internal_text_TextEngine = openfl__$internal_text_TextEngine");
 			untyped __js__("exports.openfl__$internal_aglsl_AGLSLCompiler = openfl__$internal_aglsl_AGLSLCompiler");
 			untyped __js__("exports.openfl_display3D__$shaders_AGLSLShaderUtils = openfl_display3D__$shaders_AGLSLShaderUtils");
 		}

@@ -1,7 +1,12 @@
 package openfl._internal.renderer.opengl.utils;
 
 import lime.graphics.GLRenderContext;
-import openfl._internal.renderer.opengl.shaders2.*;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader;
+import openfl._internal.renderer.opengl.shaders2.DrawTrianglesShader;
+import openfl._internal.renderer.opengl.shaders2.FillShader;
+import openfl._internal.renderer.opengl.shaders2.PatternFillShader;
+import openfl._internal.renderer.opengl.shaders2.PrimitiveShader;
+import openfl._internal.renderer.opengl.shaders2.Shader;
 import openfl.gl.GLProgram;
 
 class ShaderManager {

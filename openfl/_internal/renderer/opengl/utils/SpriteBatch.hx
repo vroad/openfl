@@ -2,8 +2,8 @@ package openfl._internal.renderer.opengl.utils;
 
 import lime.graphics.GLRenderContext;
 import openfl._internal.renderer.opengl.shaders2.*;
-import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefAttrib;
-import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefUniform;
+import openfl._internal.renderer.opengl.shaders2.DefAttrib;
+import openfl._internal.renderer.opengl.shaders2.DefUniform;
 import openfl._internal.renderer.opengl.utils.VertexAttribute;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.BitmapData;
@@ -157,7 +157,7 @@ class SpriteBatch {
 		flush();
 	}
 	
-	public function renderBitmapData(bitmapData:BitmapData, smoothing:Bool, matrix:Matrix, ct:ColorTransform, ?alpha:Float = 1, ?blendMode:BlendMode, ?flashShader:FlashShader, ?pixelSnapping:PixelSnapping, bgra:Bool = false) {
+	public function renderBitmapData(bitmapData:BitmapData, smoothing:Bool, matrix:Matrix, ct:ColorTransform, ?alpha:Float = 1, ?blendMode:BlendMode, ?flashShader:openfl.display.Shader /*FlashShader*/, ?pixelSnapping:PixelSnapping, bgra:Bool = false) {
 		if (bitmapData == null) return;
 		var texture = bitmapData.getTexture(gl);
 		
@@ -183,7 +183,7 @@ class SpriteBatch {
 		batchedSprites++;
 	}
 	
-	public function renderTiles(object:DisplayObject, sheet:Tilesheet, tileData:Array<Float>, smooth:Bool = false, flags:Int = 0, ?flashShader:FlashShader, count:Int = -1) {		
+	public function renderTiles(object:DisplayObject, sheet:Tilesheet, tileData:Array<Float>, smooth:Bool = false, flags:Int = 0, ?flashShader:openfl.display.Shader /*FlashShader*/, count:Int = -1) {		
 		
 		var texture = sheet.__bitmap.getTexture(gl);
 		if (texture == null) return;
@@ -586,7 +586,7 @@ class SpriteBatch {
 		
 	}
 	
-	inline function setState(index:Int, texture:GLTexture, ?smooth:Bool = false, ?blendMode:BlendMode, ?colorTransform:ColorTransform, ?shader:FlashShader, ?skipAlpha:Bool = false) {
+	inline function setState(index:Int, texture:GLTexture, ?smooth:Bool = false, ?blendMode:BlendMode, ?colorTransform:ColorTransform, ?shader:openfl.display.Shader /*FlashShader*/, ?skipAlpha:Bool = false) {
 		var state:State = states[index];
 		if (state == null) {
 			state = states[index] = new State();

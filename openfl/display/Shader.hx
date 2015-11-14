@@ -341,9 +341,9 @@ class GLShaderParameter {
 
 typedef GLShaderData = Map<String, GLShaderParameter>;
 
-private typedef DefaultAttrib = openfl._internal.renderer.opengl.shaders2.DefaultShader.Attrib;
-private typedef DefaultUniform = openfl._internal.renderer.opengl.shaders2.DefaultShader.Uniform;
-private typedef DefaultVarying = openfl._internal.renderer.opengl.shaders2.DefaultShader.Varying;
+private typedef DefaultAttrib = openfl._internal.renderer.opengl.shaders2.DefAttrib;
+private typedef DefaultUniform = openfl._internal.renderer.opengl.shaders2.DefUniform;
+private typedef DefaultVarying = openfl._internal.renderer.opengl.shaders2.DefVarying;
 
 #else
 typedef Shader = flash.display.Shader;
