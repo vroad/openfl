@@ -360,9 +360,17 @@ class SharedObject extends EventDispatcher {
 				
 			}
 			
+			#if nodejs
+			
+			File.saveContent (path + "/" + __name + ".sol", encodedData);
+			
+			#else
+			
 			var output = File.write (path + "/" + __name + ".sol", false);
 			output.writeString (encodedData);
 			output.close ();
+			
+			#end
 			
 			#end
 			
