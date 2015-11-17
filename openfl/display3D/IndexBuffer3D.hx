@@ -74,10 +74,10 @@ import openfl.Vector;
 		
 	}
 	
-	public function uploadFromInt16Array(data:Int16Array, startOffset:Int, count:Int):Void 
+	public function uploadFromInt16Array(data:Int16Array):Void 
 	{
 		GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, glBuffer);
-		GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, data.subarray (startOffset, startOffset + count), bufferUsage);
+		GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, bufferUsage);
 	}
 }
 
