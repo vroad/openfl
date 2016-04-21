@@ -3,8 +3,8 @@ package openfl.net; #if (!openfl_legacy || disable_legacy_networking)
 
 import lime.app.Event;
 import lime.system.BackgroundWorker;
-import lime.utils.ByteArray;
-import lime.utils.BytesUtil;
+import lime.system.CFFI;
+import lime.utils.Bytes;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import openfl.events.HTTPStatusEvent;
@@ -47,9 +47,6 @@ class URLLoader extends EventDispatcher {
 	private var __data:ByteArray;
 	#end
 	
-	#if nodejs
-	private var __fs:Dynamic = untyped require("fs");
-	#end
 	
 	public function new (request:URLRequest = null) {
 		
@@ -94,23 +91,6 @@ class URLLoader extends EventDispatcher {
 		#if (js && html5)
 		requestUrl (request.url, request.method, request.data, request.formatRequestHeaders ());
 		#elseif nodejs
-		__fs.readFile (request.url, function(err, data)
-		{
-			if (err != null)
-				throw err;
-			
-			var bytes:ByteArray = ByteArray.fromBytes (BytesUtil.createBytes (data.byteLength, data));
-			switch (dataFormat) {
-				
-				case BINARY: this.data = bytes;
-				default: this.data = bytes.readUTFBytes (bytes.length);
-				
-			}
-			
-			var evt = new Event (Event.COMPLETE);
-			evt.currentTarget = this;
-			dispatchEvent (evt);
-		});
 		#else
 		if (request.url != null && request.url.indexOf ("http://") == -1 && request.url.indexOf ("https://") == -1) {
 			
@@ -529,7 +509,7 @@ class URLLoader extends EventDispatcher {
 	
 	private function readFunction (max:Int, input:ByteArray):Bytes {
 		
-		return BytesUtil.getBytesFromByteArray (input);
+		return input;
 		
 	}
 	
