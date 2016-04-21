@@ -42,18 +42,6 @@ package openfl.text; #if !openfl_legacy
 		
 	}
 	
-	/**
-	 * Constant; aligns text to the start edge of a line. Use the syntax
-	 * <code>TextFormatAlign.START</code>
-	 */
-	START;
-	
-	/**
-	 * Constant; aligns text to the end edge of a line. Use the syntax
-	 * <code>TextFormatAlign.END</code>
-	 */
-	END;
-	
 }
 
 
