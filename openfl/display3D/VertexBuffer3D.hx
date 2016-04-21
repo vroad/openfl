@@ -1,4 +1,4 @@
-package openfl.display3D; #if !flash
+package openfl.display3D;
 
 
 import openfl.gl.GL;
@@ -7,7 +7,9 @@ import openfl.utils.Float32Array;
 import openfl.utils.ByteArray;
 import openfl.Vector;
 
+
 class VertexBuffer3D {
+	
 	
 	public var context:Context3D;
 	public var data32PerVertex:Int;
@@ -96,8 +98,3 @@ class VertexBuffer3D {
 	
 	
 }
-
-
-#else
-typedef VertexBuffer3D = flash.display3D.VertexBuffer3D;
-#end

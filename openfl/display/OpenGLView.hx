@@ -1,4 +1,4 @@
-package openfl.display; #if !openfl_legacy
+package openfl.display; #if !display #if !openfl_legacy
 
 
 #if !flash
@@ -28,8 +28,8 @@ class OpenGLView extends DirectRenderer {
 	
 	public static var isSupported (get, null):Bool;
 	
-	@:noCompletion private var __added:Bool;
-	@:noCompletion private var __initialized:Bool;
+	private var __added:Bool;
+	private var __initialized:Bool;
 	
 	
 	public function new (depth:Bool = true, stencil:Bool = false) {
@@ -72,7 +72,7 @@ class OpenGLView extends DirectRenderer {
 	
 	
 	#if !flash
-	@:noCompletion @:dox(hide) public override function __renderCanvas (renderSession:RenderSession):Void {
+	public override function __renderCanvas (renderSession:RenderSession):Void {
 		
 		/*if (!__added) {
 			
@@ -88,7 +88,7 @@ class OpenGLView extends DirectRenderer {
 	
 	
 	#if !flash
-	@:noCompletion @:dox(hide) public override function __renderDOM (renderSession:RenderSession):Void {
+	public override function __renderDOM (renderSession:RenderSession):Void {
 		
 		#if (js && html5)
 		if (stage != null && __worldVisible && __renderable) {
@@ -164,7 +164,7 @@ class OpenGLView extends DirectRenderer {
 	
 	
 	#if !flash
-	@:noCompletion @:dox(hide) public override function __renderGL (renderSession:RenderSession):Void {
+	public override function __renderGL (renderSession:RenderSession):Void {
 		
 		if (stage != null && __renderable) {
 			
@@ -207,7 +207,7 @@ class OpenGLView extends DirectRenderer {
 	
 	
 	
-	@:noCompletion private static function get_isSupported ():Bool {
+	private static function get_isSupported ():Bool {
 		
 		#if flash
 		
@@ -252,30 +252,51 @@ class OpenGLView extends DirectRenderer {
 		#end
 		
 	}
-
-	#if (html5 && dom)
 	
-	@:noCompletion private override function set_width (value:Float):Float {
-		super.set_width(value);
-
-		__canvas.width = Std.int( value );
-
-		return value;
-	}
-
-	@:noCompletion private override function set_height (value:Float):Float {
-		super.set_height(value);
-
-		__canvas.height = Std.int( value ); 
-
-		return value;
-	}
+	
+	#if (html5 && dom)
+	private override function set_width (value:Float):Float {
 		
-	#end	
+		super.set_width (value);
+		
+		__canvas.width = Std.int (value);
+		return value;
+		
+	}
+	
+	
+	private override function set_height (value:Float):Float {
+		
+		super.set_height (value);
+		
+		__canvas.height = Std.int (value); 
+		return value;
+		
+	}
+	#end
+	
 	
 }
 
 
 #else
 typedef OpenGLView = openfl._legacy.display.OpenGLView;
+#end
+#elseif !flash
+
+
+extern class OpenGLView extends DirectRenderer {
+	
+	
+	public static inline var CONTEXT_LOST = "glcontextlost";
+	public static inline var CONTEXT_RESTORED = "glcontextrestored";
+	
+	public static var isSupported (get, null):Bool;
+	
+	public function new ();
+	
+	
+}
+
+
 #end

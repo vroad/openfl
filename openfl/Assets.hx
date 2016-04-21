@@ -554,16 +554,21 @@ class Assets {
 	 */
 	public static function loadBytes (id:String, handler:ByteArray->Void = null):Future<ByteArray> {
 		
+		var promise = new Promise<ByteArray> ();
 		var future = LimeAssets.loadBytes (id);
 		
 		if (handler != null) {
 			
-			future.onComplete (handler);
-			future.onError (function (_) handler (null));
+			promise.future.onComplete (handler);
+			promise.future.onError (function (_) handler (null));
+			
+			future.onComplete (function (bytes) promise.complete (bytes));
+			future.onProgress (function (progress) promise.progress (progress));
+			future.onError (function (msg) promise.error (msg));
 			
 		}
 		
-		return future;
+		return promise.future;
 		
 	}
 	
@@ -1176,9 +1181,7 @@ class Assets {
 				
 				if (preload != null) {
 					
-					image = preload;
-					width = image.width;
-					height = image.height;
+					__fromImage(preload);
 					
 				} else {
 					
@@ -1231,50 +1234,6 @@ class Assets {
 	}
 	
 	
-	#if lime_console
-	
-	private static function embedData (metaName:String, encode:Bool = false):Array<Field> {
-		
-		var classType = Context.getLocalClass().get();
-		var metaData = classType.meta.get();
-		var position = Context.currentPos();
-		var fields = Context.getBuildFields();
-		
-		for (meta in metaData) {
-			
-			if (meta.name != metaName || meta.params.length <= 0) {
-				continue;
-			}
-				
-			switch (meta.params[0].expr) {
-				
-				case EConst(CString(filePath)):
-					
-					var fieldValue = {
-						pos: position,
-						expr: EConst(CString(filePath))
-					};
-					fields.push ({
-						kind: FVar(macro :String, fieldValue),
-						name: "filePath",
-						access: [ APrivate, AStatic ],
-						pos: position
-					});
-					
-					return fields;
-					
-				default:
-				
-			}
-			
-		}
-		
-		return null;
-		
-	}
-
-	#else
-	
 	private static function embedData (metaName:String, encode:Bool = false):Array<Field> {
 		
 		var classType = Context.getLocalClass().get();
@@ -1291,6 +1250,21 @@ class Assets {
 					switch (meta.params[0].expr) {
 						
 						case EConst(CString(filePath)):
+
+							#if lime_console
+							
+							var fieldValue = {
+								pos: position,
+								expr: EConst(CString(filePath))
+							};
+							fields.push ({
+								kind: FVar(macro :String, fieldValue),
+								name: "filePath",
+								access: [ APrivate, AStatic ],
+								pos: position
+							});
+							
+							#else
 							
 							var path = filePath;
 							if (!sys.FileSystem.exists(filePath)) {
@@ -1328,6 +1302,8 @@ class Assets {
 							var fieldValue = { pos: position, expr: EConst(CString(resourceName)) };
 							fields.push ({ kind: FVar(macro :String, fieldValue), name: "resourceName", access: [ APrivate, AStatic ], pos: position });
 							
+							#end
+							
 							return fields;
 							
 						default:
@@ -1343,8 +1319,6 @@ class Assets {
 		return null;
 		
 	}
-
-	#end
 	
 	
 	macro public static function embedFile ():Array<Field> {
@@ -1413,6 +1387,10 @@ class Assets {
 		}
 		
 		if (path != null && path != "") {
+
+			#if lime_console
+			throw "not implemented";
+			#end
 			
 			#if html5
 			Sys.command ("haxelib", [ "run", "openfl", "generate", "-font-hash", sys.FileSystem.fullPath(path) ]);

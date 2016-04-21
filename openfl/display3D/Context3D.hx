@@ -1,9 +1,10 @@
-package openfl.display3D; #if !flash
+package openfl.display3D;
 
-
+#if !lime_legacy
 import lime.app.Application;
 import lime.app.Config;
 import lime.ui.Window;
+#end
 import openfl.display.BitmapData;
 import openfl.display.OpenGLView;
 import openfl.display.Stage3D;
@@ -23,7 +24,6 @@ import openfl.gl.GLRenderbuffer;
 import openfl.utils.ByteArray;
 import openfl.utils.Float32Array;
 import openfl.Lib;
-
 
 @:final class Context3D {
 	
@@ -70,6 +70,10 @@ import openfl.Lib;
 		
 		disposed = false;
 		renderToTexture = false;
+		
+		stencilCompareMode = Context3DCompareMode.ALWAYS;
+		stencilRef = 0;
+		stencilReadMask = 0xFF;
 		
 		_yFlip = 1;
 		
@@ -178,7 +182,12 @@ import openfl.Lib;
 	@:noCompletion public function __moveStage3D (stage3D:Stage3D) {
 		
 		setBackBufferViewPort (Std.int (stage3D.x), Std.int (stage3D.y), null, null);
+	private function updateDepthAndStencilState() {
 		
+		// used to enable masking
+		var depthAndStencil:Bool = renderToTexture ? rttDepthAndStencil : backBufferDepthAndStencil;
+		
+		#if !lime_legacy
 	}
 	
 	private function updateDepthAndStencilState() {
@@ -282,8 +291,7 @@ import openfl.Lib;
 	}
 	
 	
-	@:noCompletion public function __deleteTexture (texture:TextureBase):Void
-	{
+	public function __deleteTexture (texture:TextureBase):Void {
 		
 		if (texture.glTexture == null)
 			return;
@@ -298,8 +306,7 @@ import openfl.Lib;
 		
 	}
 	
-	@:noCompletion public function __deleteVertexBuffer (buffer:VertexBuffer3D):Void
-	{
+	public function __deleteVertexBuffer (buffer:VertexBuffer3D):Void {
 		
 		if (buffer.glBuffer == null)
 			return;
@@ -309,8 +316,7 @@ import openfl.Lib;
 		
 	}
 	
-	@:noCompletion public function __deleteIndexBuffer (buffer:IndexBuffer3D):Void
-	{
+	public function __deleteIndexBuffer (buffer:IndexBuffer3D):Void {
 		
 		if (buffer.glBuffer == null)
 			return;
@@ -320,8 +326,7 @@ import openfl.Lib;
 		
 	}
 	
-	@:noCompletion public function __deleteProgram (program:Program3D):Void
-	{
+	public function __deleteProgram (program:Program3D):Void {
 		
 		if (program.glProgram == null)
 			return;
@@ -741,6 +746,7 @@ import openfl.Lib;
 	
 	
 	public function setRenderToBackBuffer ():Void {
+		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
 
 		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
 		
@@ -791,6 +797,7 @@ import openfl.Lib;
 		}
 		
 		GL.viewport (0, 0, texture.width, texture.height);
+		
 		renderToTexture = true;
 		rttDepthAndStencil = enableDepthAndStencil;
 		rttWidth = texture.width;
@@ -823,6 +830,7 @@ import openfl.Lib;
 		
 		scissorRectangle = rectangle;
 		// TODO test it
+		scissorRectangle = rectangle;
 		
 		if (rectangle == null) {
 			
@@ -1168,7 +1176,3 @@ private class SamplerState {
 	
 	
 }
-
-#else
-typedef Context3D = flash.display3D.Context3D;
-#end

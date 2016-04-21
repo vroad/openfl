@@ -1,4 +1,4 @@
-package openfl.display3D; #if !flash
+package openfl.display3D;
 
 
 enum Context3DTextureFormat {
@@ -9,8 +9,3 @@ enum Context3DTextureFormat {
 	ALPHA;
 	
 }
-
-
-#else
-typedef Context3DTextureFormat = flash.display3D.Context3DTextureFormat;
-#end
