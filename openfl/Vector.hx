@@ -216,8 +216,7 @@ abstract Vector<T>(VectorData<T>) {
 		
 		this = new VectorData<T> ();
 		#if cpp
-		this.data = new Array<T> ()
-		untyped this.data.__SetSizeExact (length);
+		this.data = untyped (new Array<T>()).__SetSizeExact(length);
 		#elseif js
 		this.data = untyped __new__(Array, length);
 		#else
@@ -736,7 +735,11 @@ abstract Vector<T>(VectorData<T>) {
 	public var data:haxe.ds.Vector<T>;
 	#end
 	public var fixed:Bool;
+	#if js
 	public var length(get, set):Int;
+	#else
+	public var length:Int;
+	#end
 	
 	
 	public function new () {
@@ -819,8 +822,7 @@ using cpp.NativeArray;
 	
 	public inline function new (?length:Int, ?fixed:Bool):Void {
 		
-		this = new Array<T> ();
-		untyped this.__SetSizeExact (length);
+		this = untyped (new Array<T> ()).__SetSizeExact (length);
 		
 	}
 	
