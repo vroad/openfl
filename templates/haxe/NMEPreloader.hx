@@ -5,7 +5,7 @@ import openfl.display.Sprite;
 import openfl.events.Event;
 
 
-@:keep class NMEPreloader extends Sprite {
+class NMEPreloader extends Sprite {
 	
 	
 	private var outline:Sprite;

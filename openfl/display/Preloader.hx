@@ -27,17 +27,11 @@ class Preloader extends LimePreloader {
 			this.display = display;
 			Lib.current.addChild (display);
 			
-			#if !codegen
 			if (Std.is (display, OpenFLPreloader)) {
 				
 				cast (display, OpenFLPreloader).onInit ();
 				
 			}
-			#else
-
-			untyped display.onInit ();
-
-			#end
 			
 		}
 		
@@ -93,14 +87,10 @@ class Preloader extends LimePreloader {
 	
 	private override function start ():Void {
 		
-		if (display != null #if !codegen && Std.is (display, OpenFLPreloader) #end) {
+		if (display != null && Std.is (display, OpenFLPreloader)) {
 			
 			display.addEventListener (Event.COMPLETE, display_onComplete);
-			#if !codegen
 			cast (display, OpenFLPreloader).onLoaded ();
-			#else
-			untyped display.onLoaded ();
-			#end
 			
 		} else {
 			
@@ -113,13 +103,9 @@ class Preloader extends LimePreloader {
 	
 	private override function update (loaded:Int, total:Int):Void {
 		
-		if (display != null #if !codegen && Std.is (display, OpenFLPreloader) #end) {
+		if (display != null && Std.is (display, OpenFLPreloader)) {
 			
-			#if !codegen
 			cast (display, OpenFLPreloader).onUpdate (loaded, total);
-			#else
-			untyped display.onUpdate (loaded, total);
-			#end
 			
 		}
 		

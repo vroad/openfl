@@ -1,6 +1,6 @@
 package openfl._internal.renderer.opengl.utils;
 
-//import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GL;
 import openfl.utils.ArrayBufferView;
 import openfl.utils.Float32Array;
 
@@ -49,9 +49,9 @@ class VertexAttribute {
 }
 
 @:enum abstract ElementType(Int) from Int to Int {
-	var BYTE = openfl.gl.GL.BYTE;
-	var UNSIGNED_BYTE = openfl.gl.GL.UNSIGNED_BYTE;
-	var SHORT = openfl.gl.GL.SHORT;
-	var UNSIGNED_SHORT = openfl.gl.GL.UNSIGNED_SHORT;
-	var FLOAT = openfl.gl.GL.FLOAT;
+	var BYTE = GL.BYTE;
+	var UNSIGNED_BYTE = GL.UNSIGNED_BYTE;
+	var SHORT = GL.SHORT;
+	var UNSIGNED_SHORT = GL.UNSIGNED_SHORT;
+	var FLOAT = GL.FLOAT;
 }

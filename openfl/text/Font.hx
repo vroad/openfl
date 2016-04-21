@@ -1,12 +1,11 @@
 package openfl.text; #if !openfl_legacy
 
 
-//import lime.text.Font in LimeFont;
-import lime.text.Font;
+import lime.text.Font in LimeFont;
 import openfl.utils.ByteArray;
 
 
-class Font extends lime.text.Font {
+class Font extends LimeFont {
 	
 	
 	public var fontName (get, set):String;

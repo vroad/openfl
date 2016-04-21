@@ -2,7 +2,6 @@ package openfl._internal.renderer;
 
 
 import lime.graphics.Image;
-import lime.graphics.ImageBuffer;
 import lime.text.Glyph;
 import lime.text.TextLayout;
 import openfl._internal.renderer.cairo.CairoTextField;
@@ -17,12 +16,10 @@ import openfl.text.TextField;
 import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
-import openfl.utils.ByteArray;
-import openfl.utils.UInt8Array;
 
 @:access(openfl.text.TextField)
 
-#if 0
+
 class TextFieldGraphics {
 	
 	
@@ -95,9 +92,7 @@ class TextFieldGraphics {
 			
 			if (!fontGlyphs.exists (size)) {
 				
-				var indices = font.getGlyphs ();
-				var imageList = font.renderGlyphs (indices, size);
-				fontGlyphs.set (size, packImages (indices, imageList));
+				fontGlyphs.set (size, font.renderGlyphs (font.getGlyphs (), size));
 				
 			}
 			
@@ -364,149 +359,5 @@ class TextFieldGraphics {
 		
 	}
 	
-	private static function packImages (indices:Array<Glyph>, imageList:Array<Image>):Map<Glyph, Image> {
-		
-		var count = imageList.length;
-		
-		var bufferWidth = 128;
-		var bufferHeight = 128;
-		var offsetX = 0;
-		var offsetY = 0;
-		var maxRows = 0;
-		
-		var width, height;
-		var i = 0;
-		
-		while (i < count) {
-			
-			var image = imageList[i];
-			if (image == null)
-			{
-				
-				i++;
-				continue;
-				
-			}
-			width = image.width;
-			height = image.height;
-			
-			if (offsetX + width > bufferWidth) {
-				
-				offsetY += maxRows + 1;
-				offsetX = 0;
-				maxRows = 0;
-				
-			}
-			
-			if (offsetY + height > bufferHeight) {
-				
-				if (bufferWidth < bufferHeight) {
-					
-					bufferWidth *= 2;
-					
-				} else {
-					
-					bufferHeight *= 2;
-					
-				}
-				
-				offsetX = 0;
-				offsetY = 0;
-				maxRows = 0;
-				
-				// TODO: make this better
-				
-				i = 0;
-				continue;
-				
-			}
-			
-			offsetX += width + 1;
-			
-			if (height > maxRows) {
-				
-				maxRows = height;
-				
-			}
-			
-			i++;
-			
-		}
-		
-		var map = new Map<Int, Image> ();
-		var buffer = new ImageBuffer (null, bufferWidth, bufferHeight, 1);
-		var data = new ByteArray (bufferWidth * bufferHeight);
-		
-		offsetX = 0;
-		offsetY = 0;
-		maxRows = 0;
-		
-		var index, x, y, image;
-		
-		for (i in 0...count) {
-			
-			var srcImage = imageList[i];
-			if (srcImage == null)
-				continue;
-			index = indices[i];
-			width = srcImage.width;
-			height = srcImage.height;
-			x = srcImage.x;
-			y = srcImage.y;
-			
-			if (offsetX + width > bufferWidth) {
-				
-				offsetY += maxRows + 1;
-				offsetX = 0;
-				maxRows = 0;
-				
-			}
-			
-			var srcPosition = 0;
-			for (i in 0...height) {
-				
-				data.position = ((i + offsetY) * bufferWidth) + offsetX;
-				//bytes.readBytes (data, 0, width);
-				
-				for (x in 0...width) {
-					
-					var byte = srcImage.buffer.data[srcPosition++];
-					data.writeByte (byte);
-					
-				}
-				
-			}
-			
-			image = new Image (buffer, offsetX, offsetY, width, height);
-			image.x = x;
-			image.y = y;
-			
-			map.set (index, image);
-			
-			offsetX += width + 1;
-			
-			if (height > maxRows) {
-				
-				maxRows = height;
-				
-			}
-			
-		}
-		
-		#if js
-		buffer.data = data.byteView;
-		#else
-		buffer.data = new UInt8Array (data);
-		#end
-		
-		return map;
-		
-	}
-	
 	
 }
-#else
-class TextFieldGraphics
-{
-}
-#end

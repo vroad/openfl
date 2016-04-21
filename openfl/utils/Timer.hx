@@ -1,7 +1,7 @@
 package openfl.utils; #if !openfl_legacy
 
 
-//import haxe.Timer in HaxeTimer;
+import haxe.Timer in HaxeTimer;
 import openfl.errors.Error;
 import openfl.events.EventDispatcher;
 import openfl.events.TimerEvent;
@@ -65,8 +65,8 @@ class Timer extends EventDispatcher {
 			#if (js && html5)
 			__timerID = Browser.window.setInterval (timer_onTimer, Std.int (__delay));
 			#else
-			__timer = new haxe.Timer (Std.int(__delay));
-			untyped __timer.run = timer_onTimer;
+			__timer = new HaxeTimer (__delay);
+			__timer.run = timer_onTimer;
 			#end
 			
 		}

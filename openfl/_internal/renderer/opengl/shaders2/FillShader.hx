@@ -1,8 +1,8 @@
 package openfl._internal.renderer.opengl.shaders2;
 
 import lime.graphics.GLRenderContext;
-import openfl._internal.renderer.opengl.shaders2.DefAttrib;
-import openfl._internal.renderer.opengl.shaders2.DefUniform;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefAttrib;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefUniform;
 
 class FillShader extends Shader {
 
@@ -10,14 +10,14 @@ class FillShader extends Shader {
 		super(gl);
 		
 		vertexSrc = [
-			'attribute vec2 ${FillAttrib.Position};',
-			'uniform mat3 ${FillUniform.TranslationMatrix};',
-			'uniform mat3 ${FillUniform.ProjectionMatrix};',
+			'attribute vec2 ${Attrib.Position};',
+			'uniform mat3 ${Uniform.TranslationMatrix};',
+			'uniform mat3 ${Uniform.ProjectionMatrix};',
 			
-			'uniform vec4 ${FillUniform.Color};',
-			'uniform float ${FillUniform.Alpha};',
-			'uniform vec4 ${FillUniform.ColorMultiplier};',
-			'uniform vec4 ${FillUniform.ColorOffset};',
+			'uniform vec4 ${Uniform.Color};',
+			'uniform float ${Uniform.Alpha};',
+			'uniform vec4 ${Uniform.ColorMultiplier};',
+			'uniform vec4 ${Uniform.ColorOffset};',
 			
 			'varying vec4 vColor;',
 			
@@ -31,8 +31,8 @@ class FillShader extends Shader {
 			'}',			
 			
 			'void main(void) {',
-			'   gl_Position = vec4((${FillUniform.ProjectionMatrix} * ${FillUniform.TranslationMatrix} * vec3(${FillAttrib.Position}, 1.0)).xy, 0.0, 1.0);',
-			'   vColor = colorTransform(${FillUniform.Color}, ${FillUniform.Alpha}, ${FillUniform.ColorMultiplier}, ${FillUniform.ColorOffset});',
+			'   gl_Position = vec4((${Uniform.ProjectionMatrix} * ${Uniform.TranslationMatrix} * vec3(${Attrib.Position}, 1.0)).xy, 0.0, 1.0);',
+			'   vColor = colorTransform(${Uniform.Color}, ${Uniform.Alpha}, ${Uniform.ColorMultiplier}, ${Uniform.ColorOffset});',
 			'}'
 
 		];
@@ -55,21 +55,21 @@ class FillShader extends Shader {
 	override private function init(force:Bool = false) {
 		super.init(force);
 		
-		getAttribLocation(FillAttrib.Position);
-		getUniformLocation(FillUniform.TranslationMatrix);
-		getUniformLocation(FillUniform.ProjectionMatrix);
-		getUniformLocation(FillUniform.Color);
-		getUniformLocation(FillUniform.ColorMultiplier);
-		getUniformLocation(FillUniform.ColorOffset);
+		getAttribLocation(Attrib.Position);
+		getUniformLocation(Uniform.TranslationMatrix);
+		getUniformLocation(Uniform.ProjectionMatrix);
+		getUniformLocation(Uniform.Color);
+		getUniformLocation(Uniform.ColorMultiplier);
+		getUniformLocation(Uniform.ColorOffset);
 	}
 	
 }
 
-@:enum abstract FillAttrib(String) from String to String {
+@:enum private abstract Attrib(String) from String to String {
 	var Position = DefAttrib.Position;
 }
 
-@:enum abstract FillUniform(String) from String to String {
+@:enum private abstract Uniform(String) from String to String {
 	var TranslationMatrix = "openfl_uTranslationMatrix";
 	var ProjectionMatrix = DefUniform.ProjectionMatrix;
 	var Color = DefUniform.Color;
@@ -77,3 +77,6 @@ class FillShader extends Shader {
 	var ColorMultiplier = DefUniform.ColorMultiplier;
 	var ColorOffset = DefUniform.ColorOffset;
 }
+
+typedef FillAttrib = Attrib;
+typedef FillUniform = Uniform;

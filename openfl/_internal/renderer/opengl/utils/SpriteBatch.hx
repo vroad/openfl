@@ -2,8 +2,8 @@ package openfl._internal.renderer.opengl.utils;
 
 import lime.graphics.GLRenderContext;
 import openfl._internal.renderer.opengl.shaders2.*;
-import openfl._internal.renderer.opengl.shaders2.DefAttrib;
-import openfl._internal.renderer.opengl.shaders2.DefUniform;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefAttrib;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefUniform;
 import openfl._internal.renderer.opengl.utils.VertexAttribute;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.BitmapData;
@@ -159,7 +159,7 @@ class SpriteBatch {
 		flush();
 	}
 	
-	public function renderBitmapData(bitmapData:BitmapData, smoothing:Bool, matrix:Matrix, ct:ColorTransform, ?alpha:Float = 1, ?blendMode:BlendMode, ?flashShader:openfl.display.Shader /*FlashShader*/, ?pixelSnapping:PixelSnapping, bgra:Bool = false) {
+	public function renderBitmapData(bitmapData:BitmapData, smoothing:Bool, matrix:Matrix, ct:ColorTransform, ?alpha:Float = 1, ?blendMode:BlendMode, ?flashShader:FlashShader, ?pixelSnapping:PixelSnapping, bgra:Bool = false) {
 		if (bitmapData == null) return;
 		var texture = bitmapData.getTexture(gl);
 		

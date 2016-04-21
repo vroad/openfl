@@ -1,8 +1,8 @@
 package openfl._internal.renderer.opengl.shaders2;
 
 import lime.graphics.GLRenderContext;
-import openfl._internal.renderer.opengl.shaders2.DefAttrib;
-import openfl._internal.renderer.opengl.shaders2.DefUniform;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefAttrib;
+import openfl._internal.renderer.opengl.shaders2.DefaultShader.DefUniform;
 
 
 class DrawTrianglesShader extends Shader {
@@ -11,19 +11,19 @@ class DrawTrianglesShader extends Shader {
 		super(gl);
 		
 		vertexSrc = [
-			'attribute vec2 ${DrawTrianglesAttrib.Position};',
-			'attribute vec2 ${DrawTrianglesAttrib.TexCoord};',
-			'attribute vec4 ${DrawTrianglesAttrib.Color};',
-			'uniform mat3 ${DrawTrianglesUniform.ProjectionMatrix};',
+			'attribute vec2 ${Attrib.Position};',
+			'attribute vec2 ${Attrib.TexCoord};',
+			'attribute vec4 ${Attrib.Color};',
+			'uniform mat3 ${Uniform.ProjectionMatrix};',
 			
 			'varying vec2 vTexCoord;',
 			'varying vec4 vColor;',
 		
 			'void main(void) {',
-			'   gl_Position = vec4((${DrawTrianglesUniform.ProjectionMatrix} * vec3(${DrawTrianglesAttrib.Position}, 1.0)).xy, 0.0, 1.0);',
-			'   vTexCoord = ${DrawTrianglesAttrib.TexCoord};',
+			'   gl_Position = vec4((${Uniform.ProjectionMatrix} * vec3(${Attrib.Position}, 1.0)).xy, 0.0, 1.0);',
+			'   vTexCoord = ${Attrib.TexCoord};',
 			// the passed color is ARGB format
-			'   vColor = ${DrawTrianglesAttrib.Color}.bgra;',
+			'   vColor = ${Attrib.Color}.bgra;',
 			'}',
 
 		];
@@ -33,12 +33,12 @@ class DrawTrianglesShader extends Shader {
 			'precision lowp float;',
 			'#endif',
 			
-			'uniform sampler2D ${DrawTrianglesUniform.Sampler};',
-			'uniform vec3 ${DrawTrianglesUniform.Color};',
-			'uniform bool ${DrawTrianglesUniform.UseTexture};',
-			'uniform float ${DrawTrianglesUniform.Alpha};',
-			'uniform vec4 ${DrawTrianglesUniform.ColorMultiplier};',
-			'uniform vec4 ${DrawTrianglesUniform.ColorOffset};',
+			'uniform sampler2D ${Uniform.Sampler};',
+			'uniform vec3 ${Uniform.Color};',
+			'uniform bool ${Uniform.UseTexture};',
+			'uniform float ${Uniform.Alpha};',
+			'uniform vec4 ${Uniform.ColorMultiplier};',
+			'uniform vec4 ${Uniform.ColorOffset};',
 			
 			'varying vec2 vTexCoord;',
 			'varying vec4 vColor;',
@@ -55,12 +55,12 @@ class DrawTrianglesShader extends Shader {
 			'}',
 			
 			'void main(void) {',
-			'   if(${DrawTrianglesUniform.UseTexture}) {',
-			'       tmp = texture2D(${DrawTrianglesUniform.Sampler}, vTexCoord);',
+			'   if(${Uniform.UseTexture}) {',
+			'       tmp = texture2D(${Uniform.Sampler}, vTexCoord);',
 			'   } else {',
-			'       tmp = vec4(${DrawTrianglesUniform.Color}, 1.);',
+			'       tmp = vec4(${Uniform.Color}, 1.);',
 			'   }',
-			'   gl_FragColor = colorTransform(tmp, vColor, ${DrawTrianglesUniform.ColorMultiplier}, ${DrawTrianglesUniform.ColorOffset});',
+			'   gl_FragColor = colorTransform(tmp, vColor, ${Uniform.ColorMultiplier}, ${Uniform.ColorOffset});',
 			'}'
 		];
 		
@@ -70,29 +70,29 @@ class DrawTrianglesShader extends Shader {
 	override private function init(force:Bool = false) {
 		super.init(force);
 		
-		getAttribLocation(DrawTrianglesAttrib.Position);
-		getAttribLocation(DrawTrianglesAttrib.TexCoord);
-		getAttribLocation(DrawTrianglesAttrib.Color);
+		getAttribLocation(Attrib.Position);
+		getAttribLocation(Attrib.TexCoord);
+		getAttribLocation(Attrib.Color);
 		
-		getUniformLocation(DrawTrianglesUniform.Sampler);
-		getUniformLocation(DrawTrianglesUniform.ProjectionMatrix);
-		getUniformLocation(DrawTrianglesUniform.Color);
-		getUniformLocation(DrawTrianglesUniform.Alpha);
-		getUniformLocation(DrawTrianglesUniform.UseTexture);
-		getUniformLocation(DrawTrianglesUniform.ColorMultiplier);
-		getUniformLocation(DrawTrianglesUniform.ColorOffset);
+		getUniformLocation(Uniform.Sampler);
+		getUniformLocation(Uniform.ProjectionMatrix);
+		getUniformLocation(Uniform.Color);
+		getUniformLocation(Uniform.Alpha);
+		getUniformLocation(Uniform.UseTexture);
+		getUniformLocation(Uniform.ColorMultiplier);
+		getUniformLocation(Uniform.ColorOffset);
 		
 	}
 	
 }
 
-@:enum abstract DrawTrianglesAttrib(String) from String to String {
+@:enum private abstract Attrib(String) from String to String {
 	var Position = DefAttrib.Position;
 	var TexCoord = DefAttrib.TexCoord;
 	var Color = DefAttrib.Color;
 }
 
-@:enum abstract DrawTrianglesUniform(String) from String to String {
+@:enum private abstract Uniform(String) from String to String {
 	var UseTexture = "openfl_uUseTexture";
 	var Sampler = DefUniform.Sampler;
 	var ProjectionMatrix = DefUniform.ProjectionMatrix;
@@ -101,3 +101,6 @@ class DrawTrianglesShader extends Shader {
 	var ColorMultiplier = DefUniform.ColorMultiplier;
 	var ColorOffset = DefUniform.ColorOffset;	
 }
+
+typedef DrawTrianglesAttrib = Attrib;
+typedef DrawTrianglesUniform = Uniform;

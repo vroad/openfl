@@ -193,7 +193,7 @@ import openfl.Lib;
 import openfl.Memory;
 import openfl.Vector;
 
-#if !codegen
+
 import lime.app.Application;
 import lime.app.Config;
 import lime.app.Event;
@@ -289,7 +289,7 @@ import lime.net.HTTPRequest;
 //import lime.net.NetConnection;
 //import lime.net.NetConnectionManager;
 import lime.net.URIParser;
-#if ((windows || mac || linux || neko) && !codegen)
+#if (windows || mac || linux || neko)
 import lime.project.ApplicationData;
 import lime.project.Architecture;
 import lime.project.Asset;
@@ -332,7 +332,7 @@ import lime.text.GlyphPosition;
 import lime.text.TextDirection;
 import lime.text.TextLayout;
 import lime.text.TextScript;
-#if ((windows || mac || linux || neko) && !codegen)
+#if (windows || mac || linux || neko)
 import lime.tools.helpers.AIRHelper;
 import lime.tools.helpers.AndroidHelper;
 import lime.tools.helpers.AntHelper;
@@ -409,7 +409,7 @@ import lime.utils.UInt8ClampedArray;
 import lime.Assets;
 
 
-#if ((windows || mac || linux || ios || android || blackberry) && !codegen)
+#if (windows || mac || linux || ios || android || blackberry)
 
 
 #if (haxe_ver >= "3.2")
@@ -1611,227 +1611,3 @@ import Sys;
 import Type;
 import UInt;
 import Xml;
-
-#end // end #if !codegen
-
-#if codegen
-import openfl.display3D._shaders.AGLSLShaderUtils;
-import openfl._internal.aglsl.AGALTokenizer;
-import openfl._internal.aglsl.AGLSLCompiler;
-import openfl._internal.aglsl.AGLSLParser;
-import openfl._internal.aglsl.Context3D;
-import openfl._internal.aglsl.Description;
-import openfl._internal.aglsl.Header;
-import openfl._internal.aglsl.Mapping;
-import openfl._internal.aglsl.OpLUT;
-import openfl._internal.aglsl.Sampler;
-import openfl._internal.aglsl.Token; 
-import openfl._internal.macros.MacroShader;
-#end
-
-#if codegen
-class ImportAll
-{
-	public static function main()
-	{
-		untyped
-		{
-			exports.openfl_display_Application = openfl_display_Application;
-			exports.openfl_display_Bitmap = openfl_display_Bitmap;
-			exports.openfl_display_BitmapData = openfl_display_BitmapData;
-			exports.openfl_display_BitmapDataChannel = openfl_display_BitmapDataChannel;
-			exports.openfl_display_BlendMode = openfl_display_BlendMode;
-			exports.openfl_display_CapsStyle = openfl_display_CapsStyle;
-			exports.openfl_display_DirectRenderer = openfl_display_DirectRenderer;
-			exports.openfl_display_DisplayObject = openfl_display_DisplayObject;
-			exports.openfl_display_DisplayObjectContainer = openfl_display_DisplayObjectContainer;
-			exports.openfl_display_DOMSprite = openfl_display_DOMSprite;
-			exports.openfl_display_FPS = openfl_display_FPS;
-			exports.openfl_display_GradientType = openfl_display_GradientType;
-			exports.openfl_display_Graphics = openfl_display_Graphics;
-			exports.openfl_display_GraphicsBitmapFill = openfl_display_GraphicsBitmapFill;
-			exports.openfl_display_GraphicsEndFill = openfl_display_GraphicsEndFill;
-			exports.openfl_display_GraphicsGradientFill = openfl_display_GraphicsGradientFill;
-			exports.openfl_display_GraphicsPath = openfl_display_GraphicsPath;
-			exports.openfl_display_GraphicsPathCommand = openfl_display_GraphicsPathCommand;
-			exports.openfl_display_GraphicsPathWinding = openfl_display_GraphicsPathWinding;
-			exports.openfl_display_GraphicsSolidFill = openfl_display_GraphicsSolidFill;
-			exports.openfl_display_GraphicsStroke = openfl_display_GraphicsStroke;
-			exports.openfl_display_IBitmapDrawable = openfl_display_IBitmapDrawable;
-			exports.openfl_display_IGraphicsData = openfl_display_IGraphicsData;
-			exports.openfl_display_IGraphicsFill = openfl_display_IGraphicsFill;
-			exports.openfl_display_IGraphicsPath = openfl_display_IGraphicsPath;
-			exports.openfl_display_IGraphicsStroke = openfl_display_IGraphicsStroke;
-			exports.openfl_display_InteractiveObject = openfl_display_InteractiveObject;
-			exports.openfl_display_InterpolationMethod = openfl_display_InterpolationMethod;
-			exports.openfl_display_JPEGEncoderOptions = openfl_display_JPEGEncoderOptions;
-			exports.openfl_display_JointStyle = openfl_display_JointStyle;
-			exports.openfl_display_LineScaleMode = openfl_display_LineScaleMode;
-			exports.openfl_display_Loader = openfl_display_Loader;
-			exports.openfl_display_LoaderInfo = openfl_display_LoaderInfo;
-			exports.openfl_display_MovieClip = openfl_display_MovieClip;
-			exports.openfl_display_OpenGLView = openfl_display_OpenGLView;
-			exports.openfl_display_PNGEncoderOptions = openfl_display_PNGEncoderOptions;
-			exports.openfl_display_PixelSnapping = openfl_display_PixelSnapping;
-			exports.openfl_display_Preloader = openfl_display_Preloader;
-			exports.openfl_display_Shape = openfl_display_Shape;
-			exports.openfl_display_SimpleButton = openfl_display_SimpleButton;
-			exports.openfl_display_SpreadMethod = openfl_display_SpreadMethod;
-			exports.openfl_display_Sprite = openfl_display_Sprite;
-			exports.openfl_display_Stage = openfl_display_Stage;
-			exports.openfl_display_Stage3D = openfl_display_Stage3D;
-			exports.openfl_display_StageAlign = openfl_display_StageAlign;
-			exports.openfl_display_StageDisplayState = openfl_display_StageDisplayState;
-			exports.openfl_display_StageQuality = openfl_display_StageQuality;
-			exports.openfl_display_StageScaleMode = openfl_display_StageScaleMode;
-			exports.openfl_display_Tilesheet = openfl_display_Tilesheet;
-			exports.openfl_display_TriangleCulling = openfl_display_TriangleCulling;
-			exports.openfl_display3D_textures_CubeTexture = openfl_display3D_textures_CubeTexture;
-			exports.openfl_display3D_textures_RectangleTexture = openfl_display3D_textures_RectangleTexture;
-			exports.openfl_display3D_textures_Texture = openfl_display3D_textures_Texture;
-			exports.openfl_display3D_textures_TextureBase = openfl_display3D_textures_TextureBase;
-			exports.openfl_display3D_Context3D = openfl_display3D_Context3D;
-			//exports.openfl_display3D_Context3DBlendFactor = openfl_display3D_Context3DBlendFactor;
-//#if (haxe_ver >= "3_2")
-			exports.openfl_display3D_Context3DBufferUsage = openfl_display3D_Context3DBufferUsage;
-//#end
-			exports.openfl_display3D_Context3DClearMask = openfl_display3D_Context3DClearMask;
-			//exports.openfl_display3D_Context3DCompareMode = openfl_display3D_Context3DCompareMode;
-			exports.openfl_display3D_Context3DMipFilter = openfl_display3D_Context3DMipFilter;
-			exports.openfl_display3D_Context3DProfile = openfl_display3D_Context3DProfile;
-			exports.openfl_display3D_Context3DProgramType = openfl_display3D_Context3DProgramType;
-			exports.openfl_display3D_Context3DRenderMode = openfl_display3D_Context3DRenderMode;
-			//exports.openfl_display3D_Context3DStencilAction = openfl_display3D_Context3DStencilAction;
-			exports.openfl_display3D_Context3DTextureFilter = openfl_display3D_Context3DTextureFilter;
-			exports.openfl_display3D_Context3DTextureFormat = openfl_display3D_Context3DTextureFormat;
-			//exports.openfl_display3D_Context3DTriangleFace = openfl_display3D_Context3DTriangleFace;
-			exports.openfl_display3D_Context3DVertexBufferFormat = openfl_display3D_Context3DVertexBufferFormat;
-			exports.openfl_display3D_Context3DWrapMode = openfl_display3D_Context3DWrapMode;
-			exports.openfl_display3D_IndexBuffer3D = openfl_display3D_IndexBuffer3D;
-			exports.openfl_display3D_Program3D = openfl_display3D_Program3D;
-			exports.openfl_display3D_VertexBuffer3D = openfl_display3D_VertexBuffer3D;
-			exports.openfl_errors_ArgumentError = openfl_errors_ArgumentError;
-			exports.openfl_errors_EOFError = openfl_errors_EOFError;
-			exports.openfl_errors_Error = openfl_errors_Error;
-			exports.openfl_errors_IllegalOperationError = openfl_errors_IllegalOperationError;
-			exports.openfl_errors_RangeError = openfl_errors_RangeError;
-			exports.openfl_errors_SecurityError = openfl_errors_SecurityError;
-			exports.openfl_errors_TypeError = openfl_errors_TypeError;
-			exports.openfl_events_AccelerometerEvent = openfl_events_AccelerometerEvent;
-			exports.openfl_events_AsyncErrorEvent = openfl_events_AsyncErrorEvent;
-			exports.openfl_events_ErrorEvent = openfl_events_ErrorEvent;
-			exports.openfl_events_Event = openfl_events_Event;
-			exports.openfl_events_EventDispatcher = openfl_events_EventDispatcher;
-			exports.openfl_events_EventPhase = openfl_events_EventPhase;
-			exports.openfl_events_FocusEvent = openfl_events_FocusEvent;
-			exports.openfl_events_HTTPStatusEvent = openfl_events_HTTPStatusEvent;
-			exports.openfl_events_IEventDispatcher = openfl_events_IEventDispatcher;
-			exports.openfl_events_IOErrorEvent = openfl_events_IOErrorEvent;
-			//exports.openfl_events_JoystickEvent = openfl_events_JoystickEvent;
-			exports.openfl_events_KeyboardEvent = openfl_events_KeyboardEvent;
-			exports.openfl_events_MouseEvent = openfl_events_MouseEvent;
-			exports.openfl_events_NetStatusEvent = openfl_events_NetStatusEvent;
-			exports.openfl_events_ProgressEvent = openfl_events_ProgressEvent;
-			exports.openfl_events_SampleDataEvent = openfl_events_SampleDataEvent;
-			exports.openfl_events_SecurityErrorEvent = openfl_events_SecurityErrorEvent;
-			exports.openfl_events_TextEvent = openfl_events_TextEvent;
-			exports.openfl_events_TimerEvent = openfl_events_TimerEvent;
-			exports.openfl_events_TouchEvent = openfl_events_TouchEvent;
-			exports.openfl_events_UncaughtErrorEvent = openfl_events_UncaughtErrorEvent;
-			exports.openfl_events_UncaughtErrorEvents = openfl_events_UncaughtErrorEvents;
-			exports.openfl_external_ExternalInterface = openfl_external_ExternalInterface;
-			exports.openfl_filters_BitmapFilter = openfl_filters_BitmapFilter;
-			exports.openfl_filters_BitmapFilterQuality = openfl_filters_BitmapFilterQuality;
-			exports.openfl_filters_BitmapFilterType = openfl_filters_BitmapFilterType;
-			exports.openfl_filters_BlurFilter = openfl_filters_BlurFilter;
-			exports.openfl_filters_ColorMatrixFilter = openfl_filters_ColorMatrixFilter;
-			exports.openfl_filters_DropShadowFilter = openfl_filters_DropShadowFilter;
-			exports.openfl_filters_GlowFilter = openfl_filters_GlowFilter;
-			exports.openfl_geom_ColorTransform = openfl_geom_ColorTransform;
-			exports.openfl_geom_Matrix = openfl_geom_Matrix;
-			exports.openfl_geom_Matrix3D = openfl_geom_Matrix3D;
-			exports.openfl_geom_Orientation3D = openfl_geom_Orientation3D;
-			exports.openfl_geom_PerspectiveProjection = openfl_geom_PerspectiveProjection;
-			exports.openfl_geom_Point = openfl_geom_Point;
-			exports.openfl_geom_Rectangle = openfl_geom_Rectangle;
-			exports.openfl_geom_Transform = openfl_geom_Transform;
-			exports.openfl_geom_Utils3D = openfl_geom_Utils3D;
-			exports.openfl_geom_Vector3D = openfl_geom_Vector3D;
-			//exports.openfl_gl_GL = openfl_gl_GL;
-			//exports.openfl_gl_GLActiveInfo = openfl_gl_GLActiveInfo;
-			//exports.openfl_gl_GLBuffer = openfl_gl_GLBuffer;
-			//exports.openfl_gl_GLContextAttributes = openfl_gl_GLContextAttributes;
-			//exports.openfl_gl_GLFramebuffer = openfl_gl_GLFramebuffer;
-			//exports.openfl_gl_GLObject = openfl_gl_GLObject;
-			//exports.openfl_gl_GLProgram = openfl_gl_GLProgram;
-			//exports.openfl_gl_GLRenderbuffer = openfl_gl_GLRenderbuffer;
-			//exports.openfl_gl_GLShader = openfl_gl_GLShader;
-			//exports.openfl_gl_GLShaderPrecisionFormat = openfl_gl_GLShaderPrecisionFormat;
-			//exports.openfl_gl_GLTexture = openfl_gl_GLTexture;
-			//exports.openfl_gl_GLUniformLocation = openfl_gl_GLUniformLocation;
-			exports.openfl_media_ID3Info = openfl_media_ID3Info;
-			exports.openfl_media_Sound = openfl_media_Sound;
-			exports.openfl_media_SoundChannel = openfl_media_SoundChannel;
-			exports.openfl_media_SoundLoaderContext = openfl_media_SoundLoaderContext;
-			exports.openfl_media_SoundTransform = openfl_media_SoundTransform;
-			exports.openfl_media_Video = openfl_media_Video;
-			exports.openfl_net_NetConnection = openfl_net_NetConnection;
-			exports.openfl_net_NetStream = openfl_net_NetStream;
-			exports.openfl_net_SharedObject = openfl_net_SharedObject;
-			exports.openfl_net_SharedObjectFlushStatus = openfl_net_SharedObjectFlushStatus;
-			exports.openfl_net_Socket = openfl_net_Socket;
-			exports.openfl_net_URLLoader = openfl_net_URLLoader;
-			exports.openfl_net_URLLoaderDataFormat = openfl_net_URLLoaderDataFormat;
-			exports.openfl_net_URLRequest = openfl_net_URLRequest;
-			exports.openfl_net_URLRequestHeader = openfl_net_URLRequestHeader;
-			//exports.openfl_net_URLRequestMethod = openfl_net_URLRequestMethod;
-			exports.openfl_net_URLVariables = openfl_net_URLVariables;
-			exports.openfl_net_XMLSocket = openfl_net_XMLSocket;
-			exports.openfl_sensors_Accelerometer = openfl_sensors_Accelerometer;
-			exports.openfl_system_ApplicationDomain = openfl_system_ApplicationDomain;
-			exports.openfl_system_Capabilities = openfl_system_Capabilities;
-			exports.openfl_system_LoaderContext = openfl_system_LoaderContext;
-			exports.openfl_system_SecurityDomain = openfl_system_SecurityDomain;
-			exports.openfl_system_System = openfl_system_System;
-			exports.openfl_text_AntiAliasType = openfl_text_AntiAliasType;
-			exports.openfl_text_Font = openfl_text_Font;
-			exports.openfl_text_FontStyle = openfl_text_FontStyle;
-			exports.openfl_text_FontType = openfl_text_FontType;
-			exports.openfl_text_GridFitType = openfl_text_GridFitType;
-			exports.openfl_text_TextField = openfl_text_TextField;
-			exports.openfl_text_TextFieldAutoSize = openfl_text_TextFieldAutoSize;
-			exports.openfl_text_TextFieldType = openfl_text_TextFieldType;
-			exports.openfl_text_TextFormat = openfl_text_TextFormat;
-			exports.openfl_text_TextFormatAlign = openfl_text_TextFormatAlign;
-			exports.openfl_text_TextLineMetrics = openfl_text_TextLineMetrics;
-			//exports.openfl_ui_KeyLocation = openfl_ui_KeyLocation;
-			exports.openfl_ui_Keyboard = openfl_ui_Keyboard;
-			exports.openfl_ui_Mouse = openfl_ui_Mouse;
-			exports.openfl_ui_Multitouch = openfl_ui_Multitouch;
-			exports.openfl_ui_MultitouchInputMode = openfl_ui_MultitouchInputMode;
-			exports.openfl_utils_AGALMiniAssembler = openfl_utils_AGALMiniAssembler;
-			//exports.openfl_utils_ArrayBuffer = openfl_utils_ArrayBuffer;
-			//exports.openfl_utils_ArrayBufferView = openfl_utils_ArrayBufferView;
-			//exports.openfl_utils_ByteArray = openfl_utils_ByteArray;
-			//exports.openfl_utils_CompressionAlgorithm = openfl_utils_CompressionAlgorithm;
-			exports.openfl_utils_Endian = openfl_utils_Endian;
-			//exports.openfl_utils_Float32Array = openfl_utils_Float32Array;
-			exports.openfl_utils_IDataInput = openfl_utils_IDataInput;
-			exports.openfl_utils_IDataOutput = openfl_utils_IDataOutput;
-			//exports.openfl_utils_Int16Array = openfl_utils_Int16Array;
-			//exports.openfl_utils_Int32Array = openfl_utils_Int32Array;
-			//exports.openfl_utils_JNI = openfl_utils_JNI;
-			exports.openfl_utils_Timer = openfl_utils_Timer;
-			//exports.openfl_utils_UInt8Array = openfl_utils_UInt8Array;
-			exports.openfl_Assets = openfl_Assets;
-			exports.openfl_Lib = openfl_Lib;
-			exports.openfl_Memory = openfl_Memory;
-			//exports.openfl_Vector = openfl_Vector;
-
-			untyped __js__("exports.openfl__$internal_aglsl_AGLSLCompiler = openfl__$internal_aglsl_AGLSLCompiler");
-			untyped __js__("exports.openfl_display3D__$shaders_AGLSLShaderUtils = openfl_display3D__$shaders_AGLSLShaderUtils");
-		}
-
-	}
-}
-#end
