@@ -182,12 +182,7 @@ import openfl.Lib;
 	@:noCompletion public function __moveStage3D (stage3D:Stage3D) {
 		
 		setBackBufferViewPort (Std.int (stage3D.x), Std.int (stage3D.y), null, null);
-	private function updateDepthAndStencilState() {
 		
-		// used to enable masking
-		var depthAndStencil:Bool = renderToTexture ? rttDepthAndStencil : backBufferDepthAndStencil;
-		
-		#if !lime_legacy
 	}
 	
 	private function updateDepthAndStencilState() {
