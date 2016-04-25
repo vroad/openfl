@@ -58,7 +58,7 @@ import openfl.utils.UInt8Array;
 		
 		#if js
 		
-		uploadFromUInt8Array(data != null ? data.b.subarray(byteArrayOffset, data.b.length) : null);
+		uploadFromUInt8Array(data != null ? new UInt8Array(data, byteArrayOffset) : null);
 		
 		#else
 		
