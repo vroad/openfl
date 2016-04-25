@@ -253,11 +253,11 @@ class Assets {
 	public static function getMusic (id:String, useCache:Bool = true):Sound {
 		
 		#if flash
-		var buffer = LimeAssets.getAudioBuffer (id, useCache);
+		var buffer = LimeAssets.getAudioBuffer (id, useCache, true);
 		return (buffer != null) ? buffer.src : null;
 		#else
 		#if !html5
-		return Sound.fromAudioBuffer (LimeAssets.getAudioBuffer (id, useCache));
+		return Sound.fromAudioBuffer (LimeAssets.getAudioBuffer (id, useCache, true));
 		#else
 		var path = LimeAssets.getPath (id);
 		
@@ -666,7 +666,7 @@ class Assets {
 		
 		var promise = new Promise<Sound> ();
 		
-		LimeAssets.loadAudioBuffer (id, useCache).onComplete (function (buffer) {
+		LimeAssets.loadAudioBuffer (id, useCache, true).onComplete (function (buffer) {
 			
 			if (buffer != null) {
 				
@@ -760,7 +760,7 @@ class Assets {
 		
 		var promise = new Promise<Sound> ();
 		
-		LimeAssets.loadAudioBuffer (id, useCache).onComplete (function (buffer) {
+		LimeAssets.loadAudioBuffer (id, useCache, false).onComplete (function (buffer) {
 			
 			if (buffer != null) {
 				

@@ -97,7 +97,7 @@ class Sound extends EventDispatcher {
 		
 		#if !html5
 		
-		AudioBuffer.fromURL (stream.url, AudioBuffer_onURLLoad);
+		AudioBuffer.fromURL (stream.url, AudioBuffer_onURLLoad, true);
 		
 		#else
 		
