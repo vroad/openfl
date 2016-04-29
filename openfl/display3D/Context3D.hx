@@ -629,8 +629,8 @@ import openfl.Lib;
 		if (format == Context3DVertexBufferFormat.BYTES_4) {
 			
 			dimension = 4;
-			type = GL.FLOAT;
-			numBytes = 4;
+			type = GL.UNSIGNED_BYTE;
+			numBytes = 1;
 			
 		} else if (format == Context3DVertexBufferFormat.FLOAT_1) {
 			

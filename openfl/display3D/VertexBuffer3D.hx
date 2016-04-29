@@ -6,6 +6,7 @@ import openfl.gl.GLBuffer;
 import openfl.utils.Float32Array;
 import openfl.utils.ByteArray;
 import openfl.Vector;
+import openfl.utils.UInt8Array;
 
 
 class VertexBuffer3D {
@@ -44,15 +45,10 @@ class VertexBuffer3D {
 		
 		var length:Int = count * bytesPerVertex;
 		var offset:Int = byteArrayOffset + startOffset * bytesPerVertex;
-		var float32Array:Float32Array;
 		
-		#if js
-		float32Array = untyped __js__("new Float32Array(byteArray.byteView.buffer, offset, length)");
-		#else
-		float32Array = new Float32Array (byteArray, offset, length);
-		#end
+		var data:UInt8Array = new UInt8Array (byteArray.toArrayBuffer(), offset, length);
 		
-		GL.bufferData (GL.ARRAY_BUFFER, float32Array, bufferUsage);
+		GL.bufferData (GL.ARRAY_BUFFER, data, bufferUsage);
 		
 	}
 	

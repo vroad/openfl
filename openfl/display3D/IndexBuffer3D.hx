@@ -35,18 +35,12 @@ import openfl.Vector;
 	
 	public function uploadFromByteArray (byteArray:ByteArray, byteArrayOffset:Int, startOffset:Int, count:Int):Void {
 		
-		var bytesPerIndex = 2;
 		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, glBuffer);
 		
-		var length:Int = count * bytesPerIndex;
-		var offset:Int = byteArrayOffset + startOffset * bytesPerIndex;
+		var offset:Int = byteArrayOffset + startOffset * 2;
 		var indices:Int16Array;
 		
-		#if js
-		indices = untyped __js__("new Int16Array(byteArray.byteView.buffer, offset, length)");
-		#else
-		indices = new Int16Array (byteArray, offset, length);
-		#end
+		indices = new Int16Array (byteArray.toArrayBuffer(), offset, count);
 		
 		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, indices, bufferUsage);
 		
