@@ -37,9 +37,9 @@ import openfl.Lib;
 	private static var maxSupportedAnisotropy:UInt = 256;
 	
 	public var driverInfo (default, null):String; // TODO
-    public var backBufferWidth (get, never):Int;
-    public var backBufferHeight (get, never):Int;
-    public var profile (default, null):Context3DProfile; // TODO
+	public var backBufferWidth (get, never):Int;
+	public var backBufferHeight (get, never):Int;
+	public var profile (default, null):Context3DProfile; // TODO
 	public var enableErrorChecking:Bool; // TODO (use GL.getError() and GL.validateProgram(program))
 	
 	private var blendDestinationFactor:Int; // to mimic Stage3d behavior of keeping blending across frames:
@@ -624,13 +624,13 @@ import openfl.Lib;
 		
 		var dimension = 4;
 		var type = GL.FLOAT;
-        var normalized:Bool = false;
+		var normalized:Bool = false;
 		
 		if (format == Context3DVertexBufferFormat.BYTES_4) {
 			
 			dimension = 4;
 			type = GL.UNSIGNED_BYTE;
-            normalized = true;
+			normalized = true;
 			
 		} else if (format == Context3DVertexBufferFormat.FLOAT_1) {
 			
@@ -1151,14 +1151,14 @@ import openfl.Lib;
 	}
 	
 	@:noCompletion private function get_backBufferWidth():Int
-    {
-        return Std.int(scrollRect.width);
-    }
-    
-    @:noCompletion private function get_backBufferHeight():Int
-    {
-        return Std.int(scrollRect.height);
-    }
+	{
+		return Std.int(scrollRect.width);
+	}
+	
+	@:noCompletion private function get_backBufferHeight():Int
+	{
+		return Std.int(scrollRect.height);
+	}
 }
 
 
