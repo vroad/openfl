@@ -716,11 +716,33 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData {
 	
 	
 	private function __resize (size:Int) {
+        
+        var oldLength:Int = this.length;
 		
-		if (size > this.length) {
-			
-			var bytes = Bytes.alloc (((size + 1) * 3) >> 1);
+		if (size > oldLength) {
+            
+            var newLength:Int;
+            if (oldLength == 0) {
+                
+                newLength = size;
+                
+            } else if ((oldLength != 0) && ((oldLength & (oldLength - 1)) == 0)) {
+                
+                newLength = oldLength;
+                
+            } else {
+                
+                newLength = 1;
+                
+            }
+            while (newLength < size) newLength <<= 1;
+			var bytes = Bytes.alloc (newLength);
+            
+            #if js
+            bytes.b.set(this.b);
+            #else
 			bytes.blit (0, this, 0, this.length);
+            #end
 			__setData (bytes);
 			
 		}
