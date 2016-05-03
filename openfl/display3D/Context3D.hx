@@ -36,7 +36,7 @@ import openfl.Lib;
 	private static var supportsAnisotropy:Bool = false;
 	private static var maxSupportedAnisotropy:UInt = 256;
 	
-	public var driverInfo (default, null):String; // TODO
+	public var driverInfo (default, null):String = "OpenGL"; // TODO
 	public var backBufferWidth (get, never):Int;
 	public var backBufferHeight (get, never):Int;
     public var maxBackBufferWidth(default, null):Int;
