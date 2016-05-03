@@ -39,6 +39,8 @@ import openfl.Lib;
 	public var driverInfo (default, null):String; // TODO
 	public var backBufferWidth (get, never):Int;
 	public var backBufferHeight (get, never):Int;
+    public var maxBackBufferWidth(default, null):Int;
+    public var maxBackBufferHeight(default, null):Int; // TODO
 	public var profile (default, null):Context3DProfile; // TODO
 	public var enableErrorChecking:Bool; // TODO (use GL.getError() and GL.validateProgram(program))
 	
@@ -117,6 +119,9 @@ import openfl.Lib;
 		rttDepthAndStencil = false;
 		
 		stencilCompareMode = GL.ALWAYS;
+        
+        maxBackBufferWidth = 4096;
+        maxBackBufferHeight = 4096;
 		
 	}
 	
