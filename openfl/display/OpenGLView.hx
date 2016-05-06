@@ -232,13 +232,7 @@ class OpenGLView extends DirectRenderer {
 		} else {
 			
 			var canvas:CanvasElement = cast Browser.document.createElement ("canvas");
-			var context = cast canvas.getContext ("webgl");
-			
-			if (context == null) {
-				
-				context = cast canvas.getContext ("experimental-webgl");
-				
-			}
+			var context = canvas.getContextWebGL();
 			
 			return (context != null);
 			
