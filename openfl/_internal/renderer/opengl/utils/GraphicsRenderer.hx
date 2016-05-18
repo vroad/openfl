@@ -1577,12 +1577,12 @@ class GLGraphicsData {
 	
 	public function upload ():Void {
 		
-		glData = new Float32Array (cast data);
+		glData = new Float32Array (data);
 		gl.bindBuffer (gl.ARRAY_BUFFER, dataBuffer);
 		gl.bufferData (gl.ARRAY_BUFFER, glData, gl.STATIC_DRAW);
 		
 		
-		glIndices = new UInt16Array (cast indices);
+		glIndices = new UInt16Array (indices);
 		gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 		gl.bufferData (gl.ELEMENT_ARRAY_BUFFER, glIndices, gl.STATIC_DRAW);
 		
