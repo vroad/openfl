@@ -219,6 +219,8 @@ abstract Vector<T>(VectorData<T>) {
 		this.data = untyped (new Array<T>()).__SetSizeExact(length);
 		#elseif js
 		this.data = untyped __new__(Array, length);
+		#elseif cs
+		this.data = new Array(new cs.NativeArray<T>(length));
 		#else
 		this.data = new haxe.ds.Vector<T> (length);
 		#end
@@ -234,7 +236,7 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.length = (a != null) ? this.length + a.length : this.length;
 		vectorData.fixed = false;
 		
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = this.data.slice (0, this.length).concat (a.data);
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (vectorData.length);
@@ -252,7 +254,7 @@ abstract Vector<T>(VectorData<T>) {
 	public function copy ():Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = this.data.copy ();
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (length);
@@ -290,6 +292,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public function pop ():Null<T> {
 		
+		#if (!js && !cs)
 		var value = null;
 		
 		if (!this.fixed) {
@@ -304,13 +307,16 @@ abstract Vector<T>(VectorData<T>) {
 		}
 		
 		return value;
+		#else
+		return this.data.pop();
+		#end
 		
 	}
 	
 	
 	public #if js inline #end function push (x:T):Int {
 		
-		#if !js
+		#if (!js && !cs)
 		if (!this.fixed) {
 			
 			this.length++;
@@ -345,8 +351,7 @@ abstract Vector<T>(VectorData<T>) {
 		#if cpp
 		untyped (this.data).__SetSizeExact (this.length);
 		this.data.reverse ();
-		#elseif js
-		untyped (this.data).length = this.length;
+		#elseif (js || cs)
 		this.data.reverse ();
 		#else
 		var data = new haxe.ds.Vector<T> (this.length);
@@ -365,7 +370,7 @@ abstract Vector<T>(VectorData<T>) {
 			
 			this.length--;
 			
-			#if (cpp || js)
+			#if (cpp || js || cs)
 			return this.data.shift ();
 			#else
 			var value = this.data[0];
@@ -390,8 +395,7 @@ abstract Vector<T>(VectorData<T>) {
 				
 				#if cpp
 				untyped (this.data).__SetSizeExact (this.length + 10);
-				#elseif js
-				untyped (this.data).length = this.length + 10;
+				#elseif (js || cs)
 				#else
 				var data = new haxe.ds.Vector<T> (this.length + 10);
 				haxe.ds.Vector.blit (this.data, 0, data, 1, this.data.length);
@@ -400,13 +404,13 @@ abstract Vector<T>(VectorData<T>) {
 				
 			} else {
 				
-				#if (!cpp && !js)
+				#if (!cpp && !js && !cs)
 				haxe.ds.Vector.blit (this.data, 0, this.data, 1, this.length - 1);
 				#end
 				
 			}
 			
-			#if (cpp || js)
+			#if (cpp || js || cs)
 			this.data.unshift (x);
 			#else
 			this.data[0] = x;
@@ -428,7 +432,7 @@ abstract Vector<T>(VectorData<T>) {
 		var vectorData = new VectorData<T> ();
 		vectorData.length = end - pos;
 		vectorData.fixed = true;
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = this.data.slice (pos, end);
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (length);
@@ -441,7 +445,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public function sort (f:T -> T -> Int):Void {
 		
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		this.data.sort (f);
 		#else
 		var array = this.data.toArray ();
@@ -462,7 +466,7 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.length = len;
 		vectorData.fixed = false;
 		
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = this.data.splice (pos, len);
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (len);
@@ -472,7 +476,7 @@ abstract Vector<T>(VectorData<T>) {
 		if (len > 0) {
 			
 			this.length -= len;
-			#if (!cpp && !js)
+			#if (!cpp && !js && !cs)
 			haxe.ds.Vector.blit (this.data, pos + len, this.data, pos, this.length - pos);
 			#end
 			
@@ -486,7 +490,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public inline function toString ():String {
 		
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		return this.data.toString ();
 		#else
 		return this.data.toArray ().toString ();
@@ -541,7 +545,7 @@ abstract Vector<T>(VectorData<T>) {
 	public static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = cast a;
 		#else
 		vectorData.data = haxe.ds.Vector.fromArrayCopy (a);
@@ -578,13 +582,9 @@ abstract Vector<T>(VectorData<T>) {
 			
 			if (this.data.length < this.length) {
 				
-				#if cpp
-				untyped (this.data).__SetSizeExact (value);
-				#else
 				var data = new haxe.ds.Vector<T> (this.data.length + 10);
 				haxe.ds.Vector.blit (cast this.data, 0, data, 0, this.data.length);
 				this.data = cast data;
-				#end
 				
 			}
 			
@@ -599,7 +599,7 @@ abstract Vector<T>(VectorData<T>) {
 	@:noCompletion @:dox(hide) @:from public static function fromArray<T> (value:Array<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = cast value;
 		#else
 		vectorData.data = haxe.ds.Vector.fromArrayCopy (value);
@@ -613,7 +613,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion @:dox(hide) @:to public function toArray<T> ():Array<T> {
 		
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		return this.data;
 		#else
 		var value = new Array ();
@@ -629,7 +629,7 @@ abstract Vector<T>(VectorData<T>) {
 	@:noCompletion @:dox(hide) @:from public static function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
 		
 		var vectorData = new VectorData<T> ();
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		vectorData.data = cast value;
 		#else
 		vectorData.data = value;
@@ -643,7 +643,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion @:dox(hide) @:to public inline function toHaxeVector<T> ():haxe.ds.Vector<T> {
 		
-		#if (cpp || js)
+		#if (cpp || js || cs)
 		return cast this.data;
 		#else
 		return this.data;
@@ -682,7 +682,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion private #if js inline #end function set_length (value:Int):Int {
 		
-		#if !js
+		#if (!js && !cs)
 		if (!fixed) {
 			
 			if (value > this.length) {
@@ -729,7 +729,7 @@ abstract Vector<T>(VectorData<T>) {
 @:dox(hide) class VectorData<T> {
 	
 	
-	#if (cpp || js)
+	#if (cpp || js || cs)
 	public var data:Array<T>;
 	#else
 	public var data:haxe.ds.Vector<T>;
