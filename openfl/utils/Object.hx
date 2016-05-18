@@ -1,4 +1,4 @@
-package openfl.utils;
+package openfl.utils; #if 0
 
 
 @:forward() abstract Object(ObjectType) from ObjectType {
@@ -108,4 +108,6 @@ package openfl.utils;
 typedef ObjectType = Dynamic;
 #else
 typedef ObjectType = flash.utils.Object;
+#end
+
 #end
