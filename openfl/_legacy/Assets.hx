@@ -639,7 +639,7 @@ class Assets {
 	private static function isValidBitmapData (bitmapData:BitmapData):Bool {
 		
 		#if (tools && !display)
-		#if (cpp || neko)
+		#if lime_native
 		
 		return (bitmapData.__handle != null);
 		
@@ -670,7 +670,7 @@ class Assets {
 	private static function isValidSound (sound:Sound):Bool {
 		
 		#if (tools && !display)
-		#if (cpp || neko)
+		#if lime_native
 		
 		return (sound.__handle != null && sound.__handle != 0);
 		

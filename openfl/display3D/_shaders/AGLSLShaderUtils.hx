@@ -8,7 +8,7 @@ import openfl._internal.aglsl.AGLSLCompiler;
 import openfl.display3D.Context3DProgramType;
 import openfl.utils.ByteArray;
 
-#if (cpp || neko || js)
+#if lime_native
 import openfl.gl.GL;
 #end
 
@@ -53,7 +53,7 @@ class AGLSLShaderUtils {
 			
 			return compile (cast (type, String), shaderSource);
 			
-		#elseif (cpp || neko || js)
+		#elseif lime_native
 			
 			var aglsl:AGLSLCompiler = new AGLSLCompiler ();	
 			var glType:Int;
