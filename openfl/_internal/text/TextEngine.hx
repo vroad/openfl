@@ -590,7 +590,7 @@ class TextEngine {
 		var lineIndex = 0;
 		var lineFormat = null;
 		
-		inline function getAdvances (text:String, startIndex:Int, endIndex:Int):Array<Float> {
+		function getAdvances (text:String, startIndex:Int, endIndex:Int):Array<Float> {
 			
 			// TODO: optimize
 			
@@ -637,7 +637,7 @@ class TextEngine {
 			
 		}
 		
-		inline function getAdvancesWidth (advances:Array<Float>):Float {
+		function getAdvancesWidth (advances:Array<Float>):Float {
 			
 			var width = 0.0;
 			
@@ -651,7 +651,7 @@ class TextEngine {
 			
 		}
 		
-		inline function getTextWidth (text:String):Float {
+		function getTextWidth (text:String):Float {
 			
 			#if (js && html5)
 			
@@ -690,7 +690,7 @@ class TextEngine {
 			
 		}
 		
-		inline function nextFormatRange ():Void {
+		function nextFormatRange ():Void {
 			
 			if (rangeIndex < textFormatRanges.length - 1) {
 				
