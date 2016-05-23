@@ -828,8 +828,6 @@ import openfl.Lib;
 	{
 		
 		scissorRectangle = rectangle;
-		// TODO test it
-		scissorRectangle = rectangle;
 		
 		if (rectangle == null) {
 			
