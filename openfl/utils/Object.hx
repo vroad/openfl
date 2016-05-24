@@ -1,4 +1,4 @@
-package openfl.utils; #if 0
+package openfl.utils; #if !cs
 
 
 @:forward() abstract Object(ObjectType) from ObjectType {
