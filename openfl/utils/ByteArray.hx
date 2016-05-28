@@ -465,7 +465,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData {
 	}
 	
 	
-	public function readUnsignedByte ():UInt {
+	public function readUnsignedByte ():Int {
 		
 		if (position < __length) {
 			
@@ -481,7 +481,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData {
 	}
 	
 	
-	public function readUnsignedInt ():UInt {
+	public function readUnsignedInt ():Int {
 		
 		var ch1 = readUnsignedByte ();
 		var ch2 = readUnsignedByte ();
@@ -501,7 +501,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData {
 	}
 	
 	
-	public function readUnsignedShort ():UInt {
+	public function readUnsignedShort ():Int {
 		
 		var ch1 = readUnsignedByte ();
 		var ch2 = readUnsignedByte ();
