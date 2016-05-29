@@ -110,4 +110,8 @@ typedef ObjectType = Dynamic;
 typedef ObjectType = flash.utils.Object;
 #end
 
+#else
+
+typedef Object = Dynamic;
+
 #end
