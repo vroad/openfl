@@ -573,7 +573,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion @:dox(hide) @:arrayAccess public #if js inline #end function set (key:Int, value:T):T {
 		
-		#if !js
+		#if (!js && !cs)
 		if (!this.fixed) {
 			
 			if (key >= this.length) {
