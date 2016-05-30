@@ -1,12 +1,10 @@
-package openfl.display3D.textures; #if !flash
+package openfl.display3D.textures;
 
 
 import openfl.display3D.Context3D;
 import openfl.gl.GL;
 import openfl.gl.GLTexture;
-import openfl.gl.GLFramebuffer;
-import openfl.geom.Rectangle;
-import openfl.utils.ArrayBuffer;
+import openfl.utils.ArrayBufferView;
 import openfl.utils.ByteArray;
 import openfl.utils.UInt8Array;
 
@@ -15,22 +13,23 @@ using openfl.display.BitmapData;
 
 @:final class Texture extends TextureBase {
 	
-	
 	public var optimizeForRenderToTexture:Bool;
+	
 	public var hasMipmap:Bool;
 	
-	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
+	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, format:Int, type:Int) {
 		
 		optimizeForRenderToTexture = optimize;
+
 		hasMipmap = false;
 		
-		super (context, glTexture, width, height, internalFormat, format, type);
+		super (context, glTexture, width, height, format, type);
 		
-		uploadFromUInt8Array(null);
+		uploadFromTypedArray (null);
 		
 		if (optimizeForRenderToTexture) {
 			
-			framebuffer = GL.createFramebuffer ();
+			frameBuffer = GL.createFramebuffer ();
 			
 		}
 		
@@ -46,97 +45,60 @@ using openfl.display.BitmapData;
 	
 	public function uploadFromBitmapData (bitmapData:BitmapData, miplevel:Int = 0):Void {
 		
-		// TODO: Support upload from UInt8Array directly
+		var image = bitmapData.image;
 		
-		width = bitmapData.width;
-		height = bitmapData.height;
+		if (!image.premultiplied && image.transparent) {
+			
+			image = image.clone ();
+			image.premultiplied = true;
+			
+		}
 		
-		#if lime_legacy
+		width = image.width;
+		height = image.height;
 		
-		var p = BitmapData.getRGBAPixels (bitmapData);
-		uploadFromByteArray(p, 0, miplevel);
-		
-		#else
-		
-		var p = bitmapData.image.data;
-		uploadFromUInt8Array(p, miplevel);
-		
-		#end
+		uploadFromTypedArray (image.data, miplevel);
 		
 	}
 	
 	
 	public function uploadFromByteArray (data:ByteArray, byteArrayOffset:Int, miplevel:Int = 0):Void {
 		
-		#if js
-		
-		uploadFromUInt8Array(data != null ? new UInt8Array(data, byteArrayOffset) : null, miplevel);
-		
-		#else
-		
-		uploadFromUInt8Array(new UInt8Array(data), miplevel);
-		
-		#end
+		uploadFromTypedArray (getUInt8ArrayFromByteArray (data, byteArrayOffset), miplevel);
 		
 	}
 	
-	public function uploadFromUInt8Array (data:UInt8Array, miplevel:Int = 0, xOffset:Int = 0, yOffset:Int = 0, _width:Int = 0, _height:Int = 0)
-	{
-		if (_width == 0)
-			_width = width;
-		if (_height == 0)
-			_height = height;
+	
+	@:deprecated("uploadFromUInt8Array is deprecated. Use uploadFromTypedArray instead.")
+	public inline function uploadFromUInt8Array (data:UInt8Array, miplevel:Int = 0):Void {
 		
-		var level:Int = miplevel;
-		while (level > 0)
-		{
-			
-			_width >>= 1;
-			_height >>= 1;
-			level >>= 1;
-			
-		}
+		uploadFromTypedArray (data, miplevel);
 		
-		#if !html5
-		data = flipPixels(data, _width, _height);
-		#end
+	}
+	
+	
+	public function uploadFromTypedArray (data:ArrayBufferView, miplevel:Int = 0, yFlipped:Bool = false, premultiplied:Bool = true):Void {
 		
-		var alignment:Int = 8;
-		var bpp:Int;
+		// TODO use premultiplied parameter
 		
-		switch (format)
-		{
-			
-			case GL.ALPHA: bpp = 1;
-			case GL.RGBA: bpp = 4;
-			default: bpp = 4;
-			
-		}
-		while (alignment != 1)
-		{
-			
-			if ((_width * bpp) % alignment == 0)
-				break;
-			alignment >>= 1;
-			
-		}
-		
-		GL.pixelStorei (GL.UNPACK_ALIGNMENT, alignment);
+		var size = getSizeForMipLevel (miplevel);
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
-		if (data == null)
-			GL.texImage2D (GL.TEXTURE_2D, miplevel, internalFormat, _width, _height, 0, format, type, null);
-		else
-			GL.texSubImage2D (GL.TEXTURE_2D, miplevel, xOffset, height - yOffset - _height, _width, _height, format, type, data);
+		#if (js && html5)
+		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, yFlipped ? 0 : 1);
+		#else
+		if (!yFlipped) {
+			
+			data = flipPixels (data, size.width, size.height);
+			
+		}
+		#end
+		
+		GL.texImage2D (GL.TEXTURE_2D, miplevel, format, size.width, size.height, 0, format, GL.UNSIGNED_BYTE, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
 		
-		if (miplevel > 0)
-			hasMipmap = true;
 	}
+	
+	
 }
-
-
-#else
-typedef Texture = flash.display3D.textures.Texture;
-#end

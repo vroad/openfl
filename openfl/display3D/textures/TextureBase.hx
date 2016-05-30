@@ -1,11 +1,13 @@
-package openfl.display3D.textures; #if !flash
+package openfl.display3D.textures;
 
 
-import openfl.display3D.Context3D;
-import openfl.gl.GL;
-import openfl.gl.GLTexture;
-import openfl.gl.GLFramebuffer;
 import openfl.events.EventDispatcher;
+import openfl.gl.GL;
+import openfl.gl.GLFramebuffer;
+import openfl.gl.GLTexture;
+import openfl.utils.ArrayBufferView;
+import openfl.utils.ByteArray;
+import openfl.utils.ByteArray.ByteArrayData;
 import openfl.utils.UInt8Array;
 
 
@@ -13,18 +15,17 @@ class TextureBase extends EventDispatcher {
 	
 	public var context:Context3D;
 	public var height:Int;
+	public var frameBuffer:GLFramebuffer;
 	public var glTexture:GLTexture;
 	public var width:Int;
-	public var internalFormat:Int;
 	public var format:Int;
 	public var type:Int;
 	public var minFilter:Int;
 	public var magFilter:Int;
 	public var maxAnisoTrophy:Float;
 	public var wrapMode:Int;
-	public var framebuffer:GLFramebuffer;
 	
-	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, internalFormat:Int = GL.RGBA, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
+	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
 		
 		super ();
 		
@@ -32,7 +33,6 @@ class TextureBase extends EventDispatcher {
 		this.width = width;
 		this.height = height;
 		this.glTexture = glTexture;
-		this.internalFormat = internalFormat;
 		this.format = format;
 		this.type = type;
 		this.minFilter = GL.NEAREST_MIPMAP_LINEAR;
@@ -47,36 +47,6 @@ class TextureBase extends EventDispatcher {
 		
 		context.__deleteTexture (this);
 		
-	}
-	
-	private function flipPixels(data:UInt8Array, _width:Int, _height:Int):UInt8Array
-	{
-		#if !html5
-		if (data == null)
-			return null;
-		var data2 = new UInt8Array(data.length);
-		var bpp:Int = 4;
-		switch(this.format)
-		{
-			case GL.RGBA:
-				bpp = 4;
-			case GL.ALPHA:
-				bpp = 1;
-		}
-		var bytesPerLine:Int = _width * bpp;
-		var srcPosition:Int = (_height - 1) * bytesPerLine;
-		var dstPosition:Int = 0;
-		
-		for(i in 0 ... _height)
-		{
-			data2.set(data.subarray(srcPosition, srcPosition + bytesPerLine), dstPosition);
-			srcPosition -= bytesPerLine;
-			dstPosition += bytesPerLine;
-		}
-		return data2;
-		#else
-		return null;
-		#end
 	}
 	
 	private function setMinFilter (filter:Int) {
@@ -123,9 +93,70 @@ class TextureBase extends EventDispatcher {
 		}
 		
 	}
+	
+	
+	private function flipPixels (inData:ArrayBufferView, _width:Int, _height:Int):UInt8Array {
+		
+		#if native
+		if (inData == null) {
+			
+			return null;
+			
+		}
+		
+		var data = getUInt8ArrayFromArrayBufferView (inData);
+		var data2 = new UInt8Array (data.length);
+		var bpp = 4;
+		var bytesPerLine = _width * bpp;
+		var srcPosition = (_height - 1) * bytesPerLine;
+		var dstPosition = 0;
+		
+		for (i in 0 ... _height) {
+			
+			data2.set (data.subarray (srcPosition, srcPosition + bytesPerLine), dstPosition);
+			srcPosition -= bytesPerLine;
+			dstPosition += bytesPerLine;
+			
+		}
+		
+		return data2;
+		#else
+		return null;
+		#end
+		
+	}
+	
+	private function getUInt8ArrayFromByteArray (data:ByteArray, byteArrayOffset:Int):UInt8Array {
+		
+		#if js
+		return byteArrayOffset == 0 ? @:privateAccess (data:ByteArrayData).b : new UInt8Array (data.toArrayBuffer (), byteArrayOffset);
+		#else
+		return new UInt8Array (data.toArrayBuffer (), byteArrayOffset);
+		#end
+		
+	}
+	
+	private function getUInt8ArrayFromArrayBufferView (data:ArrayBufferView):UInt8Array {
+		
+		return new UInt8Array (data.buffer, data.byteOffset, data.byteLength);
+		
+	}
+	
+	private function getSizeForMipLevel (miplevel:Int): {width:Int, height:Int} {
+		
+		var _width = width;
+		var _height = height;
+		var lv = miplevel;
+		
+		while (lv > 0) {
+			
+			_width >>= 1;
+			_height >>= 1;
+			lv >>= 1;
+			
+		}
+		
+		return {width:_width, height:_height};
+		
+	}
 }
-
-
-#else
-typedef TextureBase = flash.display3D.textures.TextureBase;
-#end

@@ -110,11 +110,6 @@ import openfl.Lib;
 		
 		stage.addChildAt(ogl, 0);
 		
-		#if html5
-		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, 1);
-		GL.pixelStorei (GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-		#end
-		
 		backBufferDepthAndStencil = false;
 		rttDepthAndStencil = false;
 		
@@ -216,7 +211,8 @@ import openfl.Lib;
 	
 	public function createCubeTexture (size:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):CubeTexture {
 		
-		var texture = new CubeTexture (this, GL.createTexture (), size); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var glFormat = getGLTextureFormat (format);
+		var texture = new CubeTexture (this, GL.createTexture (), size, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		texturesCreated.push (texture);
 		return texture;
 		
@@ -245,7 +241,7 @@ import openfl.Lib;
 	public function createRectangleTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool):RectangleTexture {
 		
 		var glFormat = getGLTextureFormat(format);
-		var texture = new RectangleTexture (this, GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new RectangleTexture (this, GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		texturesCreated.push (texture);
 		return texture;
 		
@@ -255,26 +251,26 @@ import openfl.Lib;
 	public function createTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):Texture {
 		
 		var glFormat = getGLTextureFormat(format);
-		var texture = new Texture (this, GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new Texture (this, GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		texturesCreated.push (texture);
 		return texture;
 		
 	}
 
 	
-	private function getGLTextureFormat(format:Context3DTextureFormat):{internalFormat:Int, format:Int, type:Int}
+	private function getGLTextureFormat(format:Context3DTextureFormat):{format:Int, type:Int}
 	{
 		
 		switch (format)
 		{
 			
 			case Context3DTextureFormat.ALPHA:
-				return { internalFormat:GL.ALPHA, format:GL.ALPHA, type:GL.UNSIGNED_BYTE };
+				return { format:GL.ALPHA, type:GL.UNSIGNED_BYTE };
 			case Context3DTextureFormat.BGRA:
 				#if html5
-				return { internalFormat:GL.RGBA, format:GL.RGBA, type:GL.UNSIGNED_BYTE };
+				return { format:GL.RGBA, type:GL.UNSIGNED_BYTE };
 				#else
-				return { internalFormat:GL.BGRA_EXT, format:GL.BGRA_EXT, type:GL.UNSIGNED_BYTE };
+				return { format:GL.BGRA_EXT, type:GL.UNSIGNED_BYTE };
 				#end
 			default:
 				return null;
@@ -300,11 +296,13 @@ import openfl.Lib;
 			return;
 		texturesCreated.remove (texture);
 		GL.deleteTexture (texture.glTexture);
-		if (texture.framebuffer != null) {
+		
+		if (texture.frameBuffer != null) {
 			
-			GL.deleteFramebuffer (texture.framebuffer);
+			GL.deleteFramebuffer (texture.frameBuffer);
 			
 		}
+		
 		texture.glTexture = null;
 		
 	}
@@ -766,13 +764,13 @@ import openfl.Lib;
 		
 		// TODO : currently does not work (framebufferStatus always return zero)
 		
-		if (texture.framebuffer == null) {
+		if (texture.frameBuffer == null) {
 			
-			texture.framebuffer = GL.createFramebuffer ();
+			texture.frameBuffer = GL.createFramebuffer ();
 			
 		}
 		
-		GL.bindFramebuffer (GL.FRAMEBUFFER, texture.framebuffer);
+		GL.bindFramebuffer (GL.FRAMEBUFFER, texture.frameBuffer);
 		
 		if (renderbuffer == null && enableDepthAndStencil) {
 			

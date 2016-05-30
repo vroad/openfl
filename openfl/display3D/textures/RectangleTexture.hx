@@ -1,28 +1,32 @@
-package openfl.display3D.textures; #if !flash
+package openfl.display3D.textures;
 
 
 import openfl.display.BitmapData;
 import openfl.display3D.Context3D;
 import openfl.gl.GL;
 import openfl.gl.GLTexture;
-import openfl.geom.Rectangle;
+import openfl.utils.ArrayBufferView;
 import openfl.utils.ByteArray;
 import openfl.utils.UInt8Array;
 
 
 @:final class RectangleTexture extends TextureBase {
 	
-	
 	public var optimizeForRenderToTexture:Bool;
 	
-	
-	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
+	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, format:Int, type:Int) {
 		
 		optimizeForRenderToTexture = optimize;
 		
-		super (context, glTexture, width, height, internalFormat, format, type);
+		super (context, glTexture, width, height, format, type);
 		
-		uploadFromUInt8Array(null);
+		uploadFromTypedArray (null);
+		
+		if (optimizeForRenderToTexture) {
+			
+			frameBuffer = GL.createFramebuffer ();
+			
+		}
 		
 	}
 	
@@ -34,86 +38,55 @@ import openfl.utils.UInt8Array;
 	
 	public function uploadFromBitmapData (bitmapData:BitmapData, miplevel:Int = 0):Void {
 		
-		// TODO: Support upload from UInt8Array directly
+		var image = bitmapData.image;
 		
-		width = bitmapData.width;
-		height = bitmapData.height;
+		if (!image.premultiplied && image.transparent) {
+			
+			image = image.clone ();
+			image.premultiplied = true;
+			
+		}
 		
-		#if lime_legacy
+		width = image.width;
+		height = image.height;
 		
-		var p = BitmapData.getRGBAPixels (bitmapData);
-		uploadFromByteArray(p);
-		
-		#else
-		
-		var p = @:privateAccess bitmapData.image.data;
-		uploadFromUInt8Array(p);
-		
-		#end
+		uploadFromTypedArray (image.data);
 		
 	}
 	
 	
 	public function uploadFromByteArray (data:ByteArray, byteArrayOffset:Int):Void {
 		
-		#if js
-		
-		uploadFromUInt8Array(data != null ? new UInt8Array(data, byteArrayOffset) : null);
-		
-		#else
-		
-		uploadFromUInt8Array(new UInt8Array(data));
-		
-		#end
+		uploadFromTypedArray (getUInt8ArrayFromByteArray (data, byteArrayOffset));
 		
 	}
 	
-	public function uploadFromUInt8Array(data:UInt8Array, xOffset:Int = 0, yOffset:Int = 0, _width:Int = 0, _height:Int = 0)
-	{
+	@:deprecated("uploadFromUInt8Array is deprecated. Use uploadFromTypedArray instead.")
+	public inline function uploadFromUInt8Array (data:UInt8Array):Void {
 		
-		if (_width == 0)
-			_width = width;
-		if (_height == 0)
-			_height = height;
+		uploadFromTypedArray (data);
 		
-		#if !html5
-		data = flipPixels(data, _width, _height);
-		#end
+	}
+	
+	public function uploadFromTypedArray (data:ArrayBufferView, yFlipped:Bool = false, premultiplied:Bool = true):Void {
 		
-		var alignment:Int = 8;
-		var bpp:Int;
-		switch (format)
-		{
-			
-			case GL.ALPHA: bpp = 1;
-			case GL.RGBA: bpp = 4;
-			default: bpp = 4;
-			
-		}
-		while (alignment != 1)
-		{
-		
-			if ((_width * bpp) % alignment == 0)
-				break;
-			alignment >>= 1;
-			
-		}
-		
-		GL.pixelStorei (GL.UNPACK_ALIGNMENT, alignment);
+		// TODO use premultiplied parameter
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
-		if (data == null)
-			GL.texImage2D (GL.TEXTURE_2D, 0, internalFormat, _width, _height, 0, format, type, null);
-		else
-			GL.texSubImage2D (GL.TEXTURE_2D, 0, xOffset, height - yOffset - _height, _width, _height, format, type, data);
+		#if (js && html5)
+		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, yFlipped ? 0 : 1);
+		#else
+		if (!yFlipped) {
+			
+			data = flipPixels (data, width, height);
+			
+		}
+		#end
+		
+		GL.texImage2D (GL.TEXTURE_2D, 0, format, width, height, 0, format, GL.UNSIGNED_BYTE, data);
 		GL.bindTexture (GL.TEXTURE_2D, null);
 		
 	}
 	
 }
-
-
-#else
-typedef RectangleTexture = flash.display3D.textures.RectangleTexture;
-#end

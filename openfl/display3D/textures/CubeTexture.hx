@@ -4,9 +4,7 @@ package openfl.display3D.textures;
 import openfl.display3D.Context3D;
 import openfl.gl.GL;
 import openfl.gl.GLTexture;
-import openfl.geom.Rectangle;
 import openfl.utils.ByteArray;
-import openfl.utils.UInt8Array;
 
 using openfl.display.BitmapData;
 
@@ -19,9 +17,9 @@ using openfl.display.BitmapData;
 	public var hasMipmap:Bool;
 	
 	
-	public function new (context:Context3D, glTexture:GLTexture, size:Int) {
+	public function new (context:Context3D, glTexture:GLTexture, size:Int, format:Int, type:Int) {
 		
-		super (context, glTexture, size, size);
+		super (context, glTexture, size, size, format, type);
 		this.size = size;
 		this.hasMipmap = false;
 		
@@ -58,6 +56,10 @@ using openfl.display.BitmapData;
 		var source = new UInt8Array (BitmapData.getRGBAPixels (bitmapData));
 		#else
 		var source = bitmapData.image.data;
+		#end
+		
+		#if (js && html5)
+		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, 0);
 		#end
 		
 		GL.bindTexture (GL.TEXTURE_CUBE_MAP, glTexture);
