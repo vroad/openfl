@@ -82,8 +82,6 @@ import openfl.Lib;
 		
 		_yFlip = 1;
 		
-		stencilRef = stencilReadMask = 0;
-		
 		vertexBuffersCreated = new Array ();
 		indexBuffersCreated = new Array ();
 		programsCreated = new Array ();
@@ -112,8 +110,6 @@ import openfl.Lib;
 		
 		backBufferDepthAndStencil = false;
 		rttDepthAndStencil = false;
-		
-		stencilCompareMode = GL.ALWAYS;
 		
 		maxBackBufferWidth = 4096;
 		maxBackBufferHeight = 4096;
