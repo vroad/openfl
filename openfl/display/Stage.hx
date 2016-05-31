@@ -742,6 +742,12 @@ class Stage extends DisplayObjectContainer implements IModule {
 		Telemetry.__advanceFrame ();
 		#end
 		
+		if (__renderer != null) {
+			
+			__renderer.onRender (this);
+			
+		}
+		
 		__broadcast (new Event (Event.ENTER_FRAME), true);
 		
 		if (__invalidated) {

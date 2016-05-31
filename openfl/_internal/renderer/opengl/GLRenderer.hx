@@ -54,8 +54,7 @@ class GLRenderer extends AbstractRenderer {
 		
 	}
 	
-	
-	public override function render (stage:Stage):Void {
+	public override function onRender (stage:Stage):Void {
 		
 		var displayMatrix = stage.__displayMatrix;
 		var offsetX = Math.round (displayMatrix.__transformInverseX (0, 0));
@@ -75,7 +74,16 @@ class GLRenderer extends AbstractRenderer {
 			
 		}
 		
-		gl.clear (gl.COLOR_BUFFER_BIT);
+	}
+	
+	
+	public override function render (stage:Stage):Void {
+		
+		var displayMatrix = stage.__displayMatrix;
+		var offsetX = Math.round (displayMatrix.__transformInverseX (0, 0));
+		var offsetY = Math.round (displayMatrix.__transformInverseY (0, 0));
+		var displayWidth = Math.round (displayMatrix.__transformInverseX (width, 0) - offsetX);
+		var displayHeight = Math.round (displayMatrix.__transformInverseY (0, height) - offsetY);
 		
 		stage.__renderGL (renderSession);
 		

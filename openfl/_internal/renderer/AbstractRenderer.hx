@@ -25,6 +25,12 @@ class AbstractRenderer {
 		
 	}
 	
+	public function onRender (stage:Stage):Void {
+		
+		
+		
+	}
+	
 	
 	public function render (stage:Stage):Void {
 		
