@@ -100,26 +100,38 @@ import openfl.gl.GLUniformLocation;
 	
 	public inline function fsUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
+		#if html5
 		return glFCLocationMap[i];
+		#else
+		return i >= 0 && i < glFCLocationMap.length ? glFCLocationMap[i] : -1;
+		#end
 		
 	}
 	
-	public inline function vsUniformLocationFromAgal (i:Int):GLUniformLocation {
+	public inline function vsUniformLocationFromAgal(i:Int):GLUniformLocation {
 		
+		#if html5
 		return glVCLocationMap[i];
+		#else
+		return i >= 0 && i < glVCLocationMap.length ? glVCLocationMap[i] : -1;
+		#end
 		
 	}
 	
 	//sampler
-	public inline function fsampUniformLocationFromAgal (i:Int):GLUniformLocation {
+	public inline function fsampUniformLocationFromAgal(i:Int):GLUniformLocation {
 		
+		#if html5
 		return glFSLocationMap[i];
+		#else
+		return i >= 0 &&  i < glFSLocationMap.length ? glFSLocationMap[i] : -1;
+		#end
 		
 	}
 	
-	public inline function vaUniformLocationFromAgal (i:Int):Int {
+	public inline function vaUniformLocationFromAgal(i:Int):Int {
 		
-		return glVALocationMap[i];
+		return i >= 0 && i < glVALocationMap.length ? glVALocationMap[i] : -1;
 		
 	}
 	
