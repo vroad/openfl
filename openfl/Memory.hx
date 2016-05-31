@@ -1,4 +1,4 @@
-package openfl; #if !openfl_legacy
+package openfl;
 
 
 import haxe.io.BytesData;
@@ -162,8 +162,3 @@ class Memory {
 	
 	
 }
-
-
-#else
-typedef Memory = openfl._legacy.Memory;
-#end

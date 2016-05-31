@@ -1,4 +1,4 @@
-package openfl.display; #if !display #if !openfl_legacy
+package openfl.display;
 
 
 #if !flash
@@ -56,7 +56,7 @@ class OpenGLView extends DirectRenderer {
 			__initialized = true;
 			
 		}
-		#elseif !webgl
+		#elseif canvas
 		if (!__added) {
 			
 			__added = true;
@@ -180,10 +180,11 @@ class OpenGLView extends DirectRenderer {
 				
 			}
 			
+			renderSession.shaderManager.setShader (null);
+			renderSession.blendModeManager.setBlendMode (null);
+			
 			if (__render != null) __render (rect);
 			
-			renderSession.shaderManager.setShader(null);
-			renderSession.blendModeManager.setBlendMode(null);
 		}
 		
 	}
@@ -215,7 +216,7 @@ class OpenGLView extends DirectRenderer {
 		
 		#elseif (js && html5)
 		
-		#if (!dom && !webgl)
+		#if (canvas && !dom)
 		return false;
 		#else
 		
@@ -271,26 +272,3 @@ class OpenGLView extends DirectRenderer {
 	
 	
 }
-
-
-#else
-typedef OpenGLView = openfl._legacy.display.OpenGLView;
-#end
-#elseif !flash
-
-
-extern class OpenGLView extends DirectRenderer {
-	
-	
-	public static inline var CONTEXT_LOST = "glcontextlost";
-	public static inline var CONTEXT_RESTORED = "glcontextrestored";
-	
-	public static var isSupported (get, null):Bool;
-	
-	public function new ();
-	
-	
-}
-
-
-#end

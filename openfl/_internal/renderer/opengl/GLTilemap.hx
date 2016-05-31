@@ -1,18 +1,12 @@
 package openfl._internal.renderer.opengl;
 
 
-import lime.graphics.GLRenderContext;
-import lime.graphics.opengl.GLBuffer;
-import lime.graphics.opengl.GLProgram;
-import lime.graphics.opengl.GLTexture;
-import lime.graphics.opengl.GLUniformLocation;
-import lime.math.Matrix4;
 import lime.utils.Float32Array;
-import lime.utils.GLUtils;
-import openfl._internal.renderer.opengl.GLTilemap;
-import openfl._internal.renderer.RenderSession;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.Tilemap;
+import openfl.filters.ShaderFilter;
+import openfl.geom.Matrix;
+import openfl.geom.Point;
 
 @:access(openfl.display.Tilemap)
 @:access(openfl.display.TilemapLayer)
@@ -22,97 +16,48 @@ import openfl.display.Tilemap;
 class GLTilemap {
 	
 	
-	private static var glImageUniform:GLUniformLocation;
-	private static var glMatrix:Matrix4;
-	private static var glMatrixUniform:GLUniformLocation;
-	private static var glProgram:GLProgram;
-	private static var glTextureAttribute:Int;
-	private static var glVertexAttribute:Int;
-	
-	
-	private static function initialize (gl:GLRenderContext):Void {
-		
-		if (glProgram == null) {
-			
-			var vertexSource = "
-				
-				attribute vec2 aVertexPosition;
-				attribute vec2 aTexCoord;
-				uniform mat4 uMatrix;
-				varying vec2 vTexCoord;
-				
-				void main (void) {
-					
-					vTexCoord = aTexCoord;
-					gl_Position = uMatrix * vec4 (aVertexPosition, 0.0, 1.0);
-					
-				}
-				
-			";
-			
-			var fragmentSource = 
-				
-				
-				"
-				#ifdef GL_ES
-				precision mediump float;
-				#endif
-				varying vec2 vTexCoord;
-				uniform sampler2D uImage0;
-				
-				void main (void) {
-					
-					gl_FragColor = texture2D (uImage0, vTexCoord);
-					
-				}
-				
-			";
-			
-			glProgram = GLUtils.createProgram (vertexSource, fragmentSource);
-			
-			glVertexAttribute = gl.getAttribLocation (glProgram, "aVertexPosition");
-			glTextureAttribute = gl.getAttribLocation (glProgram, "aTexCoord");
-			glMatrixUniform = gl.getUniformLocation (glProgram, "uMatrix");
-			glImageUniform = gl.getUniformLocation (glProgram, "uImage0");
-			
-		}
-		
-	}
-	
-	
-	public static inline function render (tilemap:Tilemap, renderSession:RenderSession):Void {
+	public static function render (tilemap:Tilemap, renderSession:RenderSession):Void {
 		
 		if (tilemap.__layers == null || tilemap.__layers.length == 0) return;
 		
-		// TODO: Smarter matrix
-		
-		glMatrix = Matrix4.createOrtho (-tilemap.__renderTransform.tx, tilemap.stage.stageWidth - tilemap.__renderTransform.tx, tilemap.stage.stageHeight - tilemap.__renderTransform.ty, -tilemap.__renderTransform.ty, -1000, 1000);
-		
-		renderSession.spriteBatch.finish ();
-		
-		renderSession.shaderManager.setShader (null);
-		renderSession.blendModeManager.setBlendMode (null);
-		
 		var gl = renderSession.gl;
+		var shader;
 		
-		initialize (gl);
+		if (tilemap.filters != null && Std.is (tilemap.filters[0], ShaderFilter)) {
+			
+			shader = cast (tilemap.filters[0], ShaderFilter).shader;
+			
+		} else {
+			
+			shader = renderSession.shaderManager.defaultShader;
+			
+		}
 		
-		gl.useProgram (glProgram);
+		renderSession.blendModeManager.setBlendMode (tilemap.blendMode);
+		renderSession.shaderManager.setShader (shader);
 		
-		gl.enableVertexAttribArray (glVertexAttribute);
-		gl.enableVertexAttribArray (glTextureAttribute);
+		var renderer:GLRenderer = cast renderSession.renderer;
 		
-		gl.activeTexture (gl.TEXTURE0);
+		if (tilemap.__mask != null) {
+			
+			renderSession.maskManager.pushMask (tilemap.__mask);
+			
+		}
 		
-		#if (desktop && !rpi)
-		gl.enable (gl.TEXTURE_2D);
-		#end
+		var scrollRect = tilemap.scrollRect;
+		
+		if (scrollRect != null) {
+			
+			renderSession.maskManager.pushRect (scrollRect, tilemap.__worldTransform);
+			
+		}
+		
+		gl.uniform1f (shader.data.uAlpha.index, tilemap.__worldAlpha);
+		gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (tilemap.__worldTransform));
 		
 		var tiles, count, bufferData, buffer, previousLength, offset, uvs, uv;
 		var cacheTileID = -1, tileWidth = 0, tileHeight = 0;
-		var tile, x, y, x2, y2;
-		
-		// TODO: Support tiles that are not the full tileset size
+		var tile, tileMatrix, x, y, x2, y2, x3, y3, x4, y4;
 		
 		for (layer in tilemap.__layers) {
 			
@@ -153,7 +98,6 @@ class GLTilemap {
 				for (i in previousLength...count) {
 					
 					uv = uvs[tiles[i].id];
-					trace (uv);
 					
 					x = uv.x;
 					y = uv.y;
@@ -206,50 +150,53 @@ class GLTilemap {
 				
 				// TODO: Use dirty flag on tiles?
 				
-				x = tile.x;
-				y = tile.y;
-				x2 = x + tileWidth;
-				y2 = y + tileHeight;
+				tileMatrix = tile.matrix;
+				
+				x = tileMatrix.__transformX (0, 0);
+				y = tileMatrix.__transformY (0, 0);
+				x2 = tileMatrix.__transformX (tileWidth, 0);
+				y2 = tileMatrix.__transformY (tileWidth, 0);
+				x3 = tileMatrix.__transformX (0, tileHeight);
+				y3 = tileMatrix.__transformY (0, tileHeight);
+				x4 = tileMatrix.__transformX (tileWidth, tileHeight);
+				y4 = tileMatrix.__transformY (tileWidth, tileHeight);
 				
 				bufferData[offset + 0] = x;
 				bufferData[offset + 1] = y;
 				bufferData[offset + 4] = x2;
-				bufferData[offset + 5] = y;
-				bufferData[offset + 8] = x;
-				bufferData[offset + 9] = y2;
+				bufferData[offset + 5] = y2;
+				bufferData[offset + 8] = x3;
+				bufferData[offset + 9] = y3;
 				
-				bufferData[offset + 12] = x;
-				bufferData[offset + 13] = y2;
+				bufferData[offset + 12] = x3;
+				bufferData[offset + 13] = y3;
 				bufferData[offset + 16] = x2;
-				bufferData[offset + 17] = y;
-				bufferData[offset + 20] = x2;
-				bufferData[offset + 21] = y2;
+				bufferData[offset + 17] = y2;
+				bufferData[offset + 20] = x4;
+				bufferData[offset + 21] = y4;
 				
 			}
 			
 			gl.bufferData (gl.ARRAY_BUFFER, bufferData, gl.DYNAMIC_DRAW);
 			
-			gl.vertexAttribPointer (glVertexAttribute, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 0);
-			gl.vertexAttribPointer (glTextureAttribute, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-			
-			gl.uniformMatrix4fv (glMatrixUniform, false, glMatrix);
-			gl.uniform1i (glImageUniform, 0);
+			gl.vertexAttribPointer (shader.data.aPosition.index, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 0);
+			gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
 			
 			gl.drawArrays (gl.TRIANGLES, 0, tiles.length * 6);
 			
 		}
 		
-		gl.bindBuffer (gl.ARRAY_BUFFER, null);
-		gl.bindTexture (gl.TEXTURE_2D, null);
+		if (scrollRect != null) {
+			
+			renderSession.maskManager.popRect ();
+			
+		}
 		
-		#if (desktop && !rpi)
-		gl.disable (gl.TEXTURE_2D);
-		#end
-		
-		gl.disableVertexAttribArray (glVertexAttribute);
-		gl.disableVertexAttribArray (glTextureAttribute);
-		
-		gl.useProgram (null);
+		if (tilemap.__mask != null) {
+			
+			renderSession.maskManager.popMask ();
+			
+		}
 		
 	}
 	

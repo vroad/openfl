@@ -1,4 +1,4 @@
-package openfl.display; #if !openfl_legacy
+package openfl.display;
 
 
 import lime.ui.MouseCursor;
@@ -303,17 +303,31 @@ class SimpleButton extends InteractiveObject {
 		
 		if (!__renderable || __worldAlpha <= 0) return;
 		
-		if (__cacheAsBitmap) {
-			__cacheGL(renderSession);
-			return;
+		if (scrollRect != null) {
+			
+			renderSession.maskManager.pushRect (scrollRect, __worldTransform);
+			
 		}
 		
-		__preRenderGL (renderSession);
-		__drawGraphicsGL (renderSession);
+		if (__mask != null) {
+			
+			renderSession.maskManager.pushMask (__mask);
+			
+		}
 		
 		__currentState.__renderGL (renderSession);
 		
-		__postRenderGL (renderSession);
+		if (__mask != null) {
+			
+			renderSession.maskManager.popMask ();
+			
+		}
+		
+		if (scrollRect != null) {
+			
+			renderSession.maskManager.popRect ();
+			
+		}
 		
 	}
 	
@@ -511,8 +525,3 @@ class SimpleButton extends InteractiveObject {
 	
 	
 }
-
-
-#else
-typedef SimpleButton = openfl._legacy.display.SimpleButton;
-#end

@@ -198,6 +198,26 @@ class CairoTextField {
 					cairo.setFontSize (size);
 					
 					cairo.moveTo (group.offsetX + scrollX, group.offsetY + group.ascent + scrollY);
+					//cairo.translate (0, 0);
+					//
+					//var glyphs = [];
+					//var x:Float = group.offsetX + scrollX;
+					//var y:Float = group.offsetY + group.ascent + scrollY;
+					//var j = 0;
+					//
+					//for (i in group.startIndex...group.endIndex) {
+						//
+						//glyphs.push (new lime.graphics.cairo.CairoGlyph (font.getGlyph (text.charAt (i)), x + 0.5, y + 0.5));
+						//
+						//if (group.advances.length > j) {
+							//x += group.advances[j];
+							//j++;
+						//}
+						//
+					//}
+					//
+					//cairo.showGlyphs (glyphs);
+					
 					cairo.showText (text.substring (group.startIndex, group.endIndex));
 					
 					if (textField.__caretIndex > -1 && textEngine.selectable) {
@@ -279,6 +299,7 @@ class CairoTextField {
 		}
 		
 		graphics.__bitmap.image.dirty = true;
+		graphics.__bitmap.image.version++;
 		textField.__dirty = false;
 		graphics.__dirty = false;
 		

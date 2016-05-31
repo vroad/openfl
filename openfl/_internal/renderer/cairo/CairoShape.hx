@@ -34,7 +34,7 @@ class CairoShape {
 				
 				var cairo = renderSession.cairo;
 				var scrollRect = shape.scrollRect;
-				var transform = shape.__renderTransform;
+				var transform = shape.__worldTransform;
 				
 				if (renderSession.roundPixels) {
 					
@@ -55,7 +55,7 @@ class CairoShape {
 					
 					cairo.pushGroup ();
 					cairo.newPath ();
-					cairo.rectangle (graphics.__bounds.x + scrollRect.x, graphics.__bounds.y + scrollRect.y, scrollRect.width, scrollRect.height);
+					cairo.rectangle (scrollRect.x - graphics.__bounds.x, scrollRect.y - graphics.__bounds.y, scrollRect.width, scrollRect.height);
 					cairo.fill ();
 					cairo.popGroupToSource ();
 					

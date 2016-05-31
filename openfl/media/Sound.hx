@@ -1,4 +1,4 @@
-package openfl.media; #if (!openfl_legacy || disable_legacy_audio)
+package openfl.media;
 
 
 import haxe.io.Path;
@@ -95,13 +95,14 @@ class Sound extends EventDispatcher {
 	
 	public function load (stream:URLRequest, context:SoundLoaderContext = null):Void {
 		
+		url = stream.url;
+
 		#if !html5
 		
 		AudioBuffer.fromURL (stream.url, AudioBuffer_onURLLoad, true);
 		
 		#else
 		
-		url = stream.url;
 		__soundID = Path.withoutExtension (stream.url);
 		
 		if (!__registeredSounds.exists (__soundID)) {
@@ -200,7 +201,7 @@ class Sound extends EventDispatcher {
 		
 		if (untyped window.createjs != null) {
 			
-			SoundJS.alternateExtensions = [ "ogg", "mp3", "wav" ];
+			SoundJS.alternateExtensions = [ "ogg", "m4a", "mp3", "wav" ];
 			
 		}
 		
@@ -400,9 +401,4 @@ class Sound extends EventDispatcher {
 	public function toString ():String;
 	
 }
-#end
-
-
-#else
-typedef Sound = openfl._legacy.media.Sound;
 #end

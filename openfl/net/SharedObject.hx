@@ -1,4 +1,4 @@
-package openfl.net; #if !openfl_legacy
+package openfl.net;
 
 
 import haxe.io.Bytes;
@@ -411,8 +411,3 @@ class SharedObject extends EventDispatcher {
 	
 	
 }
-
-
-#else
-typedef SharedObject = openfl._legacy.net.SharedObject;
-#end

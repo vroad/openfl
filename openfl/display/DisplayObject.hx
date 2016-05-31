@@ -1,4 +1,4 @@
-package openfl.display; #if !openfl_legacy
+package openfl.display;
 
 
 import lime.graphics.cairo.Cairo;
@@ -9,7 +9,7 @@ import openfl._internal.renderer.canvas.CanvasGraphics;
 import openfl._internal.renderer.canvas.CanvasShape;
 import openfl._internal.renderer.dom.DOMShape;
 import openfl._internal.renderer.opengl.GLRenderer;
-import openfl._internal.renderer.opengl.utils.GraphicsRenderer;
+import openfl._internal.renderer.opengl.GLShape;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.Stage;
 import openfl.errors.TypeError;
@@ -31,7 +31,6 @@ import js.html.CSSStyleDeclaration;
 import js.html.Element;
 #end
 
-
 @:access(openfl.events.Event)
 @:access(openfl.display.Graphics)
 @:access(openfl.display.Stage)
@@ -40,21 +39,17 @@ import js.html.Element;
 @:access(openfl.geom.Rectangle)
 
 
-class DisplayObject extends EventDispatcher implements IBitmapDrawable implements Dynamic<DisplayObject> {
+class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disable_dynamic_child_access implements Dynamic<DisplayObject> #end {
 	
 	
 	private static var __instanceCount = 0;
 	private static var __worldRenderDirty = 0;
 	private static var __worldTransformDirty = 0;
 	
-	private static var __cacheAsBitmapMode = false;
-	
 	public var alpha (get, set):Float;
 	public var blendMode (default, set):BlendMode;
 	public var cacheAsBitmap (get, set):Bool;
 	public var cacheAsBitmapMatrix (get, set):Matrix;
-	public var cacheAsBitmapSmooth (get, set):Bool;
-	public var cacheAsBitmapBounds:Rectangle;
 	public var filters (get, set):Array<BitmapFilter>;
 	public var height (get, set):Float;
 	public var loaderInfo (default, null):LoaderInfo;
@@ -70,7 +65,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	public var scaleX (get, set):Float;
 	public var scaleY (get, set):Float;
 	public var scrollRect (get, set):Rectangle;
-	public var shader (default, set):Shader;
 	public var stage (default, null):Stage;
 	public var transform (get, set):Transform;
 	public var visible (get, set):Bool;
@@ -78,32 +72,29 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	public var x (get, set):Float;
 	public var y (get, set):Float;
 	
-	public var __renderTransform:Matrix;
 	public var __worldColorTransform:ColorTransform;
-	public var __worldOffset:Point;
 	public var __worldTransform:Matrix;
 	
 	private var __alpha:Float;
 	private var __blendMode:BlendMode;
+	private var __cacheAsBitmap:Bool;
+	private var __cacheAsBitmapMatrix:Matrix;
 	private var __cairo:Cairo;
 	private var __children:Array<DisplayObject>;
 	private var __filters:Array<BitmapFilter>;
+	private var __forceCacheAsBitmap:Bool;
 	private var __graphics:Graphics;
 	private var __interactive:Bool;
 	private var __isMask:Bool;
 	private var __mask:DisplayObject;
-	private var __maskGraphics:Graphics;
-	private var __maskCached:Bool = false;
 	private var __name:String;
 	private var __objectTransform:Transform;
-	private var __offset:Point;
 	private var __renderable:Bool;
 	private var __renderDirty:Bool;
 	private var __rotation:Float;
 	private var __rotationCosine:Float;
 	private var __rotationSine:Float;
 	private var __scrollRect:Rectangle;
-	private var __shader:Shader;
 	private var __transform:Matrix;
 	private var __transformDirty:Bool;
 	private var __visible:Bool;
@@ -116,16 +107,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	private var __worldVisible:Bool;
 	private var __worldVisibleChanged:Bool;
 	private var __worldZ:Int;
-	private var __cacheAsBitmap:Bool = false;
-	private var __cacheAsBitmapMatrix:Matrix;
-	private var __cacheAsBitmapSmooth:Bool = true;
-	private var __forceCacheAsBitmap:Bool;
-	private var __updateCachedBitmap:Bool;
-	private var __cachedBitmap:BitmapData;
-	private var __cachedBitmapBounds:Rectangle;
-	private var __cachedFilterBounds:Rectangle;
-	private var __cacheGLMatrix:Matrix;
-	private var __updateFilters:Bool;
 	
 	#if (js && html5)
 	private var __canvas:CanvasElement;
@@ -145,11 +126,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 		__rotation = 0;
 		__rotationSine = 0;
 		__rotationCosine = 1;
-		
-		__renderTransform = new Matrix ();
-		
-		__offset = new Point ();
-		__worldOffset = new Point ();
 		
 		__worldAlpha = 1;
 		__worldTransform = new Matrix ();
@@ -261,6 +237,24 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 		}
 		
 		return false;
+		
+	}
+	
+	
+	private function __cleanup ():Void {
+		
+		__cairo = null;
+		
+		#if (js && html5)
+		__canvas = null;
+		__context = null;
+		#end
+		
+		if (__graphics != null) {
+			
+			__graphics.__cleanup ();
+			
+		}
 		
 	}
 	
@@ -498,149 +492,12 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	
 	public function __renderGL (renderSession:RenderSession):Void {
 		
-		if (!__renderable || __worldAlpha <= 0) return;
-		
-		if (__cacheAsBitmap) {
-			__cacheGL(renderSession);
-			return;
-		}
-		
-		__preRenderGL (renderSession);
-		__drawGraphicsGL (renderSession);
-		__postRenderGL (renderSession);
-		
-	}
-	
-	public inline function __drawGraphicsGL (renderSession:RenderSession):Void {
-		
 		if (__graphics != null) {
 			
-			if (#if !disable_cairo_graphics __graphics.__hardware #else true #end) {
-				
-				GraphicsRenderer.render (this, renderSession);
-				
-			} else {
-				
-				#if (js && html5)
-				CanvasGraphics.render (__graphics, renderSession);
-				#elseif lime_cairo
-				CairoGraphics.render (__graphics, renderSession);
-				#end
-				
-				GLRenderer.renderBitmap (this, renderSession);
-				
-			}
+			GLShape.render (this, renderSession);
 			
 		}
 		
-	}
-	
-	public inline function __preRenderGL (renderSession:RenderSession):Void {
-		
-		if (__scrollRect != null) {
-			
-			renderSession.maskManager.pushRect (__scrollRect, __renderTransform);
-			
-		}
-		
-		if (__mask != null && __maskGraphics != null && __maskGraphics.__commands.length > 0) {
-			
-			renderSession.maskManager.pushMask (this);
-			
-		}
-		
-	}
-	
-	
-	public inline function __postRenderGL (renderSession:RenderSession):Void {
-		
-		if (__mask != null && __maskGraphics != null && __maskGraphics.__commands.length > 0) {
-			
-			renderSession.maskManager.popMask ();
-			
-		}
-		
-		if (__scrollRect != null) {
-			
-			renderSession.maskManager.popRect ();
-			
-		}
-		
-	}
-	
-	
-	public inline function __cacheGL (renderSession:RenderSession):Void {
-		
-		var hasCacheMatrix = __cacheAsBitmapMatrix != null;
-		var x = __cachedBitmapBounds.x;
-		var y = __cachedBitmapBounds.y;
-		var w = __cachedBitmapBounds.width;
-		var h = __cachedBitmapBounds.height;
-		
-		// can't use Matrix.__temp here, it's not safe
-		if (__cacheGLMatrix == null) __cacheGLMatrix = new Matrix();
-		
-		if (hasCacheMatrix) {
-			
-			// Transform the bounds
-			var bmpBounds = openfl.geom.Rectangle.__temp;
-			__cachedBitmapBounds.__transform(bmpBounds, __cacheAsBitmapMatrix);
-			x = bmpBounds.x;
-			y = bmpBounds.y;
-			w = bmpBounds.width;
-			h = bmpBounds.height;
-			
-			__cacheGLMatrix = __cacheAsBitmapMatrix.clone();
-			
-		} else {
-			
-			__cacheGLMatrix.identity();
-			
-		}
-		
-		if (w <= 0 && h <= 0) {
-			
-			//throw 'Error creating a cached bitmap. The texture size is ${w}x${h}';
-			return;
-			
-		}
-		
-		if (__updateCachedBitmap || __updateFilters) {
-			
-			if (__cachedFilterBounds != null) {
-				w += Math.abs(__cachedFilterBounds.x) + Math.abs(__cachedFilterBounds.width);
-				h += Math.abs(__cachedFilterBounds.y) + Math.abs(__cachedFilterBounds.height);
-			}
-
-			if (__cachedBitmap == null) {
-				__cachedBitmap = @:privateAccess BitmapData.__asRenderTexture ();
-			}
-			@:privateAccess __cachedBitmap.__resize(Math.ceil(w), Math.ceil(h));
-			
-			// we need to position the drawing origin to 0,0 in the texture
-			var m = __cacheGLMatrix.clone();
-			m.translate( -x, -y);
-			// we disable the container shader, it will be applied to the final texture
-			var shader = __shader;
-			this.__shader = null;
-			@:privateAccess __cachedBitmap.__drawGL(renderSession, this, m, true, false, true);
-			this.__shader = shader;
-			
-			__updateCachedBitmap = false;
-		}
-		
-		if (__updateFilters) {
-			@:privateAccess BitmapFilter.__applyFilters(__filters, renderSession, __cachedBitmap, __cachedBitmap, null, null);
-			__updateFilters = false;
-		}
-		
-		// Calculate the correct position
-		__cacheGLMatrix.invert();
-		__cacheGLMatrix.__translateTransformed(x, y);
-		__cacheGLMatrix.concat(__renderTransform);
-		__cacheGLMatrix.translate ( __offset.x, __offset.y);
-		
-		renderSession.spriteBatch.renderBitmapData(__cachedBitmap, __cacheAsBitmapSmooth, __cacheGLMatrix, __worldColorTransform, __worldAlpha, blendMode, __shader, ALWAYS);
 	}
 	
 	
@@ -677,8 +534,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 		
 		if (!__renderDirty) {
 			
-			__updateCachedBitmap = true;
-			__updateFilters = filters != null && filters.length > 0;
 			__renderDirty = true;
 			__worldRenderDirty++;
 			
@@ -705,13 +560,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 		
 		__updateTransforms ();
 		
-		// TODO this?
-		if (parent != null && __isMask) {
-			
-			__maskCached = false;
-			
-		}
-		
 		if (updateChildren && __transformDirty) {
 			
 			__transformDirty = false;
@@ -719,60 +567,9 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 			
 		}
 		
-		if (!transformOnly && __mask != null && !__mask.__maskCached) {
-			
-			if (__maskGraphics == null) {
-				
-				__maskGraphics = new Graphics ();
-				
-			}
-			
-			__maskGraphics.clear ();
-			
-			__mask.__update (true, true, __maskGraphics);
-			__mask.__maskCached = true;
-			
-		}
-		
 		if (maskGraphics != null) {
 			
 			__updateMask (maskGraphics);
-			
-		}
-		
-		if (!transformOnly && __cacheAsBitmap) {
-			
-			// we need to update the bounds
-			if (__updateCachedBitmap || __updateFilters) {
-				
-				if (__cachedBitmapBounds == null) {
-					__cachedBitmapBounds = new Rectangle();
-				}
-				
-				if(cacheAsBitmapBounds != null) {
-					__cachedBitmapBounds.copyFrom(cacheAsBitmapBounds);
-				} else {
-					
-					__cachedBitmapBounds.setEmpty();
-					__getRenderBounds(__cachedBitmapBounds, @:privateAccess Matrix.__identity);
-					
-				}
-				
-				
-				if (__filters != null) {
-					
-					if (__cachedFilterBounds == null) {
-						__cachedFilterBounds = new Rectangle();
-					}
-					__cachedFilterBounds.setEmpty();
-					@:privateAccess BitmapFilter.__expandBounds (__filters, __cachedFilterBounds, @:privateAccess Matrix.__identity);
-					
-					__cachedBitmapBounds.x += __cachedFilterBounds.x;
-					__cachedBitmapBounds.y += __cachedFilterBounds.y;
-					
-				}
-				
-			}
 			
 		}
 		
@@ -811,10 +608,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 					
 					__blendMode = parent.__blendMode;
 					
-				}
-				
-				if (shader == null) {
-					__shader = parent.__shader;
 				}
 				
 				#else
@@ -948,28 +741,17 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 			__worldTransform.tx = local.tx * parentTransform.a + local.ty * parentTransform.c + parentTransform.tx;
 			__worldTransform.ty = local.tx * parentTransform.b + local.ty * parentTransform.d + parentTransform.ty;
 			
-			__worldOffset.copyFrom (parent.__worldOffset);
-			
 		} else {
 			
 			__worldTransform.copyFrom (local);
-			__worldOffset.setTo (0, 0);
 			
 		}
 		
 		if (__scrollRect != null) {
 			
-			__offset = __worldTransform.deltaTransformPoint (__scrollRect.topLeft);
-			__worldOffset.offset (__offset.x, __offset.y);
-			
-		} else {
-			
-			__offset.setTo (0, 0);
+			__worldTransform.__translateTransformed (-__scrollRect.x, -__scrollRect.y);
 			
 		}
-		
-		__renderTransform.copyFrom (__worldTransform);
-		__renderTransform.translate ( -__worldOffset.x, -__worldOffset.y);
 		
 	}
 	
@@ -1004,17 +786,10 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 		
 	}
 	
-	private function set_shader (value:Shader):Shader {
-		
-		__shader = value;
-		return shader = value;
-		
-	}
-	
 	
 	private function get_cacheAsBitmap ():Bool {
 		
-		return __cacheAsBitmap;
+		return (__filters == null ? __cacheAsBitmap : true);
 		
 	}
 	
@@ -1022,7 +797,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	private function set_cacheAsBitmap (value:Bool):Bool {
 		
 		__setRenderDirty ();
-		return __cacheAsBitmap = __forceCacheAsBitmap ? true : value;
+		return __cacheAsBitmap = value;
 		
 	}
 	
@@ -1037,21 +812,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	private function set_cacheAsBitmapMatrix (value:Matrix):Matrix {
 		
 		__setRenderDirty ();
-		return __cacheAsBitmapMatrix = value.clone();
-		
-	}
-	
-	
-	private function get_cacheAsBitmapSmooth ():Bool {
-		
-		return __cacheAsBitmapSmooth;
-		
-	}
-	
-	
-	private function set_cacheAsBitmapSmooth (value:Bool):Bool {
-		
-		return __cacheAsBitmapSmooth = value;
+		return __cacheAsBitmapMatrix = value.clone ();
 		
 	}
 	
@@ -1076,16 +837,14 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 		if (value != null && value.length > 0) {
 			
 			__filters = value;
-			__forceCacheAsBitmap = true;
 			__cacheAsBitmap = true;
-			__updateFilters = true;
+			//__updateFilters = true;
 			
 		} else {
 			
 			__filters = null;
-			__forceCacheAsBitmap = false;
 			__cacheAsBitmap = false;
-			__updateFilters = false;
+			//__updateFilters = false;
 			
 		}
 		
@@ -1140,17 +899,26 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	private function set_mask (value:DisplayObject):DisplayObject {
 		
 		if (value != __mask) {
+			
 			__setTransformDirty ();
 			__setRenderDirty ();
+			
 		}
+		
 		if (__mask != null) {
+			
 			__mask.__isMask = false;
-			__mask.__maskCached = false;
-			__mask.__setTransformDirty();
-			__mask.__setRenderDirty();
-			__maskGraphics = null;
+			__mask.__setTransformDirty ();
+			__mask.__setRenderDirty ();
+			
 		}
-		if (value != null) value.__isMask = true;
+		
+		if (value != null) {
+			
+			value.__isMask = true;
+			
+		}
+		
 		return __mask = value;
 		
 	}
@@ -1253,7 +1021,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	
 	private function set_scaleX (value:Float):Float {
 		
-		if (__transform.c == 0) {
+		if (__transform.b == 0) {
 			
 			if (value != __transform.a) __setTransformDirty ();
 			__transform.a = value;
@@ -1461,8 +1229,3 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable implement
 	
 	
 }
-
-
-#else
-typedef DisplayObject = openfl._legacy.display.DisplayObject;
-#end

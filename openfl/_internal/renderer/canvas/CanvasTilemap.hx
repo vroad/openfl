@@ -1,6 +1,7 @@
 package openfl._internal.renderer.canvas;
 
 
+import lime.graphics.utils.ImageCanvasUtil;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.Tilemap;
 
@@ -27,7 +28,7 @@ class CanvasTilemap {
 		}
 		
 		context.globalAlpha = tilemap.__worldAlpha;
-		var transform = tilemap.__renderTransform;
+		var transform = tilemap.__worldTransform;
 		
 		if (renderSession.roundPixels) {
 			
@@ -57,7 +58,7 @@ class CanvasTilemap {
 			
 			if (layer.__tiles.length == 0 || layer.tileset == null || layer.tileset.bitmapData == null) continue;
 			
-			layer.tileset.bitmapData.__sync ();
+			ImageCanvasUtil.convertToCanvas (layer.tileset.bitmapData.image);
 			source = layer.tileset.bitmapData.image.src;
 			
 			tiles = layer.__tiles;
