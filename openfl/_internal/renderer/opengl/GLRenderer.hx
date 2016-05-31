@@ -4,7 +4,6 @@ package openfl._internal.renderer.opengl;
 import lime.graphics.GLRenderContext;
 import lime.math.Matrix4;
 import openfl._internal.renderer.AbstractRenderer;
-import openfl.display.OpenGLView;
 import openfl.display.Stage;
 import openfl.geom.Matrix;
 
@@ -66,23 +65,17 @@ class GLRenderer extends AbstractRenderer {
 		
 		gl.viewport (offsetX, offsetY, displayWidth, displayHeight);
 		
-		// Temporary fix for Stage3D
-		
-		if (stage.__children.length == 0 || !Std.is (stage.__children[0], OpenGLView)) {
+		if (this.transparent) {
 			
-			if (this.transparent) {
-				
-				gl.clearColor (1, 0, 0, 1);
-				
-			} else {
-				
-				gl.clearColor (stage.__colorSplit[0], stage.__colorSplit[1], stage.__colorSplit[2], 1);
-				
-			}
+			gl.clearColor (1, 0, 0, 1);
 			
-			gl.clear (gl.COLOR_BUFFER_BIT);
+		} else {
+			
+			gl.clearColor (stage.__colorSplit[0], stage.__colorSplit[1], stage.__colorSplit[2], 1);
 			
 		}
+		
+		gl.clear (gl.COLOR_BUFFER_BIT);
 		
 		stage.__renderGL (renderSession);
 		
