@@ -13,10 +13,10 @@ import openfl.gl.GLUniformLocation;
 	public var context:Context3D;
 	public var glProgram:GLProgram;
 	/*#! Haxiomic Addition for performance improvements */
-	public var glFCLocationMap:Array<GLUniformLocation>;
-	public var glVCLocationMap:Array<GLUniformLocation>;
-	public var glFSLocationMap:Array<GLUniformLocation>; // sampler
-	public var glVALocationMap:Array<Int>;
+	private var glFCLocationMap:Array<GLUniformLocation>;
+	private var glVCLocationMap:Array<GLUniformLocation>;
+	private var glFSLocationMap:Array<GLUniformLocation>; // sampler
+	private var glVALocationMap:Array<Int>;
 
 	public function new (context:Context3D, program:GLProgram) {
 		
@@ -83,7 +83,7 @@ import openfl.gl.GLUniformLocation;
 			
 			var info:GLActiveInfo = GL.getActiveAttrib (glProgram, i);
 			var name:String = info.name.substr (0, 2);
-			var idx:Int = Std.parseInt(info.name.substr (2));
+			var idx:Int = Std.parseInt (info.name.substr (2));
 			if (name == "va")
 				glVALocationMap[idx] = i;
 			
@@ -92,47 +92,48 @@ import openfl.gl.GLUniformLocation;
 	
 	var yFlip:Null<GLUniformLocation>;
 	
-	public inline function yFlipLoc():GLUniformLocation {
+	public inline function yFlipLoc ():GLUniformLocation {
 		
 		return yFlip;
 		
 	}
 	
-	public inline function fsUniformLocationFromAgal(i:Int):GLUniformLocation {
+	public inline function fsUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
-        #if html5
 		return glFCLocationMap[i];
-        #else
-        return i >= 0 && i < glFCLocationMap.length ? glFCLocationMap[i] : -1;
-        #end
 		
 	}
 	
-	public inline function vsUniformLocationFromAgal(i:Int):GLUniformLocation {
+	public inline function vsUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
-        #if html5
 		return glVCLocationMap[i];
-        #else
-        return i >= 0 && i < glVCLocationMap.length ? glVCLocationMap[i] : -1;
-        #end
 		
 	}
 	
 	//sampler
-	public inline function fsampUniformLocationFromAgal(i:Int):GLUniformLocation {
+	public inline function fsampUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
-        #if html5
 		return glFSLocationMap[i];
-        #else
-        return i >= 0 &&  i < glFSLocationMap.length ? glFSLocationMap[i] : -1;
-        #end
 		
 	}
 	
-	public inline function vaUniformLocationFromAgal(i:Int):Int {
+	public inline function vaUniformLocationFromAgal (i:Int):Int {
 		
-		return i >= 0 && i < glVALocationMap.length ? glVALocationMap[i] : -1;
+		return glVALocationMap[i];
 		
 	}
 	
+	public inline function constUniformLocationFromAgal (type:Context3DProgramType, i:Int):GLUniformLocation {
+		
+		if (type == Context3DProgramType.VERTEX) {
+			
+			return vsUniformLocationFromAgal (i);
+			
+		} else {
+				
+			return fsUniformLocationFromAgal (i);
+			
+		}
+		
+	}
 }

@@ -12,6 +12,7 @@ import openfl.display3D.textures.CubeTexture;
 import openfl.display3D.textures.RectangleTexture;
 import openfl.display3D.textures.Texture;
 import openfl.display3D.textures.TextureBase;
+import openfl.display3D._internal.RenderBufferType;
 import openfl.errors.Error;
 import openfl.events.Event;
 import openfl.geom.Matrix3D;
@@ -49,16 +50,12 @@ import openfl.Lib;
 	private var blendSourceFactor:Int; // to mimic Stage3d behavior of keeping blending across frames:
 	private var currentProgram:Program3D;
 	private var disposed:Bool;
-	private var renderToTexture : Bool;
 	private var drawing:Bool; // to mimic Stage3d behavior of not allowing calls to drawTriangles between present and clear
 	private var indexBuffersCreated:Array<IndexBuffer3D>; // to keep track of stuff to dispose when calling dispose
 	private var ogl:OpenGLView;
 	private var programsCreated:Array<Program3D>; // to keep track of stuff to dispose when calling dispose
-	private var renderbuffer:GLRenderbuffer;
+	private var renderBuffers:Map<RenderBufferType, GLRenderbuffer>;
 	private var samplerParameters:Array<SamplerState>; //TODO : use Tupple3
-	private var scissorRectangle:Rectangle;
-	private var rttWidth:Int;
-	private var rttHeight:Int;
 	private var scrollRect:Rectangle;
 	private var stencilbuffer:GLRenderbuffer;
 	private var stencilCompareMode:Context3DCompareMode;
@@ -69,6 +66,10 @@ import openfl.Lib;
 	private var _yFlip:Float;
 	private var backBufferDepthAndStencil:Bool;
 	private var rttDepthAndStencil:Bool;
+	private var scissorRectangle:Rectangle;
+	private var renderToTexture:Bool;
+	private var rttWidth:Int;
+	private var rttHeight:Int;
 	private var window:Window;
 	
 	public function new (stage3D:Stage3D) {
@@ -87,6 +88,7 @@ import openfl.Lib;
 		programsCreated = new Array ();
 		texturesCreated = new Array (); 
 		samplerParameters = new Array<SamplerState> ();
+		renderBuffers = new Map ();
 		
 		for (i in 0...MAX_SAMPLERS) {
 			
@@ -126,16 +128,24 @@ import openfl.Lib;
 		 	
 		}
 		
-		if (scissorRectangle != null)
+		if (scissorRectangle != null) {
+			
 			GL.disable(GL.SCISSOR_TEST);
+			
+		}
+		
 		GL.clearColor (red, green, blue, alpha);
 		GL.clearDepth (depth);
 		GL.clearStencil (stencil);
 		
 		GL.clear (mask);
 		
-		if (scissorRectangle != null)
+		if (scissorRectangle != null) {
+			
 			GL.enable(GL.SCISSOR_TEST);
+			
+		}
+		
 	}
 	
 	
@@ -303,6 +313,7 @@ import openfl.Lib;
 		
 	}
 	
+	
 	public function __deleteVertexBuffer (buffer:VertexBuffer3D):Void {
 		
 		if (buffer.glBuffer == null)
@@ -313,6 +324,7 @@ import openfl.Lib;
 		
 	}
 	
+	
 	public function __deleteIndexBuffer (buffer:IndexBuffer3D):Void {
 		
 		if (buffer.glBuffer == null)
@@ -322,6 +334,7 @@ import openfl.Lib;
 		buffer.glBuffer = null;
 		
 	}
+	
 	
 	public function __deleteProgram (program:Program3D):Void {
 		
@@ -373,12 +386,13 @@ import openfl.Lib;
 		
 		texturesCreated = null;
 		
-		if (renderbuffer != null) {
+		for (renderBuffer in renderBuffers) {
 			
-			GL.deleteRenderbuffer (renderbuffer);
-			renderbuffer = null;
+			GL.deleteRenderbuffer (renderBuffer);
 			
 		}
+		
+		renderBuffers = null;
 		
 		disposed = true;
 		
@@ -394,7 +408,7 @@ import openfl.Lib;
 	
 	public function drawTriangles (indexBuffer:IndexBuffer3D, firstIndex:Int = 0, numTriangles:Int = -1):Void {
 		
-		var location:GLUniformLocation = currentProgram.yFlipLoc();
+		var location:GLUniformLocation = currentProgram.yFlipLoc ();
 		GL.uniform1f (location, this._yFlip);
 
 		if (!drawing && !renderToTexture) {
@@ -431,12 +445,6 @@ import openfl.Lib;
 		GL.bindBuffer (GL.ARRAY_BUFFER, null);
 		GL.disable (GL.CULL_FACE);
 		
-		if (renderbuffer != null) {
-
-			GL.bindRenderbuffer (GL.RENDERBUFFER, null);
-
-		}
-
 	}
 	
 	
@@ -687,8 +695,8 @@ import openfl.Lib;
 		
 		for (i in 0...numRegisters) {
 			
-			var location:GLUniformLocation = programType == Context3DProgramType.VERTEX ? currentProgram.vsUniformLocationFromAgal(firstRegister + i) : currentProgram.fsUniformLocationFromAgal(firstRegister + i);
-			setGLSLProgramConstantsFromByteArray(location, data);
+			var location = currentProgram.constUniformLocationFromAgal (programType, firstRegister + i);
+			setGLSLProgramConstantsFromByteArray (location, data);
 			
 		}
 		
@@ -720,9 +728,9 @@ import openfl.Lib;
 		
 		for (i in 0...numRegisters) {
 			
-			var currentIndex = i * 4;
-			var location:GLUniformLocation = programType == Context3DProgramType.VERTEX ? currentProgram.vsUniformLocationFromAgal(firstRegister + i) : currentProgram.fsUniformLocationFromAgal(firstRegister + i);
-			setGLSLProgramConstantsFromVector4(location, data, currentIndex);
+			var currentIndex:Int = i * 4;
+			var location:GLUniformLocation = currentProgram.constUniformLocationFromAgal (programType, firstRegister + i);
+			setGLSLProgramConstantsFromVector4 (location, data, currentIndex);
 			
 		}
 		
@@ -739,15 +747,8 @@ import openfl.Lib;
 	
 	
 	public function setRenderToBackBuffer ():Void {
-		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
-
-		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
 		
-		if (renderbuffer != null) {
-
-			GL.bindRenderbuffer (GL.RENDERBUFFER, null);
-
-		}
+		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
 		
 		renderToTexture = false;
 		updateBackBufferViewPort ();
@@ -758,8 +759,6 @@ import openfl.Lib;
 	
 	public function setRenderToTexture (texture:TextureBase, enableDepthAndStencil:Bool = false, antiAlias:Int = 0, surfaceSelector:Int = 0):Void {
 		
-		// TODO : currently does not work (framebufferStatus always return zero)
-		
 		if (texture.frameBuffer == null) {
 			
 			texture.frameBuffer = GL.createFramebuffer ();
@@ -768,24 +767,84 @@ import openfl.Lib;
 		
 		GL.bindFramebuffer (GL.FRAMEBUFFER, texture.frameBuffer);
 		
-		if (renderbuffer == null && enableDepthAndStencil) {
+		#if (js && html5)
+		var packedDepthStencilSupport = true;
+		#else
+		var packedDepthStencilSupport = false;
+		#end
+		
+		var depthStencilRenderBuffer = null;
+		var depthRenderBuffer = null;
+		var stencilRenderBuffer = null;
+		
+		if (enableDepthAndStencil) {
 			
-			renderbuffer = GL.createRenderbuffer ();
+			if (packedDepthStencilSupport) {
+				
+				depthStencilRenderBuffer = renderBuffers[RenderBufferType.DepthStencil];
+				
+				if (depthStencilRenderBuffer == null) {
+					
+					renderBuffers[RenderBufferType.DepthStencil] = depthStencilRenderBuffer = GL.createRenderbuffer ();
+					
+				}
+				
+			} else {
+				
+				depthRenderBuffer = renderBuffers[RenderBufferType.Depth];
+				stencilRenderBuffer = renderBuffers[RenderBufferType.Stencil];
+				
+				if (depthRenderBuffer == null) {
+					
+					renderBuffers[RenderBufferType.Depth] = depthRenderBuffer = GL.createRenderbuffer ();
+					
+				}
+				
+				if (stencilRenderBuffer == null) {
+					
+					renderBuffers[RenderBufferType.Stencil] = stencilRenderBuffer = GL.createRenderbuffer ();
+					
+				}
+				
+			}
 			
 		}
 		
-		GL.bindRenderbuffer (GL.RENDERBUFFER, renderbuffer);
-		#if (ios || tvos)
-		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, 0x88F0, texture.width, texture.height);
-		#else
-		if (enableDepthAndStencil) GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
-		#end
-		GL.framebufferTexture2D (GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, texture.glTexture, 0);
-
-		if (enableDepthAndStencil)
-		{
+		if (enableDepthAndStencil) {
 			
-			GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, renderbuffer);
+			if (packedDepthStencilSupport) {
+				
+				GL.bindRenderbuffer (GL.RENDERBUFFER, depthStencilRenderBuffer);
+				GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
+				
+				
+			} else {
+				
+				GL.bindRenderbuffer (GL.RENDERBUFFER, depthRenderBuffer);
+				GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_COMPONENT16, texture.width, texture.height);
+				GL.bindRenderbuffer (GL.RENDERBUFFER, stencilRenderBuffer);
+				GL.renderbufferStorage (GL.RENDERBUFFER, GL.STENCIL_INDEX8, texture.width, texture.height);
+				
+			}
+			
+			GL.bindRenderbuffer (GL.RENDERBUFFER, null);
+			
+		}
+		
+		GL.framebufferTexture2D (GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, texture.glTexture, 0);
+		
+		if (enableDepthAndStencil) {
+			
+			if (packedDepthStencilSupport) {
+				
+				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, depthStencilRenderBuffer);
+				
+			} else {
+				
+				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_ATTACHMENT, GL.RENDERBUFFER, depthRenderBuffer);
+				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.STENCIL_ATTACHMENT, GL.RENDERBUFFER, stencilRenderBuffer);
+				
+			}
 			
 		}
 		
@@ -795,8 +854,9 @@ import openfl.Lib;
 		rttDepthAndStencil = enableDepthAndStencil;
 		rttWidth = texture.width;
 		rttHeight = texture.height;
-		updateScissorRectangle();
-		updateDepthAndStencilState();
+		updateScissorRectangle ();
+		updateDepthAndStencilState ();
+		
 	}
 	
 	
@@ -818,8 +878,8 @@ import openfl.Lib;
 		
 	}
 	
-	public function setScissorRectangle(rectangle:Rectangle):Void 
-	{
+	
+	public function setScissorRectangle (rectangle:Rectangle):Void {
 		
 		scissorRectangle = rectangle;
 		
@@ -879,7 +939,7 @@ import openfl.Lib;
 	
 	public function setTextureAt (sampler:Int, texture:TextureBase):Void {
 		
-		var location = currentProgram.fsampUniformLocationFromAgal(sampler);
+		var location = currentProgram.fsampUniformLocationFromAgal (sampler);
 		setGLSLTextureAt (location, texture, sampler);
 		
 	}
@@ -889,7 +949,7 @@ import openfl.Lib;
 		
 		if (!anisotropySupportTested) {
 			
-			#if !html5
+			#if native
 			
 			supportsAnisotropy = (GL.getSupportedExtensions ().indexOf ("GL_EXT_texture_filter_anisotropic") != -1);
 			
@@ -1123,7 +1183,7 @@ import openfl.Lib;
 	
 	public function setVertexBufferAt (index:Int, buffer:VertexBuffer3D, bufferOffset:Int = 0, ?format:Context3DVertexBufferFormat):Void {
 		
-		var location:Int = currentProgram.vaUniformLocationFromAgal(index);
+		var location = currentProgram.vaUniformLocationFromAgal (index);
 		setGLSLVertexBufferAt (location, buffer, bufferOffset, format);
 		
 	}
