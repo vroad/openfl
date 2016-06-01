@@ -35,6 +35,7 @@ import openfl.Lib;
 	
 	private static var anisotropySupportTested:Bool = false;
 	private static var supportsAnisotropy:Bool = false;
+	private static var supportsPackedDepthStencil:Null<Bool> = null;
 	private static var maxSupportedAnisotropy:UInt = 256;
 	
 	public var driverInfo (default, null):String = "OpenGL"; // TODO
@@ -767,11 +768,11 @@ import openfl.Lib;
 		
 		GL.bindFramebuffer (GL.FRAMEBUFFER, texture.frameBuffer);
 		
-		#if (js && html5)
-		var packedDepthStencilSupport = true;
-		#else
-		var packedDepthStencilSupport = false;
-		#end
+		if (supportsPackedDepthStencil == null) {
+			
+			supportsPackedDepthStencil = __hasGLExtension ("GL_OES_packed_depth_stencil") || __hasGLExtension ("GL_EXT_packed_depth_stencil");
+			
+		}
 		
 		var depthStencilRenderBuffer = null;
 		var depthRenderBuffer = null;
@@ -779,7 +780,7 @@ import openfl.Lib;
 		
 		if (enableDepthAndStencil) {
 			
-			if (packedDepthStencilSupport) {
+			if (supportsPackedDepthStencil) {
 				
 				depthStencilRenderBuffer = renderBuffers[RenderBufferType.DepthStencil];
 				
@@ -812,11 +813,10 @@ import openfl.Lib;
 		
 		if (enableDepthAndStencil) {
 			
-			if (packedDepthStencilSupport) {
+			if (supportsPackedDepthStencil) {
 				
 				GL.bindRenderbuffer (GL.RENDERBUFFER, depthStencilRenderBuffer);
-				GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_STENCIL, texture.width, texture.height);
-				
+				GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH24_STENCIL8_EXT, texture.width, texture.height);
 				
 			} else {
 				
@@ -835,7 +835,7 @@ import openfl.Lib;
 		
 		if (enableDepthAndStencil) {
 			
-			if (packedDepthStencilSupport) {
+			if (supportsPackedDepthStencil) {
 				
 				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, depthStencilRenderBuffer);
 				
@@ -1204,6 +1204,12 @@ import openfl.Lib;
 			GL.disable (GL.BLEND);
 			
 		}
+		
+	}
+	
+	private function __hasGLExtension (name:String):Bool {
+		
+		return (GL.getSupportedExtensions ().indexOf (name) != -1);
 		
 	}
 	
