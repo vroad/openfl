@@ -578,7 +578,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
-		if (window.renderer != null && window.renderer.context != null) {
+		if (window.renderer != null) {
 			
 			switch (window.renderer.context) {
 				
@@ -744,7 +744,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (__renderer != null) {
 			
-			__renderer.onRender (this);
+			__renderer.init (this);
 			
 		}
 		
@@ -770,15 +770,19 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (__renderer != null) {
 			
-			switch (renderer.context) {
+			if (renderer.type == CAIRO) {
 				
-				case CAIRO (cairo):
+				switch (renderer.context) {
 					
-					cast (__renderer, CairoRenderer).cairo = cairo;
-					@:privateAccess (__renderer.renderSession).cairo = cairo;
+					case CAIRO (cairo):
+						
+						cast (__renderer, CairoRenderer).cairo = cairo;
+						@:privateAccess (__renderer.renderSession).cairo = cairo;
+					
+					default:
+						
+				}
 				
-				default:
-					
 			}
 			
 			__renderer.render (this);

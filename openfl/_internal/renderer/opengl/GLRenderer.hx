@@ -54,15 +54,8 @@ class GLRenderer extends AbstractRenderer {
 		
 	}
 	
-	public override function onRender (stage:Stage):Void {
-		
-		var displayMatrix = stage.__displayMatrix;
-		var offsetX = Math.round (displayMatrix.__transformInverseX (0, 0));
-		var offsetY = Math.round (displayMatrix.__transformInverseY (0, 0));
-		var displayWidth = Math.round (displayMatrix.__transformInverseX (width, 0) - offsetX);
-		var displayHeight = Math.round (displayMatrix.__transformInverseY (0, height) - offsetY);
-		
-		gl.viewport (offsetX, offsetY, displayWidth, displayHeight);
+	
+	public override function init (stage:Stage):Void {
 		
 		if (this.transparent) {
 			
@@ -71,6 +64,15 @@ class GLRenderer extends AbstractRenderer {
 		} else {
 			
 			gl.clearColor (stage.__colorSplit[0], stage.__colorSplit[1], stage.__colorSplit[2], 1);
+			
+		}
+		
+		gl.clear (gl.COLOR_BUFFER_BIT);
+		
+		if (stage.stage3Ds[0].context3D != null) {
+			
+			renderSession.shaderManager.setShader (null);
+			renderSession.blendModeManager.setBlendMode (null);
 			
 		}
 		
@@ -84,6 +86,8 @@ class GLRenderer extends AbstractRenderer {
 		var offsetY = Math.round (displayMatrix.__transformInverseY (0, 0));
 		var displayWidth = Math.round (displayMatrix.__transformInverseX (width, 0) - offsetX);
 		var displayHeight = Math.round (displayMatrix.__transformInverseY (0, height) - offsetY);
+		
+		gl.viewport (offsetX, offsetY, displayWidth, displayHeight);
 		
 		stage.__renderGL (renderSession);
 		
