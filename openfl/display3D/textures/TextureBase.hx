@@ -25,7 +25,8 @@ class TextureBase extends EventDispatcher {
 	public var __minFilter:Int;
 	public var __magFilter:Int;
 	public var __maxAnisoTrophy:Float;
-	public var __wrapMode:Int;
+	public var __wrapS:Int;
+	public var __wrapT:Int;
 	
 	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
 		
@@ -40,7 +41,8 @@ class TextureBase extends EventDispatcher {
 		__minFilter = GL.NEAREST_MIPMAP_LINEAR;
 		__magFilter = GL.LINEAR;
 		__maxAnisoTrophy = 1.0;
-		__wrapMode = GL.REPEAT;
+		__wrapS = GL.REPEAT;
+		__wrapT = GL.REPEAT;
 		
 	}
 	
@@ -84,13 +86,19 @@ class TextureBase extends EventDispatcher {
 		
 	}
 	
-	private function setWrapMode (mode:Int) {
+	private function setWrapMode (wrapS:Int, wrapT:Int) {
 		
-		if (__wrapMode != mode) {
+		if (__wrapS != wrapS) {
 			
-			__wrapMode = mode;
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, __wrapMode);
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, __wrapMode);
+			__wrapS = wrapS;
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, wrapS);
+			
+		}
+		
+		if (__wrapT != wrapT) {
+			
+			__wrapT = wrapT;
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, wrapT);
 			
 		}
 		

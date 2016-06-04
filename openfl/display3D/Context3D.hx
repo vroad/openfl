@@ -1026,23 +1026,19 @@ import openfl.Lib;
 				
 				case Context3DWrapMode.CLAMP:
 					
-					texture.setWrapMode (GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.CLAMP_TO_EDGE);
 				
 				case Context3DWrapMode.CLAMP_U_REPEAT_V:
 					
-					// TODO
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.REPEAT);
+					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.REPEAT);
 				
 				case Context3DWrapMode.REPEAT:
 					
-					texture.setWrapMode (GL.REPEAT);
+					texture.setWrapMode (GL.REPEAT, GL.REPEAT);
 				
 				case Context3DWrapMode.REPEAT_U_CLAMP_V:
 					
-					// TODO
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.REPEAT);
-					GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GL.REPEAT, GL.CLAMP_TO_EDGE);
 				
 			}
 			
@@ -1111,7 +1107,7 @@ import openfl.Lib;
 			
 		} else if (Std.instance (texture, RectangleTexture) != null) {
 			
-			texture.setWrapMode (GL.CLAMP_TO_EDGE);
+			texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.CLAMP_TO_EDGE);
 			
 			switch (filter) {
 				
@@ -1157,15 +1153,19 @@ import openfl.Lib;
 				
 				case Context3DWrapMode.CLAMP:
 					
-					texture.setWrapMode (GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.CLAMP_TO_EDGE);
+					
+				case Context3DWrapMode.CLAMP_U_REPEAT_V:
+					
+					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.REPEAT);
 				
 				case Context3DWrapMode.REPEAT:
 					
-					texture.setWrapMode (GL.REPEAT);
+					texture.setWrapMode (GL.REPEAT, GL.REPEAT);
 					
-				case _:
+				case Context3DWrapMode.REPEAT_U_CLAMP_V:
 					
-					// TODO
+					texture.setWrapMode (GL.REPEAT, GL.CLAMP_TO_EDGE);
 				
 			}
 			
