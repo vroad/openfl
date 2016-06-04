@@ -4,19 +4,23 @@ package openfl.display;
 import haxe.Timer;
 import openfl.display.OpenGLView;
 import openfl.display3D.Context3D;
+import openfl.display3D.Context3DProfile;
 import openfl.display3D.Context3DRenderMode;
 import openfl.events.ErrorEvent;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
+import openfl.Vector;
+
+@:access(openfl.display3D.Context3D)
 
 
 class Stage3D extends EventDispatcher {
 	
 	
-	public var context3D:Context3D;
+	public var context3D (default, null):Context3D;
 	public var visible:Bool; // TODO
-	public var x(default, set):Float;
-	public var y(default, set):Float;
+	public var x:Float;
+	public var y:Float;
 	
 	
 	public function new () {
@@ -28,26 +32,30 @@ class Stage3D extends EventDispatcher {
 		
 	}
 	
-	public function requestContext3D (context3DRenderMode:Context3DRenderMode = null):Void {
+	
+	public function requestContext3D (context3DRenderMode:Context3DRenderMode = AUTO, profile:Context3DProfile = BASELINE):Void {
 		
-		if (OpenGLView.isSupported) {
+		Timer.delay (function () {
 			
-			Timer.delay(function() {
+			if (OpenGLView.isSupported) {
 				
 				context3D = new Context3D (this);
 				dispatchEvent (new Event (Event.CONTEXT3D_CREATE));
 				
-			}, 1);
-			
-		} else {
-			
-			Timer.delay(function() {
+			} else {
 				
 				dispatchEvent (new ErrorEvent (ErrorEvent.ERROR));
 				
-			}, 1);
+			}
 			
-		}
+		}, 1);
+		
+	}
+	
+	
+	public function requestContext3DMatchingProfiles (profiles:Vector<Context3DProfile>):Void {
+		
+		requestContext3D ();
 		
 	}
 	

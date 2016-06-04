@@ -47,7 +47,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	private static var __worldTransformDirty = 0;
 	
 	public var alpha (get, set):Float;
-	public var blendMode (default, set):BlendMode;
+	public var blendMode (get, set):BlendMode;
 	public var cacheAsBitmap (get, set):Bool;
 	public var cacheAsBitmapMatrix (get, set):Matrix;
 	public var filters (get, set):Array<BitmapFilter>;
@@ -91,6 +91,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	private var __objectTransform:Transform;
 	private var __renderable:Bool;
 	private var __renderDirty:Bool;
+	private var __renderTransform:Matrix;
 	private var __rotation:Float;
 	private var __rotationCosine:Float;
 	private var __rotationSine:Float;
@@ -120,6 +121,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 		super ();
 		
 		__alpha = 1;
+		__blendMode = NORMAL;
+		__cacheAsBitmap = false;
 		__transform = new Matrix ();
 		__visible = true;
 		
@@ -130,6 +133,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 		__worldAlpha = 1;
 		__worldTransform = new Matrix ();
 		__worldColorTransform = new ColorTransform ();
+		__renderTransform = new Matrix ();
 		
 		#if dom
 		__worldVisible = true;
@@ -341,6 +345,14 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 			rect.__expand (matrix.tx, matrix.ty, r.width, r.height);
 			
 		}
+		
+	}
+	
+	
+	private function __getRenderTransform ():Matrix {
+		
+		__getWorldTransform ();
+		return __renderTransform;
 		
 	}
 	
@@ -753,6 +765,14 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 			
 		}
 		
+		__renderTransform.copyFrom (__worldTransform);
+		
+		if (stage != null) {
+			
+			__renderTransform.concat (stage.__displayMatrix);
+			
+		}
+		
 	}
 	
 	
@@ -779,10 +799,17 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	}
 	
 	
+	private function get_blendMode ():BlendMode {
+		
+		return __blendMode;
+		
+	}
+	
+	
 	private function set_blendMode (value:BlendMode):BlendMode {
 		
-		__blendMode = value;
-		return blendMode = value;
+		if (value == null) value = NORMAL;
+		return __blendMode = value;
 		
 	}
 	
@@ -837,13 +864,11 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 		if (value != null && value.length > 0) {
 			
 			__filters = value;
-			__cacheAsBitmap = true;
 			//__updateFilters = true;
 			
 		} else {
 			
 			__filters = null;
-			__cacheAsBitmap = false;
 			//__updateFilters = false;
 			
 		}

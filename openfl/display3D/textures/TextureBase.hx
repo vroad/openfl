@@ -1,59 +1,61 @@
 package openfl.display3D.textures;
 
 
+import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLFramebuffer;
+import lime.graphics.opengl.GLTexture;
+import lime.utils.ArrayBufferView;
+import lime.utils.UInt8Array;
 import openfl.events.EventDispatcher;
-import openfl.gl.GL;
-import openfl.gl.GLFramebuffer;
-import openfl.gl.GLTexture;
-import openfl.utils.ArrayBufferView;
 import openfl.utils.ByteArray;
 import openfl.utils.ByteArray.ByteArrayData;
-import openfl.utils.UInt8Array;
+
+@:access(openfl.display3D.Context3D)
 
 
 class TextureBase extends EventDispatcher {
 	
-	public var context:Context3D;
-	public var height:Int;
-	public var frameBuffer:GLFramebuffer;
-	public var glTexture:GLTexture;
-	public var width:Int;
-	public var format:Int;
-	public var type:Int;
-	public var minFilter:Int;
-	public var magFilter:Int;
-	public var maxAnisoTrophy:Float;
-	public var wrapMode:Int;
+	public var __context:Context3D;
+	public var __frameBuffer:GLFramebuffer;
+	public var __height:Int;
+	public var __width:Int;
+	public var __glTexture:GLTexture;
+	public var __format:Int;
+	public var __type:Int;
+	public var __minFilter:Int;
+	public var __magFilter:Int;
+	public var __maxAnisoTrophy:Float;
+	public var __wrapMode:Int;
 	
 	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
 		
 		super ();
 		
-		this.context = context;
-		this.width = width;
-		this.height = height;
-		this.glTexture = glTexture;
-		this.format = format;
-		this.type = type;
-		this.minFilter = GL.NEAREST_MIPMAP_LINEAR;
-		this.magFilter = GL.LINEAR;
-		this.maxAnisoTrophy = 1.0;
-		this.wrapMode = GL.REPEAT;
+		__context = context;
+		__width = width;
+		__height = height;
+		__glTexture = glTexture;
+		__format = format;
+		__type = type;
+		__minFilter = GL.NEAREST_MIPMAP_LINEAR;
+		__magFilter = GL.LINEAR;
+		__maxAnisoTrophy = 1.0;
+		__wrapMode = GL.REPEAT;
 		
 	}
 	
 	
 	public function dispose ():Void {
 		
-		context.__deleteTexture (this);
+		__context.__deleteTexture (this);
 		
 	}
 	
 	private function setMinFilter (filter:Int) {
 		
-		if (this.minFilter != filter) {
+		if (__minFilter != filter) {
 			
-			minFilter = filter;
+			__minFilter = filter;
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter);
 			
 		}
@@ -62,9 +64,9 @@ class TextureBase extends EventDispatcher {
 	
 	private function setMagFilter (filter:Int) {
 		
-		if (this.magFilter != filter) {
+		if (__magFilter != filter) {
 			
-			magFilter = filter;
+			__magFilter = filter;
 			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, filter);
 			
 		}
@@ -73,9 +75,9 @@ class TextureBase extends EventDispatcher {
 	
 	private function setMaxAnisotrophy (value:Float) {
 		
-		if (this.maxAnisoTrophy != value) {
+		if (__maxAnisoTrophy != value) {
 			
-			maxAnisoTrophy = value;
+			__maxAnisoTrophy = value;
 			GL.texParameterf (GL.TEXTURE_2D, @:privateAccess Context3D.TEXTURE_MAX_ANISOTROPY_EXT, value);
 			
 		}
@@ -84,18 +86,18 @@ class TextureBase extends EventDispatcher {
 	
 	private function setWrapMode (mode:Int) {
 		
-		if (this.wrapMode != mode) {
+		if (__wrapMode != mode) {
 			
-			wrapMode = mode;
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, wrapMode);
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, wrapMode);
+			__wrapMode = mode;
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, __wrapMode);
+			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, __wrapMode);
 			
 		}
 		
 	}
 	
 	
-	private function flipPixels (inData:ArrayBufferView, _width:Int, _height:Int):UInt8Array {
+	private function __flipPixels (inData:ArrayBufferView, _width:Int, _height:Int):UInt8Array {
 		
 		#if native
 		if (inData == null) {
@@ -104,7 +106,7 @@ class TextureBase extends EventDispatcher {
 			
 		}
 		
-		var data = getUInt8ArrayFromArrayBufferView (inData);
+		var data = __getUInt8ArrayFromArrayBufferView (inData);
 		var data2 = new UInt8Array (data.length);
 		var bpp = 4;
 		var bytesPerLine = _width * bpp;
@@ -126,26 +128,11 @@ class TextureBase extends EventDispatcher {
 		
 	}
 	
-	private function getUInt8ArrayFromByteArray (data:ByteArray, byteArrayOffset:Int):UInt8Array {
-		
-		#if js
-		return byteArrayOffset == 0 ? @:privateAccess (data:ByteArrayData).b : new UInt8Array (data.toArrayBuffer (), byteArrayOffset);
-		#else
-		return new UInt8Array (data.toArrayBuffer (), byteArrayOffset);
-		#end
-		
-	}
 	
-	private function getUInt8ArrayFromArrayBufferView (data:ArrayBufferView):UInt8Array {
+	private function __getSizeForMipLevel (miplevel:Int):{ width:Int, height:Int } {
 		
-		return new UInt8Array (data.buffer, data.byteOffset, data.byteLength);
-		
-	}
-	
-	private function getSizeForMipLevel (miplevel:Int): {width:Int, height:Int} {
-		
-		var _width = width;
-		var _height = height;
+		var _width = __width;
+		var _height = __height;
 		var lv = miplevel;
 		
 		while (lv > 0) {
@@ -156,7 +143,27 @@ class TextureBase extends EventDispatcher {
 			
 		}
 		
-		return {width:_width, height:_height};
+		return { width: _width, height: _height };
 		
 	}
+	
+	
+	private function __getUInt8ArrayFromByteArray (data:ByteArray, byteArrayOffset:Int):UInt8Array {
+		
+		#if js
+		return byteArrayOffset == 0 ? @:privateAccess (data:ByteArrayData).b : new UInt8Array (data.toArrayBuffer (), byteArrayOffset);
+		#else
+		return new UInt8Array (data.toArrayBuffer (), byteArrayOffset);
+		#end
+		
+	}
+	
+	
+	private function __getUInt8ArrayFromArrayBufferView (data:ArrayBufferView):UInt8Array {
+		
+		return new UInt8Array (data.buffer, data.byteOffset, data.byteLength);
+		
+	}
+	
+	
 }

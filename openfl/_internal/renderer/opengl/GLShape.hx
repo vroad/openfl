@@ -28,14 +28,14 @@ class GLShape {
 		if (graphics != null) {
 			
 			#if (js && html5)
-			CanvasGraphics.render (graphics, renderSession);
+			CanvasGraphics.render (graphics, renderSession, shape.__worldTransform);
 			#elseif lime_cairo
-			CairoGraphics.render (graphics, renderSession);
+			CairoGraphics.render (graphics, renderSession, shape.__worldTransform);
 			#end
 			
 			var bounds = graphics.__bounds;
 			
-			if (graphics.__bitmap != null && graphics.__visible && bounds != null && bounds.width >= 1 && bounds.height >= 1) {
+			if (graphics.__bitmap != null && graphics.__visible) {
 				
 				var shader;
 				
@@ -51,31 +51,12 @@ class GLShape {
 				
 				renderSession.blendModeManager.setBlendMode (shape.blendMode);
 				renderSession.shaderManager.setShader (shader);
+				renderSession.maskManager.pushObject (shape);
 				
 				var renderer:GLRenderer = cast renderSession.renderer;
 				
-				if (shape.__mask != null) {
-					
-					renderSession.maskManager.pushMask (shape.__mask);
-					
-				}
-				
-				var scrollRect = shape.scrollRect;
-				
-				if (scrollRect != null) {
-					
-					renderSession.maskManager.pushRect (scrollRect, shape.__worldTransform);
-					
-				}
-				
-				var transform = Matrix.__temp;
-				transform.identity ();
-				transform.tx = bounds.x;
-				transform.ty = bounds.y;
-				transform.concat (shape.__worldTransform);
-				
 				gl.uniform1f (shader.data.uAlpha.index, shape.__worldAlpha);
-				gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (transform));
+				gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (graphics.__worldTransform));
 				
 				gl.bindTexture (gl.TEXTURE_2D, graphics.__bitmap.getTexture (gl));
 				
@@ -88,17 +69,7 @@ class GLShape {
 				
 				gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
 				
-				if (scrollRect != null) {
-					
-					renderSession.maskManager.popRect ();
-					
-				}
-				
-				if (shape.__mask != null) {
-					
-					renderSession.maskManager.popMask ();
-					
-				}
+				renderSession.maskManager.popObject (shape);
 				
 			}
 			

@@ -1,6 +1,7 @@
 package openfl.display3D; #if (display || !flash)
 
 
+import lime.utils.ArrayBufferView;
 import openfl.utils.ByteArray;
 import openfl.Vector;
 
@@ -10,6 +11,7 @@ import openfl.Vector;
 	
 	public function dispose ():Void;
 	public function uploadFromByteArray (data:ByteArray, byteArrayOffset:Int, startOffset:Int, count:Int):Void;
+	public function uploadFromTypedArray (data:ArrayBufferView):Void;
 	public function uploadFromVector (data:Vector<UInt>, startOffset:Int, count:Int):Void;
 	
 	

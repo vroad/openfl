@@ -26,6 +26,7 @@ import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 #end
 
+@:access(openfl.display.DisplayObject)
 @:access(openfl.geom.Matrix)
 @:access(openfl.geom.Rectangle)
 
@@ -36,15 +37,17 @@ import js.html.CanvasRenderingContext2D;
 	private var __bounds:Rectangle;
 	private var __commands:DrawCommandBuffer;
 	private var __dirty (default, set):Bool = true;
-	//private var __glStack:Array<GLStack> = [];
-	//private var __drawPaths:Array<DrawPath>;
+	private var __height:Int;
 	private var __positionX:Float;
 	private var __positionY:Float;
+	private var __renderTransform:Matrix;
 	private var __strokePadding:Float;
 	private var __transformDirty:Bool;
 	private var __visible:Bool;
 	//private var __cachedTexture:RenderTexture;
 	private var __owner:DisplayObject;
+	private var __width:Int;
+	private var __worldTransform:Matrix;
 	
 	#if (js && html5)
 	private var __canvas:CanvasElement;
@@ -56,12 +59,18 @@ import js.html.CanvasRenderingContext2D;
 	private var __bitmap:BitmapData;
 	
 	
-	private function new () {
+	private function new (owner:DisplayObject) {
+		
+		__owner = owner;
 		
 		__commands = new DrawCommandBuffer ();
 		__strokePadding = 0;
 		__positionX = 0;
 		__positionY = 0;
+		__renderTransform = new Matrix ();
+		__worldTransform = new Matrix ();
+		__width = 0;
+		__height = 0;
 		
 		#if (js && html5)
 		moveTo (0, 0);
@@ -374,12 +383,12 @@ import js.html.CanvasRenderingContext2D;
 				
 				case GraphicsPathCommand.WIDE_MOVE_TO:
 					
-					moveTo(data[dataIndex + 2], data[dataIndex + 3]); break;
+					moveTo (data[dataIndex + 2], data[dataIndex + 3]); break;
 					dataIndex += 4;
 				
 				case GraphicsPathCommand.WIDE_LINE_TO:
 					
-					lineTo(data[dataIndex + 2], data[dataIndex + 3]); break;
+					lineTo (data[dataIndex + 2], data[dataIndex + 3]); break;
 					dataIndex += 4;
 					
 				case GraphicsPathCommand.CURVE_TO:
@@ -534,11 +543,11 @@ import js.html.CanvasRenderingContext2D;
 	
 	
 	public function lineTo (x:Float, y:Float):Void {
-
+		
 		if (!Math.isFinite(x) || !Math.isFinite(y)) {
-
+			
 			return;
-
+			
 		}
 		
 		// TODO: Should we consider the origin instead, instead of inflating in all directions?
@@ -644,6 +653,7 @@ import js.html.CanvasRenderingContext2D;
 		
 	}
 	
+	
 	private function __inflateBounds (x:Float, y:Float):Void {
 		
 		if (__bounds == null) {
@@ -681,6 +691,60 @@ import js.html.CanvasRenderingContext2D;
 			__bounds.height = y - __bounds.y;
 			
 		}
+		
+	}
+	
+	
+	private function __update ():Void {
+		
+		if (__bounds == null || __bounds.width <= 0 || __bounds.height <= 0) return;
+		
+		var parentTransform = __owner.__getRenderTransform ();
+		var scaleX, scaleY;
+		
+		if (parentTransform.b == 0) {
+			
+			scaleX = parentTransform.a;
+			
+		} else {
+			
+			scaleX = Math.sqrt (parentTransform.a * parentTransform.a + parentTransform.b * parentTransform.b);
+			
+		}
+		
+		if (parentTransform.c == 0) {
+			
+			scaleY = parentTransform.d;
+			
+		} else {
+			
+			scaleY = Math.sqrt (parentTransform.c * parentTransform.c + parentTransform.d * parentTransform.d);
+			
+		}
+		
+		var width = __bounds.width * scaleX;
+		var height = __bounds.height * scaleY;
+		
+		if (Math.abs (width - __width) > 2 || Math.abs (height - __height) > 2) {
+			
+			__dirty = true;
+			__width = Math.floor (width);
+			__height = Math.floor (height);
+			
+			__renderTransform.a = width / __bounds.width;
+			__renderTransform.d = height / __bounds.height;
+			
+		}
+		
+		if (__width <= 0 || __height <= 0) return;
+		
+		__worldTransform.a = 1 / __renderTransform.a;
+		__worldTransform.b = 0;
+		__worldTransform.c = 0;
+		__worldTransform.d = 1 / __renderTransform.d;
+		__worldTransform.tx = __bounds.x;
+		__worldTransform.ty = __bounds.y;
+		__worldTransform.concat (__owner.__worldTransform);
 		
 	}
 	

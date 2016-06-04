@@ -1,81 +1,65 @@
-package openfl.display3D; #if !flash
+package openfl.display3D;
 
 
-import openfl.gl.GL;
-import openfl.gl.GLBuffer;
-import openfl.utils.Int16Array;
+import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLBuffer;
+import lime.utils.ArrayBufferView;
+import lime.utils.Int16Array;
 import openfl.utils.ByteArray;
 import openfl.Vector;
+
+@:access(openfl.display3D.Context3D)
 
 
 @:final class IndexBuffer3D {
 	
-	public var context:Context3D;
-	public var glBuffer:GLBuffer;
-	public var numIndices:Int;
-	public var bufferUsage:Int;
+	
+	private var __context:Context3D;
+	private var __glBuffer:GLBuffer;
+	private var __numIndices:Int;
+	private var __bufferUsage:Int;
 	
 	
-	public function new (context:Context3D, glBuffer:GLBuffer, numIndices:Int, bufferUsage:Int) {
+	private function new (context:Context3D, glBuffer:GLBuffer, numIndices:Int, bufferUsage:Int) {
 		
-		this.context = context;
-		this.glBuffer = glBuffer;
-		this.numIndices = numIndices;
-		this.bufferUsage = bufferUsage;
+		__context = context;
+		__glBuffer = glBuffer;
+		__numIndices = numIndices;
+		__bufferUsage = bufferUsage;
 		
 	}
 	
 	
 	public function dispose ():Void {
 		
-		context.__deleteIndexBuffer (this);
+		__context.__deleteIndexBuffer (this);
 		
 	}
 	
 	
 	public function uploadFromByteArray (byteArray:ByteArray, byteArrayOffset:Int, startOffset:Int, count:Int):Void {
 		
-		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, glBuffer);
-		
 		var offset:Int = byteArrayOffset + startOffset * 2;
-		var indices:Int16Array;
+		var indices:Int16Array = new Int16Array (byteArray.toArrayBuffer(), offset, count);
 		
-		indices = new Int16Array (byteArray.toArrayBuffer(), offset, count);
+		uploadFromTypedArray (indices);
 		
-		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, indices, bufferUsage);
+	}
+	
+	
+	public function uploadFromTypedArray (data:ArrayBufferView):Void {
+		
+		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, __glBuffer);
+		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, data, __bufferUsage);
 		
 	}
 	
 	
 	public function uploadFromVector (data:Vector<UInt>, startOffset:Int, count:Int):Void {
 		
-		var indices:Int16Array;
-		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, glBuffer);
-		
-		#if js
-		indices = new Int16Array (count);
-		
-		for (i in startOffset...(startOffset + count)) {
-			
-			indices[i] = data[i];
-			
-		}
-		#else
-		indices = new Int16Array (data, startOffset, count);
-		#end
-		
-		GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, bufferUsage);
+		uploadFromTypedArray (new Int16Array (data, startOffset * 2, count));
 		
 	}
 	
-	public function uploadFromInt16Array(data:Int16Array):Void 
-	{
-		GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, glBuffer);
-		GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, bufferUsage);
-	}
+	
 }
-
-
-#else
-typedef IndexBuffer3D = flash.display3D.IndexBuffer3D;
-#end

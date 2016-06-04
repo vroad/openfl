@@ -299,7 +299,7 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function copyChannel (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, sourceChannel:Int, destChannel:Int):Void {
+	public function copyChannel (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, sourceChannel:BitmapDataChannel, destChannel:BitmapDataChannel):Void {
 		
 		if (!__isValid) return;
 		
@@ -432,7 +432,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (clipRect != null){
 			
-			renderSession.maskManager.popMask ();
+			renderSession.maskManager.popRect ();
 			
 		}
 		
@@ -490,7 +490,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (clipRect != null) {
 			
-			renderSession.maskManager.popMask ();
+			renderSession.maskManager.popRect ();
 			
 		}
 		
