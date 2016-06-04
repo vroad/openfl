@@ -343,12 +343,7 @@ import openfl.Lib;
 	
 	public function present ():Void {
 		
-		// TODO
 		__drawing = false;
-		GL.useProgram (null);
-		
-		GL.bindBuffer (GL.ARRAY_BUFFER, null);
-		GL.disable (GL.CULL_FACE);
 		
 	}
 	
