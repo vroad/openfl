@@ -11,7 +11,7 @@ class ApplicationMain {
 	
 	public static var config:lime.app.Config;
 	public static var preloader:openfl.display.Preloader;
-	
+	private static var exitCode:Int = -1;
 	
 	public static function create ():Void {
 		
@@ -57,11 +57,7 @@ class ApplicationMain {
 		preloader.load (urls, types);
 		#end
 		
-		var result = app.exec ();
-		
-		#if (sys && !nodejs && !emscripten)
-		Sys.exit (result);
-		#end
+		exitCode = app.exec ();
 		
 	}
 	
@@ -98,7 +94,7 @@ class ApplicationMain {
 	}
 	
 	
-	public static function main () {
+	public static function main ():Int {
 		
 		config = {
 			
@@ -149,6 +145,8 @@ class ApplicationMain {
 		#else
 		create ();
 		#end
+		
+		return exitCode;
 		
 	}
 	
