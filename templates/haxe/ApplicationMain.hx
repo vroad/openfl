@@ -12,6 +12,7 @@ class ApplicationMain {
 	public static var config:lime.app.Config;
 	public static var preloader:openfl.display.Preloader;
 	
+	
 	public static function create ():Void {
 		
 		var app = new openfl.display.Application ();
@@ -101,7 +102,7 @@ class ApplicationMain {
 	}
 	
 	
-	public static function main ():Int {
+	public static function main () {
 		
 		config = {
 			
@@ -152,8 +153,6 @@ class ApplicationMain {
 		#else
 		create ();
 		#end
-		
-		return exitCode;
 		
 	}
 	
