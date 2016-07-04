@@ -7,7 +7,6 @@ import lime.utils.ArrayBufferView;
 import lime.utils.Float32Array;
 import openfl.utils.ByteArray;
 import openfl.Vector;
-import openfl.utils.UInt8Array;
 
 @:access(openfl.display3D.Context3D)
 
@@ -42,12 +41,11 @@ class VertexBuffer3D {
 	
 	public function uploadFromByteArray (data:ByteArray, byteArrayOffset:Int, startVertex:Int, numVertices:Int):Void {
 		
-		var bytesPerVertex:Int = __data32PerVertex * 4;
-		var length:Int = numVertices * bytesPerVertex;
-		var offset:Int = byteArrayOffset + startVertex * bytesPerVertex;
-		var data:UInt8Array = new UInt8Array (data.toArrayBuffer(), offset, length);
+		var bytesPerVertex = __data32PerVertex * 4;
+		var offset = byteArrayOffset + startVertex * bytesPerVertex;
+		var length = numVertices * __data32PerVertex;
 		
-		uploadFromTypedArray (data);
+		uploadFromTypedArray (new Float32Array (data, offset, length));
 		
 	}
 	
@@ -62,7 +60,8 @@ class VertexBuffer3D {
 	
 	public function uploadFromVector (data:Vector<Float>, startVertex:Int, numVertices:Int):Void {
 		
-		var offset = startVertex * __data32PerVertex * 4;
+		var bytesPerVertex = __data32PerVertex * 4;
+		var offset = startVertex * bytesPerVertex;
 		var length = numVertices * __data32PerVertex;
 		
 		uploadFromTypedArray (new Float32Array (data, offset, length));
