@@ -1,6 +1,7 @@
 package openfl._internal.renderer.opengl;
 
 
+import lime.graphics.opengl.GLES20;
 import lime.utils.Float32Array;
 import openfl._internal.renderer.cairo.CairoGraphics;
 import openfl._internal.renderer.canvas.CanvasGraphics;
@@ -58,16 +59,16 @@ class GLShape {
 				gl.uniform1f (shader.data.uAlpha.index, shape.__worldAlpha);
 				gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (graphics.__worldTransform));
 				
-				gl.bindTexture (gl.TEXTURE_2D, graphics.__bitmap.getTexture (gl));
+				gl.bindTexture (GLES20.TEXTURE_2D, graphics.__bitmap.getTexture (gl));
 				
-				gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.LINEAR);
+				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.LINEAR);
 				
-				gl.bindBuffer (gl.ARRAY_BUFFER, graphics.__bitmap.getBuffer (gl));
-				gl.vertexAttribPointer (shader.data.aPosition.index, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-				gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+				gl.bindBuffer (GLES20.ARRAY_BUFFER, graphics.__bitmap.getBuffer (gl));
+				gl.vertexAttribPointer (shader.data.aPosition.index, 3, GLES20.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
+				gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, GLES20.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
 				
-				gl.drawArrays (gl.TRIANGLE_STRIP, 0, 4);
+				gl.drawArrays (GLES20.TRIANGLE_STRIP, 0, 4);
 				
 				renderSession.maskManager.popObject (shape);
 				

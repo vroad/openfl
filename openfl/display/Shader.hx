@@ -2,6 +2,7 @@ package openfl.display;
 
 
 import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLProgram;
 import lime.utils.GLUtils;
 import openfl.utils.ByteArray;
@@ -98,11 +99,11 @@ class Shader {
 				
 			}
 			
-			gl.bindBuffer (gl.ARRAY_BUFFER, null);
-			gl.bindTexture (gl.TEXTURE_2D, null);
+			gl.bindBuffer (GLES20.ARRAY_BUFFER, null);
+			gl.bindTexture (GLES20.TEXTURE_2D, null);
 			
 			#if desktop
-			gl.disable (gl.TEXTURE_2D);
+			gl.disable (GLES20.TEXTURE_2D);
 			#end
 			
 		}
@@ -148,10 +149,10 @@ class Shader {
 			
 			if (textureCount > 0) {
 				
-				gl.activeTexture (gl.TEXTURE0);
+				gl.activeTexture (GLES20.TEXTURE0);
 				
 				#if desktop
-				gl.enable (gl.TEXTURE_2D);
+				gl.enable (GLES20.TEXTURE_2D);
 				#end
 				
 			}

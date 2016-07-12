@@ -2,6 +2,7 @@ package openfl._internal.renderer.opengl;
 
 
 import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.GLES20;
 import openfl._internal.renderer.AbstractBlendModeManager;
 import openfl.display.BlendMode;
 
@@ -20,7 +21,7 @@ class GLBlendModeManager extends AbstractBlendModeManager {
 		this.gl = gl;
 		
 		setBlendMode (NORMAL);
-		gl.enable (gl.BLEND);
+		gl.enable (GLES20.BLEND);
 		
 	}
 	
@@ -35,40 +36,40 @@ class GLBlendModeManager extends AbstractBlendModeManager {
 			
 			case ADD:
 				
-				gl.blendEquation (gl.FUNC_ADD);
-				gl.blendFunc (gl.ONE, gl.ONE);
+				gl.blendEquation (GLES20.FUNC_ADD);
+				gl.blendFunc (GLES20.ONE, GLES20.ONE);
 			
 			case MULTIPLY:
 				
-				gl.blendEquation (gl.FUNC_ADD);
-				gl.blendFunc (gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+				gl.blendEquation (GLES20.FUNC_ADD);
+				gl.blendFunc (GLES20.DST_COLOR, GLES20.ONE_MINUS_SRC_ALPHA);
 			
 			case SCREEN:
 				
-				gl.blendEquation (gl.FUNC_ADD);
-				gl.blendFunc (gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+				gl.blendEquation (GLES20.FUNC_ADD);
+				gl.blendFunc (GLES20.ONE, GLES20.ONE_MINUS_SRC_COLOR);
 			
 			case SUBTRACT:
 				
-				gl.blendEquation (gl.FUNC_REVERSE_SUBTRACT);
-				gl.blendFunc (gl.ONE, gl.ONE);
+				gl.blendEquation (GLES20.FUNC_REVERSE_SUBTRACT);
+				gl.blendFunc (GLES20.ONE, GLES20.ONE);
 			
 			#if desktop
 			case DARKEN:
 				
 				gl.blendEquation (0x8007); // GL_MIN
-				gl.blendFunc (gl.ONE, gl.ONE);
+				gl.blendFunc (GLES20.ONE, GLES20.ONE);
 				
 			case LIGHTEN:
 				
 				gl.blendEquation (0x8008); // GL_MAX
-				gl.blendFunc (gl.ONE, gl.ONE);
+				gl.blendFunc (GLES20.ONE, GLES20.ONE);
 			#end
 			
 			default:
 				
-				gl.blendEquation (gl.FUNC_ADD);
-				gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+				gl.blendEquation (GLES20.FUNC_ADD);
+				gl.blendFunc (GLES20.SRC_ALPHA, GLES20.ONE_MINUS_SRC_ALPHA);
 			
 		}
 		

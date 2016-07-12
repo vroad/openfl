@@ -2,6 +2,7 @@ package openfl._internal.renderer.opengl;
 
 
 import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.GLES20;
 import openfl._internal.renderer.AbstractMaskManager;
 import openfl.display.DisplayObject;
 import openfl.display.Stage;
@@ -99,7 +100,7 @@ class GLMaskManager extends AbstractMaskManager {
 		
 		var renderer:GLRenderer = cast renderSession.renderer;
 		
-		gl.enable (gl.SCISSOR_TEST);
+		gl.enable (GLES20.SCISSOR_TEST);
 		gl.scissor (Math.floor (clipRect.x), Math.floor (renderer.windowHeight - clipRect.y - clipRect.height), Math.ceil (clipRect.width), Math.ceil (clipRect.height));
 		
 		numClipRects++;
@@ -141,7 +142,7 @@ class GLMaskManager extends AbstractMaskManager {
 		
 		if (numClipRects == 0) {
 			
-			gl.disable (gl.SCISSOR_TEST);
+			gl.disable (GLES20.SCISSOR_TEST);
 			
 		}
 		

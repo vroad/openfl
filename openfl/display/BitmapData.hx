@@ -7,7 +7,9 @@ import lime.graphics.cairo.CairoImageSurface;
 import lime.graphics.cairo.CairoPattern;
 import lime.graphics.cairo.CairoSurface;
 import lime.graphics.cairo.Cairo;
+import lime.graphics.opengl.ExtensionBGRA;
 import lime.graphics.opengl.GLBuffer;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLTexture;
 import lime.graphics.GLRenderContext;
 import lime.graphics.Image;
@@ -74,7 +76,7 @@ class BitmapData implements IBitmapDrawable {
 	private var __blendMode:BlendMode;
 	private var __buffer:GLBuffer;
 	private var __isValid:Bool;
-	private var __surface:CairoSurface;
+	private var __surface:CairoImageSurface;
 	private var __texture:GLTexture;
 	private var __textureVersion:Int;
 	
@@ -622,9 +624,9 @@ class BitmapData implements IBitmapDrawable {
 			];
 			
 			__buffer = gl.createBuffer ();
-			gl.bindBuffer (gl.ARRAY_BUFFER, __buffer);
-			gl.bufferData (gl.ARRAY_BUFFER, new Float32Array (data), gl.STATIC_DRAW);
-			gl.bindBuffer (gl.ARRAY_BUFFER, null);
+			gl.bindBuffer (GLES20.ARRAY_BUFFER, __buffer);
+			gl.bufferData (GLES20.ARRAY_BUFFER, new Float32Array (data), GLES20.STATIC_DRAW);
+			gl.bindBuffer (GLES20.ARRAY_BUFFER, null);
 			
 		}
 		
@@ -697,11 +699,11 @@ class BitmapData implements IBitmapDrawable {
 		if (__texture == null) {
 			
 			__texture = gl.createTexture ();
-			gl.bindTexture (gl.TEXTURE_2D, __texture);
-			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-			gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.bindTexture (GLES20.TEXTURE_2D, __texture);
+			gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_WRAP_S, GLES20.CLAMP_TO_EDGE);
+			gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_WRAP_T, GLES20.CLAMP_TO_EDGE);
+			gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.NEAREST);
+			gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.NEAREST);
 			__textureVersion = -1;
 			
 		}
@@ -722,38 +724,38 @@ class BitmapData implements IBitmapDrawable {
 			
 			if (image.buffer.bitsPerPixel == 1) {
 				
-				internalFormat = gl.ALPHA;
-				format = gl.ALPHA;
+				internalFormat = GLES20.ALPHA;
+				format = GLES20.ALPHA;
 				
 			} else {
 				
 				#if !sys
 				
-				internalFormat = gl.RGBA;
-				format = gl.RGBA;
+				internalFormat = GLES20.RGBA;
+				format = GLES20.RGBA;
 				
 				#elseif (ios || tvos)
 				
-				internalFormat = gl.RGBA;
-				format = gl.BGRA_EXT;
+				internalFormat = GLES20.RGBA;
+				format = ExtensionBGRA.BGRA_EXT;
 				
 				#else
 				
 				if (__isGLES == null) {
 					
-					var version:String = gl.getParameter (gl.VERSION);
+					var version:String = gl.getParameter (GLES20.VERSION);
 					__isGLES = (version.indexOf ("OpenGL ES") > -1 && version.indexOf ("WebGL") == -1);
 					
 				}
 				
-				internalFormat = (__isGLES ? gl.BGRA_EXT : gl.RGBA);
-				format = gl.BGRA_EXT;
+				internalFormat = (__isGLES ? ExtensionBGRA.BGRA_EXT : GLES20.RGBA);
+				format = ExtensionBGRA.BGRA_EXT;
 				
 				#end
 				
 			}
 			
-			gl.bindTexture (gl.TEXTURE_2D, __texture);
+			gl.bindTexture (GLES20.TEXTURE_2D, __texture);
 			
 			var textureImage = image;
 			
@@ -773,21 +775,21 @@ class BitmapData implements IBitmapDrawable {
 			
 			if (textureImage.type == DATA) {
 				
-				gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
+				gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, width, height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
 				
 			} else {
 				
-				gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, format, gl.UNSIGNED_BYTE, textureImage.src);
+				gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, format, GLES20.UNSIGNED_BYTE, textureImage.src);
 				
 			}
 			
 			#else
 			
-			gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
+			gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, width, height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
 			
 			#end
 			
-			gl.bindTexture (gl.TEXTURE_2D, null);
+			gl.bindTexture (GLES20.TEXTURE_2D, null);
 			__textureVersion = image.version;
 			
 		}

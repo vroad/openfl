@@ -56,7 +56,7 @@ class CairoTextField {
 		
 		if (cairo != null) {
 			
-			var surface:CairoImageSurface = cast cairo.target;
+			var surface:CairoImageSurface = cast(cairo.target, CairoImageSurface);
 			
 			if (width != surface.width || height != surface.height) {
 				
@@ -86,7 +86,7 @@ class CairoTextField {
 			
 			cairo = graphics.__cairo;
 			
-			var options = new CairoFontOptions ();
+			var options = CairoFontOptions.create ();
 			
 			if (textEngine.antiAliasType == ADVANCED) {
 				

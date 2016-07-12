@@ -31,11 +31,7 @@ import lime.graphics.opengl.GLUniformLocation;
 		__glVCLocationMap = new Array<GLUniformLocation> ();
 		__glFSLocationMap = new Array<GLUniformLocation> ();
 		__glVALocationMap = new Array<Int> ();
-		#if html5
 		__yFlip = null;
-		#else
-		__yFlip = -1;
-		#end
 		
 	}
 	
@@ -122,22 +118,14 @@ import lime.graphics.opengl.GLUniformLocation;
 	
 	private inline function __fsampUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
-		#if html5
 		return __glFSLocationMap[i];
-		#else
-		return i >= 0 && i < __glFSLocationMap.length ? __glFSLocationMap[i] : -1;
-		#end
 		
 	}
 	
 	
 	private inline function __fsUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
-		#if html5
 		return __glFCLocationMap[i];
-		#else
-		return i >= 0 && i < __glFCLocationMap.length ? __glFCLocationMap[i] : -1;
-		#end
 		
 	}
 	
@@ -151,11 +139,7 @@ import lime.graphics.opengl.GLUniformLocation;
 	
 	private inline function __vsUniformLocationFromAgal (i:Int):GLUniformLocation {
 		
-		#if html5
 		return __glVCLocationMap[i];
-		#else
-		return i >= 0 && i < __glVCLocationMap.length ? __glVCLocationMap[i] : -1;
-		#end
 		
 	}
 	

@@ -2,6 +2,7 @@ package openfl._internal.renderer.opengl;
 
 
 import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.GLES20;
 import lime.math.Matrix4;
 import openfl._internal.renderer.AbstractRenderer;
 import openfl.display.Stage;
@@ -69,7 +70,7 @@ class GLRenderer extends AbstractRenderer {
 			
 		}
 		
-		gl.clear (gl.COLOR_BUFFER_BIT);
+		gl.clear (GLES20.COLOR_BUFFER_BIT);
 		
 		if (stage.stage3Ds[0].context3D != null) {
 			
@@ -99,29 +100,29 @@ class GLRenderer extends AbstractRenderer {
 		if (offsetX > 0 || offsetY > 0) {
 			
 			gl.clearColor (0, 0, 0, 1);
-			gl.enable (gl.SCISSOR_TEST);
+			gl.enable (GLES20.SCISSOR_TEST);
 			
 			if (offsetX > 0) {
 				
 				gl.scissor (0, 0, offsetX, windowHeight);
-				gl.clear (gl.COLOR_BUFFER_BIT);
+				gl.clear (GLES20.COLOR_BUFFER_BIT);
 				
 				gl.scissor (offsetX + displayWidth, 0, windowWidth, windowHeight);
-				gl.clear (gl.COLOR_BUFFER_BIT);
+				gl.clear (GLES20.COLOR_BUFFER_BIT);
 				
 			}
 			
 			if (offsetY > 0) {
 				
 				gl.scissor (0, 0, windowWidth, offsetY);
-				gl.clear (gl.COLOR_BUFFER_BIT);
+				gl.clear (GLES20.COLOR_BUFFER_BIT);
 				
 				gl.scissor (0, offsetY + displayHeight, windowWidth, windowHeight);
-				gl.clear (gl.COLOR_BUFFER_BIT);
+				gl.clear (GLES20.COLOR_BUFFER_BIT);
 				
 			}
 			
-			gl.disable (gl.SCISSOR_TEST);
+			gl.disable (GLES20.SCISSOR_TEST);
 			
 		}
 		
