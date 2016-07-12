@@ -759,19 +759,27 @@ class BitmapData implements IBitmapDrawable {
 			
 			var textureImage = image;
 			
-			// TODO: Support premultiplied canvas?
+			#if (js && html5)
 			
-			if ((!textureImage.premultiplied && textureImage.transparent) #if (js && html5) || textureImage.format != RGBA32 #end) {
+			if (textureImage.premultiplied) {
 				
-				textureImage = textureImage.clone ();
-				#if (js && html5)
-				textureImage.format = RGBA32;
-				#end
-				textureImage.premultiplied = true;
+				gl.pixelStorei (gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
+				
+			} else {
+				
+				gl.pixelStorei (gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
 				
 			}
 			
-			#if (js && html5)
+			// TODO: Some way to support BGRA on WebGL?
+			
+			if (textureImage.format != RGBA32) {
+				
+				textureImage = textureImage.clone ();
+				textureImage.format = RGBA32;
+				textureImage.buffer.premultiplied = true;
+				
+			}
 			
 			if (textureImage.type == DATA) {
 				
@@ -784,6 +792,13 @@ class BitmapData implements IBitmapDrawable {
 			}
 			
 			#else
+			
+			if ((!textureImage.premultiplied && textureImage.transparent)) {
+				
+				textureImage = textureImage.clone ();
+				textureImage.premultiplied = true;
+				
+			}
 			
 			gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, width, height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
 			
