@@ -763,11 +763,11 @@ class BitmapData implements IBitmapDrawable {
 			
 			if (textureImage.premultiplied) {
 				
-				gl.pixelStorei (gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
+				gl.pixelStorei (GLES20.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
 				
 			} else {
 				
-				gl.pixelStorei (gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+				gl.pixelStorei (GLES20.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
 				
 			}
 			

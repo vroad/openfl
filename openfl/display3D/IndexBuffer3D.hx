@@ -1,7 +1,7 @@
 package openfl.display3D;
 
 
-import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLBuffer;
 import lime.utils.ArrayBufferView;
 import lime.utils.Int16Array;
@@ -48,8 +48,8 @@ import openfl.Vector;
 	
 	public function uploadFromTypedArray (data:ArrayBufferView):Void {
 		
-		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, __glBuffer);
-		GL.bufferData (GL.ELEMENT_ARRAY_BUFFER, data, __bufferUsage);
+		__context.gl.bindBuffer (GLES20.ELEMENT_ARRAY_BUFFER, __glBuffer);
+		__context.gl.bufferData (GLES20.ELEMENT_ARRAY_BUFFER, data, __bufferUsage);
 		
 	}
 	

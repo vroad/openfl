@@ -179,7 +179,7 @@ class Shader {
 				#endif
 				" + glFragmentSource;
 			
-			glProgram = GLUtils.createProgram (glVertexSource, fragment);
+			glProgram = GLUtils.createProgram (gl, glVertexSource, fragment);
 			
 			if (glProgram != null) {
 				

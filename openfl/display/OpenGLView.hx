@@ -1,6 +1,7 @@
 package openfl.display;
 
 
+import lime.graphics.GLRenderContext;
 import lime.graphics.opengl.GL;
 #if !flash
 import openfl._internal.renderer.dom.DOMRenderer;
@@ -30,6 +31,8 @@ class OpenGLView extends DirectRenderer {
 	
 	private var __added:Bool;
 	private var __initialized:Bool;
+	
+	public var gl (get, never):GLRenderContext;
 	
 	
 	public function new (depth:Bool = true, stencil:Bool = false) {
@@ -203,9 +206,31 @@ class OpenGLView extends DirectRenderer {
 	
 	
 	
+	
 	// Getters & Setters
 	
 	
+	
+	
+	private function get_gl ():GLRenderContext {
+		
+		#if (js && html5)
+		
+		return cast __context;
+		
+		#elseif native
+		
+		// TODO: support multiple contexts
+		return GL.context;
+		
+		#else
+		
+		return null;
+		
+		#end
+		
+		
+	}
 	
 	
 	private static function get_isSupported ():Bool {

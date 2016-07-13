@@ -1,7 +1,8 @@
 package openfl.utils;
 
 
-import lime.graphics.opengl.GL;
+import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.GLES20;
 import openfl._internal.aglsl.assembler.FS;
 import openfl._internal.aglsl.assembler.Part;
 import openfl._internal.aglsl.assembler.Opcode;
@@ -13,10 +14,12 @@ import openfl._internal.aglsl.AGALTokenizer;
 import openfl._internal.aglsl.AGLSLCompiler;
 import openfl._internal.aglsl.AGLSLParser;
 import openfl._internal.aglsl.Description;
+import openfl.display3D.Context3D;
 import openfl.display3D.Context3DProgramType;
 import openfl.errors.Error;
 
 
+@:access(openfl.display3D.Context3D)
 class AGALMiniAssembler {
 	
 	
@@ -36,7 +39,7 @@ class AGALMiniAssembler {
 	}
 	
 	
-	public function assemble (programType:Context3DProgramType, source:String):Dynamic {
+	public function assemble (context:Context3D, programType:Context3DProgramType, source:String):Dynamic {
 		
 		#if flash
 		
@@ -66,8 +69,9 @@ class AGALMiniAssembler {
 		
 		return agalcode = data;
 		
-		#elseif lime_native
+		#else
 		
+		var gl = context.gl;
 		var aglsl:AGLSLCompiler = new AGLSLCompiler ();
 		var glType:Int;
 		var shaderType:String;
@@ -76,12 +80,12 @@ class AGALMiniAssembler {
 			
 			case VERTEX:
 				
-				glType = GL.VERTEX_SHADER;
+				glType = GLES20.VERTEX_SHADER;
 				shaderType = "vertex";
 			
 			default:
 				
-				glType = GL.FRAGMENT_SHADER;
+				glType = GLES20.FRAGMENT_SHADER;
 				shaderType = "fragment";
 			
 		}
@@ -89,15 +93,15 @@ class AGALMiniAssembler {
 		//trace ("--- AGAL ---\n" + shaderSource);
 		
 		var shaderSourceString = aglsl.compile (shaderType, source);
-		var shader = GL.createShader (glType);
+		var shader = gl.createShader (glType);
 		
-		GL.shaderSource (shader, shaderSourceString);
-		GL.compileShader (shader);
+		gl.shaderSource (shader, shaderSourceString);
+		gl.compileShader (shader);
 		
-		if (GL.getShaderParameter (shader, GL.COMPILE_STATUS) == 0) {
+		if (gl.getShaderParameter (shader, GLES20.COMPILE_STATUS) == 0) {
 			
 			trace("--- ERR ---\n" + shaderSourceString);
-			var err = GL.getShaderInfoLog (shader);
+			var err = gl.getShaderInfoLog (shader);
 			if (err != "") throw err;
 			
 		} 

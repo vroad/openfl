@@ -2,7 +2,9 @@ package openfl.display3D;
 
 
 import lime.app.Application;
-import lime.graphics.opengl.GL;
+import lime.graphics.GLRenderContext;
+import lime.graphics.opengl.ExtensionBGRA;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLFramebuffer;
 import lime.graphics.opengl.GLUniformLocation;
 import lime.graphics.opengl.GLProgram;
@@ -49,7 +51,7 @@ import openfl.Lib;
 	public var backBufferHeight (default, null):Int;
 	public var backBufferWidth (default, null):Int;
 	public var driverInfo (default, null):String = "OpenGL (Direct blitting)";
-	public var enableErrorChecking:Bool; // TODO (use GL.getError() and GL.validateProgram(program))
+	public var enableErrorChecking:Bool; // TODO (use gl.getError() and gl.validateProgram(program))
 	public var maxBackBufferHeight:Int;
 	public var maxBackBufferWidth:Int;
 	public var profile (default, null):Context3DProfile = BASELINE;
@@ -82,6 +84,7 @@ import openfl.Lib;
 	private var __rttWidth:Int;
 	private var __rttHeight:Int;
 	private var renderBuffers:Map<RenderBufferType, GLRenderbuffer>;
+	private var gl (get, null):GLRenderContext;
 	
 	
 	private function new (stage3D:Stage3D) {
@@ -144,19 +147,19 @@ import openfl.Lib;
 		
 		if (__scissorRectangle != null) {
 			
-			GL.disable (GL.SCISSOR_TEST);
+			gl.disable (GLES20.SCISSOR_TEST);
 			
 		}
 		
-		GL.clearColor (red, green, blue, alpha);
-		GL.clearDepth (depth);
-		GL.clearStencil (stencil);
+		gl.clearColor (red, green, blue, alpha);
+		gl.clearDepth (depth);
+		gl.clearStencil (stencil);
 		
-		GL.clear (__getGLClearMask (mask));
+		gl.clear (__getGLClearMask (mask));
 		
 		if (__scissorRectangle != null) {
 			
-			GL.enable (GL.SCISSOR_TEST);
+			gl.enable (GLES20.SCISSOR_TEST);
 			
 		}
 		
@@ -178,7 +181,7 @@ import openfl.Lib;
 	public function createCubeTexture (size:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):CubeTexture {
 		
 		var glFormat = getGLTextureFormat (format);
-		var texture = new CubeTexture (this, GL.createTexture (), size, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new CubeTexture (this, gl.createTexture (), size, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		__texturesCreated.push (texture);
 		return texture;
 		
@@ -187,7 +190,7 @@ import openfl.Lib;
 	
 	public function createIndexBuffer (numIndices:Int, bufferUsage:Context3DBufferUsage = STATIC_DRAW):IndexBuffer3D {
 		
-		var indexBuffer = new IndexBuffer3D (this, GL.createBuffer(), numIndices, bufferUsage == Context3DBufferUsage.STATIC_DRAW ? GL.STATIC_DRAW : GL.DYNAMIC_DRAW);
+		var indexBuffer = new IndexBuffer3D (this, gl.createBuffer(), numIndices, bufferUsage == Context3DBufferUsage.STATIC_DRAW ? GLES20.STATIC_DRAW : GLES20.DYNAMIC_DRAW);
 		__indexBuffersCreated.push (indexBuffer);
 		return indexBuffer;
 		
@@ -196,7 +199,7 @@ import openfl.Lib;
 	
 	public function createProgram ():Program3D {
 		
-		var program = new Program3D (this, GL.createProgram ());
+		var program = new Program3D (this, gl.createProgram ());
 		__programsCreated.push (program);
 		return program;
 		
@@ -206,7 +209,7 @@ import openfl.Lib;
 	public function createRectangleTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool):RectangleTexture {
 		
 		var glFormat = getGLTextureFormat(format);
-		var texture = new RectangleTexture (this, GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new RectangleTexture (this, gl.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		__texturesCreated.push (texture);
 		return texture;
 		
@@ -216,7 +219,7 @@ import openfl.Lib;
 	public function createTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):Texture {
 		
 		var glFormat = getGLTextureFormat(format);
-		var texture = new Texture (this, GL.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new Texture (this, gl.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		__texturesCreated.push (texture);
 		return texture;
 		
@@ -230,9 +233,9 @@ import openfl.Lib;
 			
 			case Context3DTextureFormat.BGRA:
 				#if html5
-				return { format:GL.RGBA, type:GL.UNSIGNED_BYTE };
+				return { format:GLES20.RGBA, type:GLES20.UNSIGNED_BYTE };
 				#else
-				return { format:GL.BGRA_EXT, type:GL.UNSIGNED_BYTE };
+				return { format:ExtensionBGRA.BGRA_EXT, type:GLES20.UNSIGNED_BYTE };
 				#end
 			default:
 				return null;
@@ -244,7 +247,7 @@ import openfl.Lib;
 	
 	public function createVertexBuffer (numVertices:Int, data32PerVertex:Int, bufferUsage:Context3DBufferUsage = STATIC_DRAW):VertexBuffer3D {
 		
-		var vertexBuffer = new VertexBuffer3D (this, GL.createBuffer (), numVertices, data32PerVertex, bufferUsage == Context3DBufferUsage.STATIC_DRAW ? GL.STATIC_DRAW : GL.DYNAMIC_DRAW);
+		var vertexBuffer = new VertexBuffer3D (this, gl.createBuffer (), numVertices, data32PerVertex, bufferUsage == Context3DBufferUsage.STATIC_DRAW ? GLES20.STATIC_DRAW : GLES20.DYNAMIC_DRAW);
 		__vertexBuffersCreated.push (vertexBuffer);
 		return vertexBuffer;
 		
@@ -292,7 +295,7 @@ import openfl.Lib;
 		
 		for (renderBuffer in renderBuffers) {
 			
-			GL.deleteRenderbuffer (renderBuffer);
+			gl.deleteRenderbuffer (renderBuffer);
 			
 		}
 		
@@ -313,7 +316,7 @@ import openfl.Lib;
 	public function drawTriangles (indexBuffer:IndexBuffer3D, firstIndex:Int = 0, numTriangles:Int = -1):Void {
 		
 		var location = __currentProgram.__yFlipLoc ();
-		GL.uniform1f (location, __yFlip);
+		gl.uniform1f (location, __yFlip);
 		
 		if (!__drawing && !__renderToTexture) {
 			
@@ -335,8 +338,8 @@ import openfl.Lib;
 		
 		var byteOffset = firstIndex * 2;
 		
-		GL.bindBuffer (GL.ELEMENT_ARRAY_BUFFER, indexBuffer.__glBuffer);
-		GL.drawElements (GL.TRIANGLES, numIndices, GL.UNSIGNED_SHORT, byteOffset);
+		gl.bindBuffer (GLES20.ELEMENT_ARRAY_BUFFER, indexBuffer.__glBuffer);
+		gl.drawElements (GLES20.TRIANGLES, numIndices, GLES20.UNSIGNED_SHORT, byteOffset);
 		
 	}
 	
@@ -361,7 +364,7 @@ import openfl.Lib;
 	
 	public function setColorMask (red:Bool, green:Bool, blue:Bool, alpha:Bool):Void {
 		
-		GL.colorMask (red, green, blue, alpha);
+		gl.colorMask (red, green, blue, alpha);
 		
 	}
 	
@@ -370,17 +373,17 @@ import openfl.Lib;
 		
 		if (triangleFaceToCull == Context3DTriangleFace.NONE) {
 			
-			GL.disable (GL.CULL_FACE);
+			gl.disable (GLES20.CULL_FACE);
 			
 		} else {
 			
-			GL.enable (GL.CULL_FACE);
+			gl.enable (GLES20.CULL_FACE);
 			
 			switch (triangleFaceToCull) {
 				
-				case Context3DTriangleFace.FRONT: GL.cullFace (GL.BACK);
-				case Context3DTriangleFace.BACK: GL.cullFace (GL.FRONT);
-				case Context3DTriangleFace.FRONT_AND_BACK: GL.cullFace (GL.FRONT_AND_BACK);
+				case Context3DTriangleFace.FRONT: gl.cullFace (GLES20.BACK);
+				case Context3DTriangleFace.BACK: gl.cullFace (GLES20.FRONT);
+				case Context3DTriangleFace.FRONT_AND_BACK: gl.cullFace (GLES20.FRONT_AND_BACK);
 				default: throw "Unknown Context3DTriangleFace type.";
 				
 			}
@@ -416,8 +419,8 @@ import openfl.Lib;
 	
 	public function setDepthTest (depthMask:Bool, passCompareMode:Context3DCompareMode):Void {
 		
-		GL.depthFunc (__getGLCompareMode (passCompareMode));
-		GL.depthMask (depthMask);
+		gl.depthFunc (__getGLCompareMode (passCompareMode));
+		gl.depthMask (depthMask);
 		
 	}
 	
@@ -432,7 +435,7 @@ import openfl.Lib;
 			
 		}
 		
-		GL.useProgram (glProgram);
+		gl.useProgram (glProgram);
 		__currentProgram = program3D;
 		//TODO reset bound textures, buffers... ?
 		// Or maybe we should have arrays and map for each program so we can switch them while keeping the bounded texture and variable?
@@ -495,7 +498,7 @@ import openfl.Lib;
 	
 	public function setRenderToBackBuffer ():Void {
 		
-		GL.bindFramebuffer (GL.FRAMEBUFFER, null);
+		gl.bindFramebuffer (GLES20.FRAMEBUFFER, null);
 		
 		__renderToTexture = false;
 		__updateBackBufferViewPort ();
@@ -509,11 +512,11 @@ import openfl.Lib;
 		
 		if (texture.__frameBuffer == null) {
 			
-			texture.__frameBuffer = GL.createFramebuffer ();
+			texture.__frameBuffer = gl.createFramebuffer ();
 			
 		}
 		
-		GL.bindFramebuffer (GL.FRAMEBUFFER, texture.__frameBuffer);
+		gl.bindFramebuffer (GLES20.FRAMEBUFFER, texture.__frameBuffer);
 		
 		if (supportsPackedDepthStencil == null) {
 			
@@ -533,7 +536,7 @@ import openfl.Lib;
 				
 				if (depthStencilRenderBuffer == null) {
 					
-					renderBuffers[RenderBufferType.DepthStencil] = depthStencilRenderBuffer = GL.createRenderbuffer ();
+					renderBuffers[RenderBufferType.DepthStencil] = depthStencilRenderBuffer = gl.createRenderbuffer ();
 					
 				}
 				
@@ -544,13 +547,13 @@ import openfl.Lib;
 				
 				if (depthRenderBuffer == null) {
 					
-					renderBuffers[RenderBufferType.Depth] = depthRenderBuffer = GL.createRenderbuffer ();
+					renderBuffers[RenderBufferType.Depth] = depthRenderBuffer = gl.createRenderbuffer ();
 					
 				}
 				
 				if (stencilRenderBuffer == null) {
 					
-					renderBuffers[RenderBufferType.Stencil] = stencilRenderBuffer = GL.createRenderbuffer ();
+					renderBuffers[RenderBufferType.Stencil] = stencilRenderBuffer = gl.createRenderbuffer ();
 					
 				}
 				
@@ -562,40 +565,40 @@ import openfl.Lib;
 			
 			if (supportsPackedDepthStencil) {
 				
-				GL.bindRenderbuffer (GL.RENDERBUFFER, depthStencilRenderBuffer);
-				GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH24_STENCIL8_EXT, texture.__width, texture.__height);
+				gl.bindRenderbuffer (GLES20.RENDERBUFFER, depthStencilRenderBuffer);
+				gl.renderbufferStorage (GLES20.RENDERBUFFER, GLES20.DEPTH_STENCIL, texture.__width, texture.__height);
 				
 			} else {
 				
-				GL.bindRenderbuffer (GL.RENDERBUFFER, depthRenderBuffer);
-				GL.renderbufferStorage (GL.RENDERBUFFER, GL.DEPTH_COMPONENT16, texture.__width, texture.__height);
-				GL.bindRenderbuffer (GL.RENDERBUFFER, stencilRenderBuffer);
-				GL.renderbufferStorage (GL.RENDERBUFFER, GL.STENCIL_INDEX8, texture.__width, texture.__height);
+				gl.bindRenderbuffer (GLES20.RENDERBUFFER, depthRenderBuffer);
+				gl.renderbufferStorage (GLES20.RENDERBUFFER, GLES20.DEPTH_COMPONENT16, texture.__width, texture.__height);
+				gl.bindRenderbuffer (GLES20.RENDERBUFFER, stencilRenderBuffer);
+				gl.renderbufferStorage (GLES20.RENDERBUFFER, GLES20.STENCIL_INDEX8, texture.__width, texture.__height);
 				
 			}
 			
-			GL.bindRenderbuffer (GL.RENDERBUFFER, null);
+			gl.bindRenderbuffer (GLES20.RENDERBUFFER, null);
 			
 		}
 		
-		GL.framebufferTexture2D (GL.FRAMEBUFFER, GL.COLOR_ATTACHMENT0, GL.TEXTURE_2D, texture.__glTexture, 0);
+		gl.framebufferTexture2D (GLES20.FRAMEBUFFER, GLES20.COLOR_ATTACHMENT0, GLES20.TEXTURE_2D, texture.__glTexture, 0);
 		
 		if (enableDepthAndStencil) {
 			
 			if (supportsPackedDepthStencil) {
 				
-				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, depthStencilRenderBuffer);
+				gl.framebufferRenderbuffer (GLES20.FRAMEBUFFER, GLES20.DEPTH_STENCIL_ATTACHMENT, GLES20.RENDERBUFFER, depthStencilRenderBuffer);
 				
 			} else {
 				
-				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_ATTACHMENT, GL.RENDERBUFFER, depthRenderBuffer);
-				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.STENCIL_ATTACHMENT, GL.RENDERBUFFER, stencilRenderBuffer);
+				gl.framebufferRenderbuffer (GLES20.FRAMEBUFFER, GLES20.DEPTH_ATTACHMENT, GLES20.RENDERBUFFER, depthRenderBuffer);
+				gl.framebufferRenderbuffer (GLES20.FRAMEBUFFER, GLES20.STENCIL_ATTACHMENT, GLES20.RENDERBUFFER, stencilRenderBuffer);
 				
 			}
 			
 		}
 		
-		GL.viewport (0, 0, texture.__width, texture.__height);
+		gl.viewport (0, 0, texture.__width, texture.__height);
 		
 		__renderToTexture = true;
 		__rttDepthAndStencil = enableDepthAndStencil;
@@ -632,12 +635,12 @@ import openfl.Lib;
 		
 		if (rectangle == null) {
 			
-			GL.disable (GL.SCISSOR_TEST);
+			gl.disable (GLES20.SCISSOR_TEST);
 			return;
 			
 		}
 		
-		GL.enable (GL.SCISSOR_TEST);
+		gl.enable (GLES20.SCISSOR_TEST);
 		__updateScissorRectangle ();
 		
 	}
@@ -646,8 +649,8 @@ import openfl.Lib;
 	public function setStencilActions (triangleFace:Context3DTriangleFace = FRONT_AND_BACK, compareMode:Context3DCompareMode = ALWAYS, actionOnBothPass:Context3DStencilAction = KEEP, actionOnDepthFail:Context3DStencilAction = KEEP, actionOnDepthPassStencilFail:Context3DStencilAction = KEEP):Void {
 		
 		__stencilCompareMode = compareMode;
-		GL.stencilOp (__getGLStencilAction (actionOnDepthFail), __getGLStencilAction (actionOnDepthPassStencilFail), __getGLStencilAction (actionOnBothPass));
-		GL.stencilFunc (__getGLCompareMode (__stencilCompareMode), __stencilRef, __stencilReadMask);
+		gl.stencilOp (__getGLStencilAction (actionOnDepthFail), __getGLStencilAction (actionOnDepthPassStencilFail), __getGLStencilAction (actionOnBothPass));
+		gl.stencilFunc (__getGLCompareMode (__stencilCompareMode), __stencilRef, __stencilReadMask);
 		
 	}
 	
@@ -657,8 +660,8 @@ import openfl.Lib;
 		__stencilReadMask = readMask;
 		__stencilRef = referenceValue;
 		
-		GL.stencilFunc (__getGLCompareMode (__stencilCompareMode), __stencilRef, __stencilReadMask);
-		GL.stencilMask (writeMask);
+		gl.stencilFunc (__getGLCompareMode (__stencilCompareMode), __stencilRef, __stencilReadMask);
+		gl.stencilMask (writeMask);
 		
 	}
 	
@@ -688,7 +691,7 @@ import openfl.Lib;
 		}
 		
 		__indexBuffersCreated.remove (buffer);
-		GL.deleteBuffer (buffer.__glBuffer);
+		gl.deleteBuffer (buffer.__glBuffer);
 		buffer.__glBuffer = null;
 		
 	}
@@ -703,7 +706,7 @@ import openfl.Lib;
 		}
 		
 		__programsCreated.remove (program);
-		GL.deleteProgram (program.__glProgram);
+		gl.deleteProgram (program.__glProgram);
 		program.__glProgram = null;
 		
 	}
@@ -718,7 +721,7 @@ import openfl.Lib;
 		}
 		
 		__texturesCreated.remove (texture);
-		GL.deleteTexture (texture.__glTexture);
+		gl.deleteTexture (texture.__glTexture);
 		texture.__glTexture = null;
 		
 	}
@@ -733,7 +736,7 @@ import openfl.Lib;
 		}
 		
 		__vertexBuffersCreated.remove (buffer);
-		GL.deleteBuffer (buffer.__glBuffer);
+		gl.deleteBuffer (buffer.__glBuffer);
 		buffer.__glBuffer = null;
 		
 	}
@@ -743,17 +746,17 @@ import openfl.Lib;
 		
 		return switch (blendMode) {
 			
-			case DESTINATION_ALPHA: GL.DST_ALPHA;
-			case DESTINATION_COLOR: GL.DST_COLOR;
-			case ONE: GL.ONE;
-			case ONE_MINUS_DESTINATION_ALPHA: GL.ONE_MINUS_DST_ALPHA;
-			case ONE_MINUS_DESTINATION_COLOR: GL.ONE_MINUS_DST_COLOR;
-			case ONE_MINUS_SOURCE_ALPHA: GL.ONE_MINUS_SRC_ALPHA;
-			case ONE_MINUS_SOURCE_COLOR: GL.ONE_MINUS_SRC_COLOR;
-			case SOURCE_ALPHA: GL.SRC_ALPHA;
-			case SOURCE_COLOR: GL.SRC_COLOR;
-			case ZERO: GL.ZERO;
-			default: GL.ONE_MINUS_SRC_ALPHA;
+			case DESTINATION_ALPHA: GLES20.DST_ALPHA;
+			case DESTINATION_COLOR: GLES20.DST_COLOR;
+			case ONE: GLES20.ONE;
+			case ONE_MINUS_DESTINATION_ALPHA: GLES20.ONE_MINUS_DST_ALPHA;
+			case ONE_MINUS_DESTINATION_COLOR: GLES20.ONE_MINUS_DST_COLOR;
+			case ONE_MINUS_SOURCE_ALPHA: GLES20.ONE_MINUS_SRC_ALPHA;
+			case ONE_MINUS_SOURCE_COLOR: GLES20.ONE_MINUS_SRC_COLOR;
+			case SOURCE_ALPHA: GLES20.SRC_ALPHA;
+			case SOURCE_COLOR: GLES20.SRC_COLOR;
+			case ZERO: GLES20.ZERO;
+			default: GLES20.ONE_MINUS_SRC_ALPHA;
 			
 		}
 		
@@ -764,11 +767,11 @@ import openfl.Lib;
 		
 		return switch (clearMask) {
 			
-			case ALL: GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT | GL.STENCIL_BUFFER_BIT;
-			case COLOR: GL.COLOR_BUFFER_BIT;
-			case DEPTH: GL.DEPTH_BUFFER_BIT;
-			case STENCIL: GL.STENCIL_BUFFER_BIT;
-			default: GL.COLOR_BUFFER_BIT;
+			case ALL: GLES20.COLOR_BUFFER_BIT | GLES20.DEPTH_BUFFER_BIT | GLES20.STENCIL_BUFFER_BIT;
+			case COLOR: GLES20.COLOR_BUFFER_BIT;
+			case DEPTH: GLES20.DEPTH_BUFFER_BIT;
+			case STENCIL: GLES20.STENCIL_BUFFER_BIT;
+			default: GLES20.COLOR_BUFFER_BIT;
 			
 		}
 		
@@ -779,15 +782,15 @@ import openfl.Lib;
 		
 		return switch (compareMode) {
 			
-			case ALWAYS: GL.ALWAYS;
-			case EQUAL: GL.EQUAL;
-			case GREATER: GL.GREATER;
-			case GREATER_EQUAL: GL.GEQUAL;
-			case LESS: GL.LESS;
-			case LESS_EQUAL: GL.LEQUAL; // TODO : wrong value
-			case NEVER: GL.NEVER;
-			case NOT_EQUAL: GL.NOTEQUAL;
-			default: GL.EQUAL;
+			case ALWAYS: GLES20.ALWAYS;
+			case EQUAL: GLES20.EQUAL;
+			case GREATER: GLES20.GREATER;
+			case GREATER_EQUAL: GLES20.GEQUAL;
+			case LESS: GLES20.LESS;
+			case LESS_EQUAL: GLES20.LEQUAL; // TODO : wrong value
+			case NEVER: GLES20.NEVER;
+			case NOT_EQUAL: GLES20.NOTEQUAL;
+			default: GLES20.EQUAL;
 			
 		}
 		
@@ -798,15 +801,15 @@ import openfl.Lib;
 		
 		return switch (stencilAction) {
 			
-			case DECREMENT_SATURATE: GL.DECR;
-			case DECREMENT_WRAP: GL.DECR_WRAP;
-			case INCREMENT_SATURATE: GL.INCR;
-			case INCREMENT_WRAP: GL.INCR_WRAP;
-			case INVERT: GL.INVERT;
-			case KEEP: GL.KEEP;
-			case SET: GL.REPLACE;
-			case ZERO: GL.ZERO;
-			default: GL.KEEP;
+			case DECREMENT_SATURATE: GLES20.DECR;
+			case DECREMENT_WRAP: GLES20.DECR_WRAP;
+			case INCREMENT_SATURATE: GLES20.INCR;
+			case INCREMENT_WRAP: GLES20.INCR_WRAP;
+			case INVERT: GLES20.INVERT;
+			case KEEP: GLES20.KEEP;
+			case SET: GLES20.REPLACE;
+			case ZERO: GLES20.ZERO;
+			default: GLES20.KEEP;
 			
 		}
 		
@@ -817,9 +820,9 @@ import openfl.Lib;
 		
 		return switch (triangleFace) {
 			
-			case BACK: GL.FRONT;
-			case FRONT: GL.BACK;
-			case FRONT_AND_BACK: GL.FRONT_AND_BACK;
+			case BACK: GLES20.FRONT;
+			case FRONT: GLES20.BACK;
+			case FRONT_AND_BACK: GLES20.FRONT_AND_BACK;
 			case NONE: 0;
 			default: 0;
 			
@@ -850,21 +853,21 @@ import openfl.Lib;
 	private function __setGLSLProgramConstantsFromByteArray (location:GLUniformLocation, data:ByteArray, byteArrayOffset:Int = 0):Void {
 		
 		data.position = byteArrayOffset;
-		GL.uniform4f (location, data.readFloat (), data.readFloat (), data.readFloat (), data.readFloat ());
+		gl.uniform4f (location, data.readFloat (), data.readFloat (), data.readFloat (), data.readFloat ());
 		
 	}
 	
 	
 	private function __setGLSLProgramConstantsFromMatrix (location:GLUniformLocation, matrix:Matrix3D, transposedMatrix:Bool = false):Void {
 		
-		GL.uniformMatrix4fv (location, !transposedMatrix, new Float32Array (matrix.rawData));
+		gl.uniformMatrix4fv (location, !transposedMatrix, new Float32Array (matrix.rawData));
 		
 	}
 	
 	
 	private function __setGLSLProgramConstantsFromVector4 (location:GLUniformLocation, data:Array<Float>, startIndex:Int = 0):Void {
 		
-		GL.uniform4f (location, data[startIndex], data[startIndex + 1], data[startIndex + 2], data[startIndex + 3]);
+		gl.uniform4f (location, data[startIndex], data[startIndex + 1], data[startIndex + 2], data[startIndex + 3]);
 		
 	}
 	
@@ -873,14 +876,14 @@ import openfl.Lib;
 		
 		switch (textureIndex) {
 			
-			case 0 : GL.activeTexture (GL.TEXTURE0);
-			case 1 : GL.activeTexture (GL.TEXTURE1);
-			case 2 : GL.activeTexture (GL.TEXTURE2);
-			case 3 : GL.activeTexture (GL.TEXTURE3);
-			case 4 : GL.activeTexture (GL.TEXTURE4);
-			case 5 : GL.activeTexture (GL.TEXTURE5);
-			case 6 : GL.activeTexture (GL.TEXTURE6);
-			case 7 : GL.activeTexture (GL.TEXTURE7);
+			case 0 : gl.activeTexture (GLES20.TEXTURE0);
+			case 1 : gl.activeTexture (GLES20.TEXTURE1);
+			case 2 : gl.activeTexture (GLES20.TEXTURE2);
+			case 3 : gl.activeTexture (GLES20.TEXTURE3);
+			case 4 : gl.activeTexture (GLES20.TEXTURE4);
+			case 5 : gl.activeTexture (GLES20.TEXTURE5);
+			case 6 : gl.activeTexture (GLES20.TEXTURE6);
+			case 7 : gl.activeTexture (GLES20.TEXTURE7);
 			// TODO more?
 			default: throw "Does not support texture8 or more";
 			
@@ -888,21 +891,21 @@ import openfl.Lib;
 		
 		if (texture == null) {
 			
-			GL.bindTexture (GL.TEXTURE_2D, null);
-			GL.bindTexture (GL.TEXTURE_CUBE_MAP, null);
+			gl.bindTexture (GLES20.TEXTURE_2D, null);
+			gl.bindTexture (GLES20.TEXTURE_CUBE_MAP, null);
 			return;
 			
 		}
 		
 		if (Std.instance (texture, Texture) != null || Std.instance (texture, RectangleTexture) != null) {
 			
-			GL.bindTexture (GL.TEXTURE_2D, texture.__glTexture);
-			GL.uniform1i (location, textureIndex);
+			gl.bindTexture (GLES20.TEXTURE_2D, texture.__glTexture);
+			gl.uniform1i (location, textureIndex);
 			
 		} else if (Std.instance (texture, CubeTexture) != null) {
 			
-			GL.bindTexture (GL.TEXTURE_CUBE_MAP, texture.__glTexture );
-			GL.uniform1i (location, textureIndex);
+			gl.bindTexture (GLES20.TEXTURE_CUBE_MAP, texture.__glTexture );
+			gl.uniform1i (location, textureIndex);
 			
 		} else {
 			
@@ -931,7 +934,7 @@ import openfl.Lib;
 			
 			if (location > -1) {
 				
-				GL.disableVertexAttribArray (location);
+				gl.disableVertexAttribArray (location);
 				
 			}
 			
@@ -939,37 +942,37 @@ import openfl.Lib;
 			
 		}
 		
-		GL.bindBuffer (GL.ARRAY_BUFFER, buffer.__glBuffer);
+		gl.bindBuffer (GLES20.ARRAY_BUFFER, buffer.__glBuffer);
 		
 		var dimension = 4;
-		var type = GL.FLOAT;
+		var type = GLES20.FLOAT;
 		var normalized:Bool = false;
 		
 		if (format == Context3DVertexBufferFormat.BYTES_4) {
 			
 			dimension = 4;
-			type = GL.UNSIGNED_BYTE;
+			type = GLES20.UNSIGNED_BYTE;
 			normalized = true;
 			
 		} else if (format == Context3DVertexBufferFormat.FLOAT_1) {
 			
 			dimension = 1;
-			type = GL.FLOAT;
+			type = GLES20.FLOAT;
 			
 		} else if (format == Context3DVertexBufferFormat.FLOAT_2) {
 			
 			dimension = 2;
-			type = GL.FLOAT;
+			type = GLES20.FLOAT;
 			
 		} else if (format == Context3DVertexBufferFormat.FLOAT_3) {
 			
 			dimension = 3;
-			type = GL.FLOAT;
+			type = GLES20.FLOAT;
 			
 		} else if (format == Context3DVertexBufferFormat.FLOAT_4) {
 			
 			dimension = 4;
-			type = GL.FLOAT;
+			type = GLES20.FLOAT;
 			
 		} else {
 			
@@ -977,8 +980,8 @@ import openfl.Lib;
 			
 		}
 		
-		GL.enableVertexAttribArray (location);
-		GL.vertexAttribPointer (location, dimension, type, normalized, buffer.__data32PerVertex * 4, bufferOffset * 4);
+		gl.enableVertexAttribArray (location);
+		gl.vertexAttribPointer (location, dimension, type, normalized, buffer.__data32PerVertex * 4, bufferOffset * 4);
 		
 	}
 	
@@ -989,28 +992,28 @@ import openfl.Lib;
 			
 			#if native
 			
-			__supportsAnisotropy = (GL.getSupportedExtensions ().indexOf ("GL_EXT_texture_filter_anisotropic") != -1);
+			__supportsAnisotropy = (gl.getSupportedExtensions ().indexOf ("GL_EXT_texture_filter_anisotropic") != -1);
 			
 			if (__supportsAnisotropy) {
 				
 				// GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT is not currently recongnised in Lime
 				// If supported, max anisotropic filtering of 256 is assumed.
-				// __maxSupportedAnisotropy = GL.getTexParameter (GL.TEXTURE_2D, MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-				GL.texParameteri (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, __maxSupportedAnisotropy);
+				// __maxSupportedAnisotropy = gl.getTexParameter (GLES20.TEXTURE_2D, MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+				gl.texParameteri (GLES20.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, __maxSupportedAnisotropy);
 				
 			}
 			
 			#else
 			
-			var ext:Dynamic = GL.getExtension ("EXT_texture_filter_anisotropic");
-			if (ext == null || Reflect.field( ext, "MAX_TEXTURE_MAX_ANISOTROPY_EXT" ) == null) ext = GL.getExtension ("MOZ_EXT_texture_filter_anisotropic");
-			if (ext == null || Reflect.field( ext, "MAX_TEXTURE_MAX_ANISOTROPY_EXT" ) == null) ext = GL.getExtension ("WEBKIT_EXT_texture_filter_anisotropic");
+			var ext:Dynamic = gl.getExtension ("EXT_texture_filter_anisotropic");
+			if (ext == null || Reflect.field( ext, "MAX_TEXTURE_MAX_ANISOTROPY_EXT" ) == null) ext = gl.getExtension ("MOZ_EXT_texture_filter_anisotropic");
+			if (ext == null || Reflect.field( ext, "MAX_TEXTURE_MAX_ANISOTROPY_EXT" ) == null) ext = gl.getExtension ("WEBKIT_EXT_texture_filter_anisotropic");
 			__supportsAnisotropy = (ext != null);
 			
 			if (__supportsAnisotropy) {
 				
-				__maxSupportedAnisotropy = GL.getParameter (ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-				GL.texParameteri (GL.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, __maxSupportedAnisotropy);
+				__maxSupportedAnisotropy = gl.getParameter (ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+				gl.texParameteri (GLES20.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, __maxSupportedAnisotropy);
 				
 			}
 			
@@ -1026,36 +1029,36 @@ import openfl.Lib;
 				
 				case Context3DWrapMode.CLAMP:
 					
-					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GLES20.CLAMP_TO_EDGE, GLES20.CLAMP_TO_EDGE);
 				
 				case Context3DWrapMode.CLAMP_U_REPEAT_V:
 					
-					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.REPEAT);
+					texture.setWrapMode (GLES20.CLAMP_TO_EDGE, GLES20.REPEAT);
 				
 				case Context3DWrapMode.REPEAT:
 					
-					texture.setWrapMode (GL.REPEAT, GL.REPEAT);
+					texture.setWrapMode (GLES20.REPEAT, GLES20.REPEAT);
 				
 				case Context3DWrapMode.REPEAT_U_CLAMP_V:
 					
-					texture.setWrapMode (GL.REPEAT, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GLES20.REPEAT, GLES20.CLAMP_TO_EDGE);
 				
 			}
 			
-			// Currently using TEXTURE_MAX_ANISOTROPY_EXT instead of GL.TEXTURE_MAX_ANISOTROPY_EXT
+			// Currently using TEXTURE_MAX_ANISOTROPY_EXT instead of gl.TEXTURE_MAX_ANISOTROPY_EXT
 			// until it is implemented.
 			
 			switch (filter) {
 				
 				case Context3DTextureFilter.LINEAR:
 					
-					texture.setMagFilter (GL.LINEAR);
+					texture.setMagFilter (GLES20.LINEAR);
 					if (__supportsAnisotropy)
 						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.NEAREST:
 					
-					texture.setMagFilter (GL.NEAREST);
+					texture.setMagFilter (GLES20.NEAREST);
 					if (__supportsAnisotropy)
 						texture.setMaxAnisotrophy (1);
 				
@@ -1085,41 +1088,41 @@ import openfl.Lib;
 				
 				case Context3DMipFilter.MIPLINEAR:
 					
-					texture.setMinFilter (GL.LINEAR_MIPMAP_LINEAR);
+					texture.setMinFilter (GLES20.LINEAR_MIPMAP_LINEAR);
 				
 				case Context3DMipFilter.MIPNEAREST:
 					
-					texture.setMinFilter (GL.NEAREST_MIPMAP_NEAREST);
+					texture.setMinFilter (GLES20.NEAREST_MIPMAP_NEAREST);
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
+					texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GLES20.NEAREST : GLES20.LINEAR);
 				
 			} 
 			
 			var tex:Texture = cast texture;
 			if (mipfilter != Context3DMipFilter.MIPNONE && !tex.__hasMipMap) {
 				
-				GL.generateMipmap(GL.TEXTURE_2D);
+				gl.generateMipmap(GLES20.TEXTURE_2D);
 				tex.__hasMipMap = true;
 				
 			}
 			
 		} else if (Std.instance (texture, RectangleTexture) != null) {
 			
-			texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.CLAMP_TO_EDGE);
+			texture.setWrapMode (GLES20.CLAMP_TO_EDGE, GLES20.CLAMP_TO_EDGE);
 			
 			switch (filter) {
 				
 				case Context3DTextureFilter.LINEAR:
 					
-					texture.setMagFilter (GL.LINEAR);
+					texture.setMagFilter (GLES20.LINEAR);
 					if (__supportsAnisotropy)
 						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.NEAREST:
 					
-					texture.setMagFilter (GL.NEAREST);
+					texture.setMagFilter (GLES20.NEAREST);
 					if (__supportsAnisotropy)
 						texture.setMaxAnisotrophy (1);
 				
@@ -1145,7 +1148,7 @@ import openfl.Lib;
 				
 			}
 			
-			texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
+			texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GLES20.NEAREST : GLES20.LINEAR);
 			
 		} else if (Std.instance (texture, CubeTexture) != null) {
 			
@@ -1153,19 +1156,19 @@ import openfl.Lib;
 				
 				case Context3DWrapMode.CLAMP:
 					
-					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GLES20.CLAMP_TO_EDGE, GLES20.CLAMP_TO_EDGE);
 					
 				case Context3DWrapMode.CLAMP_U_REPEAT_V:
 					
-					texture.setWrapMode (GL.CLAMP_TO_EDGE, GL.REPEAT);
+					texture.setWrapMode (GLES20.CLAMP_TO_EDGE, GLES20.REPEAT);
 				
 				case Context3DWrapMode.REPEAT:
 					
-					texture.setWrapMode (GL.REPEAT, GL.REPEAT);
+					texture.setWrapMode (GLES20.REPEAT, GLES20.REPEAT);
 					
 				case Context3DWrapMode.REPEAT_U_CLAMP_V:
 					
-					texture.setWrapMode (GL.REPEAT, GL.CLAMP_TO_EDGE);
+					texture.setWrapMode (GLES20.REPEAT, GLES20.CLAMP_TO_EDGE);
 				
 			}
 			
@@ -1173,13 +1176,13 @@ import openfl.Lib;
 				
 				case Context3DTextureFilter.LINEAR:
 					
-					texture.setMagFilter (GL.LINEAR);
+					texture.setMagFilter (GLES20.LINEAR);
 					if (__supportsAnisotropy)
 						texture.setMaxAnisotrophy (1);
 				
 				case Context3DTextureFilter.NEAREST:
 					
-					texture.setMagFilter (GL.NEAREST);
+					texture.setMagFilter (GLES20.NEAREST);
 					if (__supportsAnisotropy)
 						texture.setMaxAnisotrophy (1);
 				
@@ -1209,22 +1212,22 @@ import openfl.Lib;
 				
 				case Context3DMipFilter.MIPLINEAR:
 					
-					texture.setMinFilter (GL.LINEAR_MIPMAP_LINEAR);
+					texture.setMinFilter (GLES20.LINEAR_MIPMAP_LINEAR);
 				
 				case Context3DMipFilter.MIPNEAREST:
 					
-					texture.setMinFilter (GL.NEAREST_MIPMAP_NEAREST);
+					texture.setMinFilter (GLES20.NEAREST_MIPMAP_NEAREST);
 				
 				case Context3DMipFilter.MIPNONE:
 					
-					texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR);
+					texture.setMinFilter (filter == Context3DTextureFilter.NEAREST ? GLES20.NEAREST : GLES20.LINEAR);
 				
 			}
 			
 			var cubetex:CubeTexture = cast texture;
 			if (mipfilter != Context3DMipFilter.MIPNONE && !cubetex.__hasMipMap) {
 				
-				GL.generateMipmap (GL.TEXTURE_CUBE_MAP);
+				gl.generateMipmap (GLES20.TEXTURE_CUBE_MAP);
 				cubetex.__hasMipMap = true;
 				
 			}
@@ -1242,7 +1245,7 @@ import openfl.Lib;
 		
 		if (!__renderToTexture) {
 			
-			GL.viewport (Std.int (__scrollRect.x), Std.int (__scrollRect.y), Std.int (__scrollRect.width), Std.int (__scrollRect.height));
+			gl.viewport (Std.int (__scrollRect.x), Std.int (__scrollRect.y), Std.int (__scrollRect.width), Std.int (__scrollRect.height));
 			
 		}
 		
@@ -1261,13 +1264,13 @@ import openfl.Lib;
 		
 		if (__blendEnabled) {
 			
-			GL.enable (GL.BLEND);
-			GL.blendEquation (GL.FUNC_ADD);
-			GL.blendFunc (__getGLBlend (__blendSourceFactor), __getGLBlend (__blendDestinationFactor));
+			gl.enable (GLES20.BLEND);
+			gl.blendEquation (GLES20.FUNC_ADD);
+			gl.blendFunc (__getGLBlend (__blendSourceFactor), __getGLBlend (__blendDestinationFactor));
 			
 		} else {
 			
-			GL.disable (GL.BLEND);
+			gl.disable (GLES20.BLEND);
 			
 		}
 		
@@ -1275,7 +1278,7 @@ import openfl.Lib;
 	
 	private function __hasGLExtension (name:String):Bool {
 		
-		return (GL.getSupportedExtensions ().indexOf (name) != -1);
+		return (gl.getSupportedExtensions ().indexOf (name) != -1);
 		
 	}
 	
@@ -1291,6 +1294,12 @@ import openfl.Lib;
 		
 	}
 	
+	@:noCompletion private inline function get_gl ():GLRenderContext {
+		
+		return __ogl.gl;
+		
+	}
+	
 	private function __updateDepthAndStencilState ():Void {
 		
 		// used to enable masking
@@ -1301,20 +1310,20 @@ import openfl.Lib;
 			// TODO check whether this is kept across frame
 			if (Application.current.window.config.depthBuffer) {
 				
-				GL.enable (GL.DEPTH_TEST);
+				gl.enable (GLES20.DEPTH_TEST);
 				
 			}
 			
 			if (Application.current.window.config.stencilBuffer) {
 				
-				GL.enable (GL.STENCIL_TEST);
+				gl.enable (GLES20.STENCIL_TEST);
 				
 			}
 			
 		} else {
 			
-			GL.disable (GL.DEPTH_TEST);
-			GL.disable (GL.STENCIL_TEST);
+			gl.disable (GLES20.DEPTH_TEST);
+			gl.disable (GLES20.STENCIL_TEST);
 			
 		}
 		
@@ -1331,7 +1340,7 @@ import openfl.Lib;
 		
 		//var width:Int = renderToTexture ? rttWidth : scrollRect.width;
 		var height:Int = __renderToTexture ? __rttHeight : Std.int (__scrollRect.height);
-		GL.scissor (Std.int (__scissorRectangle.x),
+		gl.scissor (Std.int (__scissorRectangle.x),
 			Std.int (height - Std.int(__scissorRectangle.y) - Std.int (__scissorRectangle.height)),
 			Std.int (__scissorRectangle.width),
 			Std.int (__scissorRectangle.height)

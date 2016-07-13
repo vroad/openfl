@@ -1,7 +1,6 @@
 package openfl._internal.renderer.opengl.utils;
 
 
-import lime.graphics.opengl.GL;
 import lime.graphics.GLRenderContext;
 import openfl._internal.renderer.BlendModeManager;
 import openfl.display.BlendMode;

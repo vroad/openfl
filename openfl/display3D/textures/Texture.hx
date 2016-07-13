@@ -1,7 +1,7 @@
 package openfl.display3D.textures;
 
 
-import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLTexture;
 import lime.utils.ArrayBufferView;
 import lime.utils.UInt8Array;
@@ -10,6 +10,7 @@ import openfl.utils.ByteArray;
 
 using openfl.display.BitmapData;
 
+@:access(openfl.display3D.Context3D)
 
 @:final class Texture extends TextureBase {	
 	
@@ -24,7 +25,7 @@ using openfl.display.BitmapData;
 		
 		if (__optimizeForRenderToTexture) {
 			
-			__frameBuffer = GL.createFramebuffer ();
+			__frameBuffer = __context.gl.createFramebuffer ();
 			
 		}
 		
@@ -83,10 +84,10 @@ using openfl.display.BitmapData;
 		
 		var size = __getSizeForMipLevel (miplevel);
 		
-		GL.bindTexture (GL.TEXTURE_2D, __glTexture);
+		__context.gl.bindTexture (GLES20.TEXTURE_2D, __glTexture);
 		
 		#if (js && html5)
-		GL.pixelStorei (GL.UNPACK_FLIP_Y_WEBGL, yFlipped ? 0 : 1);
+		__context.gl.pixelStorei (GLES20.UNPACK_FLIP_Y_WEBGL, yFlipped ? 0 : 1);
 		#else
 		if (!yFlipped) {
 			
@@ -95,8 +96,8 @@ using openfl.display.BitmapData;
 		}
 		#end
 		
-		GL.texImage2D (GL.TEXTURE_2D, miplevel, __format, size.width, size.height, 0, __format, GL.UNSIGNED_BYTE, data);
-		GL.bindTexture (GL.TEXTURE_2D, null);
+		__context.gl.texImage2D (GLES20.TEXTURE_2D, miplevel, __format, size.width, size.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
+		__context.gl.bindTexture (GLES20.TEXTURE_2D, null);
 		
 	}
 	

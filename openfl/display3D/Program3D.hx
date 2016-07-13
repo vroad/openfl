@@ -1,7 +1,7 @@
 package openfl.display3D;
 
 
-import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLProgram;
 import lime.graphics.opengl.GLUniformLocation;
 
@@ -45,21 +45,21 @@ import lime.graphics.opengl.GLUniformLocation;
 	
 	public function upload (vertexProgram:Dynamic, fragmentProgram:Dynamic):Void {
 		
-		GL.attachShader (__glProgram, vertexProgram);
-		GL.attachShader (__glProgram, fragmentProgram);
-		GL.linkProgram (__glProgram);
+		__context.gl.attachShader (__glProgram, vertexProgram);
+		__context.gl.attachShader (__glProgram, fragmentProgram);
+		__context.gl.linkProgram (__glProgram);
 		
-		if (GL.getProgramParameter (__glProgram, GL.LINK_STATUS) == 0) {
+		if (__context.gl.getProgramParameter (__glProgram, GLES20.LINK_STATUS) == 0) {
 			
-			var result = GL.getProgramInfoLog (__glProgram);
+			var result = __context.gl.getProgramInfoLog (__glProgram);
 			if (result != "") throw result;
 			
 		}
 		
-		for (i in 0 ... GL.getProgramParameter (__glProgram, GL.ACTIVE_UNIFORMS)) {
+		for (i in 0 ... __context.gl.getProgramParameter (__glProgram, GLES20.ACTIVE_UNIFORMS)) {
 			
-			var info = GL.getActiveUniform (__glProgram, i);
-			var loc = GL.getUniformLocation (__glProgram, info.name);
+			var info = __context.gl.getActiveUniform (__glProgram, i);
+			var loc = __context.gl.getUniformLocation (__glProgram, info.name);
 			
 			if (info.name == "yflip") {
 				
@@ -84,9 +84,9 @@ import lime.graphics.opengl.GLUniformLocation;
 		
 		var info, name, idx;
 		
-		for (i in 0 ... GL.getProgramParameter (__glProgram, GL.ACTIVE_ATTRIBUTES)) {
+		for (i in 0 ... __context.gl.getProgramParameter (__glProgram, GLES20.ACTIVE_ATTRIBUTES)) {
 			
-			info = GL.getActiveAttrib (__glProgram, i);
+			info = __context.gl.getActiveAttrib (__glProgram, i);
 			name = info.name.substr (0, 2);
 			idx = Std.parseInt (info.name.substr (2));
 			

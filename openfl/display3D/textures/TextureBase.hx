@@ -1,7 +1,7 @@
 package openfl.display3D.textures;
 
 
-import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLFramebuffer;
 import lime.graphics.opengl.GLTexture;
 import lime.utils.ArrayBufferView;
@@ -28,7 +28,7 @@ class TextureBase extends EventDispatcher {
 	public var __wrapS:Int;
 	public var __wrapT:Int;
 	
-	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, format:Int = GL.RGBA, type:Int = GL.UNSIGNED_BYTE) {
+	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, format:Int = GLES20.RGBA, type:Int = GLES20.UNSIGNED_BYTE) {
 		
 		super ();
 		
@@ -38,11 +38,11 @@ class TextureBase extends EventDispatcher {
 		__glTexture = glTexture;
 		__format = format;
 		__type = type;
-		__minFilter = GL.NEAREST_MIPMAP_LINEAR;
-		__magFilter = GL.LINEAR;
+		__minFilter = GLES20.NEAREST_MIPMAP_LINEAR;
+		__magFilter = GLES20.LINEAR;
 		__maxAnisoTrophy = 1.0;
-		__wrapS = GL.REPEAT;
-		__wrapT = GL.REPEAT;
+		__wrapS = GLES20.REPEAT;
+		__wrapT = GLES20.REPEAT;
 		
 	}
 	
@@ -58,7 +58,7 @@ class TextureBase extends EventDispatcher {
 		if (__minFilter != filter) {
 			
 			__minFilter = filter;
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, filter);
+			__context.gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, filter);
 			
 		}
 		
@@ -69,7 +69,7 @@ class TextureBase extends EventDispatcher {
 		if (__magFilter != filter) {
 			
 			__magFilter = filter;
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, filter);
+			__context.gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, filter);
 			
 		}
 		
@@ -80,7 +80,7 @@ class TextureBase extends EventDispatcher {
 		if (__maxAnisoTrophy != value) {
 			
 			__maxAnisoTrophy = value;
-			GL.texParameterf (GL.TEXTURE_2D, @:privateAccess Context3D.TEXTURE_MAX_ANISOTROPY_EXT, value);
+			__context.gl.texParameterf (GLES20.TEXTURE_2D, @:privateAccess Context3D.TEXTURE_MAX_ANISOTROPY_EXT, value);
 			
 		}
 		
@@ -91,14 +91,14 @@ class TextureBase extends EventDispatcher {
 		if (__wrapS != wrapS) {
 			
 			__wrapS = wrapS;
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, wrapS);
+			__context.gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_WRAP_S, wrapS);
 			
 		}
 		
 		if (__wrapT != wrapT) {
 			
 			__wrapT = wrapT;
-			GL.texParameteri (GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, wrapT);
+			__context.gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_WRAP_T, wrapT);
 			
 		}
 		

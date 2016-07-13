@@ -5,7 +5,6 @@ import haxe.EnumFlags;
 import lime.app.Application;
 import lime.app.IModule;
 import lime.app.Preloader;
-import lime.graphics.opengl.GL;
 import lime.graphics.opengl.GLProgram;
 import lime.graphics.opengl.GLUniformLocation;
 import lime.graphics.CanvasRenderContext;
