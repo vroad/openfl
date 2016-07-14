@@ -216,7 +216,8 @@ abstract Vector<T>(VectorData<T>) {
 		
 		this = new VectorData<T> ();
 		#if cpp
-		this.data = untyped (new Array<T>()).__SetSizeExact(length);
+		this.data = new Array<T> ()
+		this.data.__SetSizeExact (length);
 		#elseif js
 		this.data = untyped __new__(Array, length);
 		#elseif cs
@@ -822,7 +823,8 @@ using cpp.NativeArray;
 	
 	public inline function new (?length:Int, ?fixed:Bool):Void {
 		
-		this = untyped (new Array<T> ()).__SetSizeExact (length);
+		this = new Array<T> ();
+		untyped this.__SetSizeExact (length);
 		
 	}
 	
