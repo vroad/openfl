@@ -17,9 +17,9 @@ using openfl.display.BitmapData;
 	private var __optimizeForRenderToTexture:Bool;
 	private var __hasMipMap:Bool;
 	
-	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, format:Int, type:Int) {
+	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
 		
-		super (context, glTexture, width, height, format, type);
+		super (context, glTexture, width, height, internalFormat, format, type);
 		
 		__optimizeForRenderToTexture = optimize;
 		
@@ -96,7 +96,7 @@ using openfl.display.BitmapData;
 		}
 		#end
 		
-		__context.gl.texImage2D (GLES20.TEXTURE_2D, miplevel, __format, size.width, size.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
+		__context.gl.texImage2D (GLES20.TEXTURE_2D, miplevel, __internalFormat, size.width, size.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 		__context.gl.bindTexture (GLES20.TEXTURE_2D, null);
 		
 	}

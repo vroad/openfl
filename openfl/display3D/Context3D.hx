@@ -84,6 +84,7 @@ import openfl.Lib;
 	private var __rttWidth:Int;
 	private var __rttHeight:Int;
 	private var renderBuffers:Map<RenderBufferType, GLRenderbuffer>;
+	private var __isGLES:Bool;
 	private var gl (get, null):GLRenderContext;
 	
 	
@@ -133,6 +134,13 @@ import openfl.Lib;
 		maxBackBufferWidth = 4096;
 		maxBackBufferHeight = 4096;
 		
+		#if (html5 || android || ios)
+		__isGLES = true;
+		#else
+		var version:String = gl.getParameter (GLES20.VERSION);
+		__isGLES = (version.indexOf ("OpenGL ES") != -1);
+		#end
+		
 	}
 	
 	
@@ -181,7 +189,7 @@ import openfl.Lib;
 	public function createCubeTexture (size:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):CubeTexture {
 		
 		var glFormat = getGLTextureFormat (format);
-		var texture = new CubeTexture (this, gl.createTexture (), size, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new CubeTexture (this, gl.createTexture (), size, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		__texturesCreated.push (texture);
 		return texture;
 		
@@ -209,7 +217,7 @@ import openfl.Lib;
 	public function createRectangleTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool):RectangleTexture {
 		
 		var glFormat = getGLTextureFormat(format);
-		var texture = new RectangleTexture (this, gl.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new RectangleTexture (this, gl.createTexture (), optimizeForRenderToTexture, width, height, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		__texturesCreated.push (texture);
 		return texture;
 		
@@ -219,13 +227,13 @@ import openfl.Lib;
 	public function createTexture (width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool, streamingLevels:Int = 0):Texture {
 		
 		var glFormat = getGLTextureFormat(format);
-		var texture = new Texture (this, gl.createTexture (), optimizeForRenderToTexture, width, height, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
+		var texture = new Texture (this, gl.createTexture (), optimizeForRenderToTexture, width, height, glFormat.internalFormat, glFormat.format, glFormat.type); // TODO use format, optimizeForRenderToTexture and streamingLevels?
 		__texturesCreated.push (texture);
 		return texture;
 		
 	}
 	
-	private function getGLTextureFormat(format:Context3DTextureFormat):{format:Int, type:Int}
+	private function getGLTextureFormat(format:Context3DTextureFormat):{internalFormat:Int, format:Int, type:Int}
 	{
 		
 		switch (format)
@@ -233,9 +241,9 @@ import openfl.Lib;
 			
 			case Context3DTextureFormat.BGRA:
 				#if html5
-				return { format:GLES20.RGBA, type:GLES20.UNSIGNED_BYTE };
+				return { internalFormat:GLES20.RGBA, format:GLES20.RGBA, type:GLES20.UNSIGNED_BYTE };
 				#else
-				return { format:ExtensionBGRA.BGRA_EXT, type:GLES20.UNSIGNED_BYTE };
+				return { internalFormat:__isGLES ? ExtensionBGRA.BGRA_EXT : GLES20.RGBA, format:ExtensionBGRA.BGRA_EXT, type:GLES20.UNSIGNED_BYTE };
 				#end
 			default:
 				return null;

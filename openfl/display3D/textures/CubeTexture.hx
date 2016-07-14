@@ -18,9 +18,9 @@ using openfl.display.BitmapData;
 	private var __hasMipMap:Bool;
 	
 	
-	private function new (context:Context3D, glTexture:GLTexture, size:Int, format:Int, type:Int) {
+	private function new (context:Context3D, glTexture:GLTexture, size:Int, internalFormat:Int, format:Int, type:Int) {
 		
-		super (context, glTexture, size, size, format, type);
+		super (context, glTexture, size, size, internalFormat, format, type);
 		this.__hasMipMap = false;
 		
 		__size = size;
@@ -58,27 +58,27 @@ using openfl.display.BitmapData;
 			
 			case 0:
 				
-				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_POSITIVE_X, miplevel, GLES20.RGBA, source.width, source.height, 0, GLES20.RGBA, GLES20.UNSIGNED_BYTE, data);
+				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_POSITIVE_X, miplevel, __internalFormat, source.width, source.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 			
 			case 1:
 				
-				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_NEGATIVE_X, miplevel, GLES20.RGBA, source.width, source.height, 0, GLES20.RGBA, GLES20.UNSIGNED_BYTE, data);
+				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_NEGATIVE_X, miplevel, __internalFormat, source.width, source.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 			
 			case 2:
 				
-				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_POSITIVE_Y, miplevel, GLES20.RGBA, source.width, source.height, 0, GLES20.RGBA, GLES20.UNSIGNED_BYTE, data);
+				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_POSITIVE_Y, miplevel, __internalFormat, source.width, source.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 			
 			case 3:
 				
-				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_NEGATIVE_Y, miplevel, GLES20.RGBA, source.width, source.height, 0, GLES20.RGBA, GLES20.UNSIGNED_BYTE, data);
+				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_NEGATIVE_Y, miplevel, __internalFormat, source.width, source.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 			
 			case 4:
 				
-				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_POSITIVE_Z, miplevel, GLES20.RGBA, source.width, source.height, 0, GLES20.RGBA, GLES20.UNSIGNED_BYTE, data);
+				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_POSITIVE_Z, miplevel, __internalFormat, source.width, source.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 			
 			case 5:
 				
-				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_NEGATIVE_Z, miplevel, GLES20.RGBA, source.width, source.height, 0, GLES20.RGBA, GLES20.UNSIGNED_BYTE, data);
+				__context.gl.texImage2D (GLES20.TEXTURE_CUBE_MAP_NEGATIVE_Z, miplevel, __internalFormat, source.width, source.height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 			
 			default:
 				

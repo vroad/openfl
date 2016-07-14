@@ -15,9 +15,9 @@ import openfl.utils.ByteArray;
 	
 	private var __optimizeForRenderToTexture:Bool;
 	
-	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, format:Int, type:Int) {
+	public function new (context:Context3D, glTexture:GLTexture, optimize:Bool, width:Int, height:Int, internalFormat:Int, format:Int, type:Int) {
 		
-		super (context, glTexture, width, height, format, type);
+		super (context, glTexture, width, height, internalFormat, format, type);
 		
 		__optimizeForRenderToTexture = optimize;
 		
@@ -85,7 +85,7 @@ import openfl.utils.ByteArray;
 		}
 		#end
 		
-		__context.gl.texImage2D (GLES20.TEXTURE_2D, 0, __format, __width, __height, 0, __format, GLES20.UNSIGNED_BYTE, data);
+		__context.gl.texImage2D (GLES20.TEXTURE_2D, 0, __internalFormat, __width, __height, 0, __format, GLES20.UNSIGNED_BYTE, data);
 		__context.gl.bindTexture (GLES20.TEXTURE_2D, null);
 		
 	}

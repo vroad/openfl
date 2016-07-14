@@ -20,6 +20,7 @@ class TextureBase extends EventDispatcher {
 	public var __height:Int;
 	public var __width:Int;
 	public var __glTexture:GLTexture;
+	public var __internalFormat:Int;
 	public var __format:Int;
 	public var __type:Int;
 	public var __minFilter:Int;
@@ -28,7 +29,7 @@ class TextureBase extends EventDispatcher {
 	public var __wrapS:Int;
 	public var __wrapT:Int;
 	
-	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, format:Int = GLES20.RGBA, type:Int = GLES20.UNSIGNED_BYTE) {
+	public function new (context:Context3D, glTexture:GLTexture, width:Int = 0, height:Int = 0, internalFormat:Int = GLES20.RGBA, format:Int = GLES20.RGBA, type:Int = GLES20.UNSIGNED_BYTE) {
 		
 		super ();
 		
@@ -36,6 +37,7 @@ class TextureBase extends EventDispatcher {
 		__width = width;
 		__height = height;
 		__glTexture = glTexture;
+		__internalFormat = internalFormat;
 		__format = format;
 		__type = type;
 		__minFilter = GLES20.NEAREST_MIPMAP_LINEAR;
