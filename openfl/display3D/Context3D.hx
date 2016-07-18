@@ -86,6 +86,7 @@ import openfl.Lib;
 	private var __rttHeight:Int;
 	private var renderBuffers:Map<RenderBufferType, GLRenderbuffer>;
 	private var __isGLES:Bool;
+	private var __vector4:Vector<Float>;
 	private var gl (get, null):GLRenderContext;
 	
 	
@@ -141,6 +142,8 @@ import openfl.Lib;
 		var version:String = gl.getParameter (GLES20.VERSION);
 		__isGLES = (version.indexOf ("OpenGL ES") != -1);
 		#end
+		
+		__vector4 = new Vector<Float>(4, true);
 		
 	}
 	
@@ -475,17 +478,17 @@ import openfl.Lib;
 		
 		if (transposedMatrix) {
 			
-			setProgramConstantsFromVector(programType, firstRegister, [ d[0], d[4], d[8], d[12] ], 1);  
-			setProgramConstantsFromVector(programType, firstRegister + 1, [ d[1], d[5], d[9], d[13] ], 1);
-			setProgramConstantsFromVector(programType, firstRegister + 2, [ d[2], d[6], d[10], d[14] ], 1);
-			setProgramConstantsFromVector(programType, firstRegister + 3, [ d[3], d[7], d[11], d[15] ], 1);
+			setProgramConstantsFromVector (programType, firstRegister, __getVector4 (__vector4, d[0], d[4], d[8], d[12]), 1);  
+			setProgramConstantsFromVector (programType, firstRegister + 1, __getVector4 (__vector4, d[1], d[5], d[9], d[13]), 1);
+			setProgramConstantsFromVector (programType, firstRegister + 2, __getVector4 (__vector4, d[2], d[6], d[10], d[14]), 1);
+			setProgramConstantsFromVector (programType, firstRegister + 3, __getVector4 (__vector4, d[3], d[7], d[11], d[15]), 1);
 			
 		} else {
 			
-			setProgramConstantsFromVector(programType, firstRegister, [ d[0], d[1], d[2], d[3] ], 1);
-			setProgramConstantsFromVector(programType, firstRegister + 1, [ d[4], d[5], d[6], d[7] ], 1);
-			setProgramConstantsFromVector(programType, firstRegister + 2, [ d[8], d[9], d[10], d[11] ], 1);
-			setProgramConstantsFromVector(programType, firstRegister + 3, [ d[12], d[13], d[14], d[15] ], 1);
+			setProgramConstantsFromVector (programType, firstRegister, __getVector4 (__vector4, d[0], d[1], d[2], d[3]), 1);
+			setProgramConstantsFromVector (programType, firstRegister + 1, __getVector4 (__vector4, d[4], d[5], d[6], d[7]), 1);
+			setProgramConstantsFromVector (programType, firstRegister + 2, __getVector4 (__vector4, d[8], d[9], d[10], d[11]), 1);
+			setProgramConstantsFromVector (programType, firstRegister + 3, __getVector4 (__vector4, d[12], d[13], d[14], d[15]), 1);
 			
 		}
 		
@@ -1354,6 +1357,16 @@ import openfl.Lib;
 			Std.int (__scissorRectangle.width),
 			Std.int (__scissorRectangle.height)
 		);
+		
+	}
+	
+	private static function __getVector4 (out:Vector<Float>, v0:Float, v1:Float, v2:Float, v3:Float):Vector<Float> {
+		
+		out[0] = v0;
+		out[1] = v1;
+		out[2] = v2;
+		out[3] = v3;
+		return out;
 		
 	}
 	
