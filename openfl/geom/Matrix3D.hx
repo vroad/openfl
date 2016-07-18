@@ -15,6 +15,9 @@ class Matrix3D {
 	public var rawData:Vector<Float>;
 	
 	
+	private static var __identityRawData:Vector<Float> = Vector.ofArray ([ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ]);
+	
+	
 	public function new (v:Vector<Float> = null) {
 		
 		if (v != null && v.length == 16) {
@@ -23,7 +26,7 @@ class Matrix3D {
 			
 		} else {
 			
-			rawData = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+			rawData = __identityRawData.copy ();
 			
 		}
 		
@@ -487,7 +490,7 @@ class Matrix3D {
 	
 	public function identity ():Void {
 		
-		rawData = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+		rawData = __identityRawData.copy ();
 		
 	}
 	
