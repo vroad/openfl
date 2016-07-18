@@ -10,6 +10,7 @@ import lime.graphics.opengl.GLUniformLocation;
 import lime.graphics.opengl.GLProgram;
 import lime.graphics.opengl.GLRenderbuffer;
 import lime.utils.Float32Array;
+import openfl.Vector;
 import openfl.display.BitmapData;
 import openfl.display.OpenGLView;
 import openfl.display.Stage3D;
@@ -873,7 +874,7 @@ import openfl.Lib;
 	}
 	
 	
-	private function __setGLSLProgramConstantsFromVector4 (location:GLUniformLocation, data:Array<Float>, startIndex:Int = 0):Void {
+	private function __setGLSLProgramConstantsFromVector4 (location:GLUniformLocation, data:Vector<Float>, startIndex:Int = 0):Void {
 		
 		gl.uniform4f (location, data[startIndex], data[startIndex + 1], data[startIndex + 2], data[startIndex + 3]);
 		
