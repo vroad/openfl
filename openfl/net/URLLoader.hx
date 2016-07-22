@@ -43,7 +43,7 @@ class URLLoader extends EventDispatcher {
 	
 	
 	#if lime_curl
-	private var __curl:CURL;
+	private var __curl:CURLEasy;
 	private var __data:ByteArray;
 	#end
 	
@@ -58,7 +58,7 @@ class URLLoader extends EventDispatcher {
 		
 		#if lime_curl
 		__data = new ByteArray ();
-		__curl = CURLEasy.init ();
+		__curl = CURLEasy.create ();
 		#end
 		
 		if (request != null) {
@@ -73,7 +73,7 @@ class URLLoader extends EventDispatcher {
 	public function close ():Void {
 		
 		#if lime_curl
-		CURLEasy.cleanup (__curl);
+		__curl.cleanup ();
 		#end
 		
 	}
@@ -362,44 +362,44 @@ class URLLoader extends EventDispatcher {
 		bytesLoaded = 0;
 		bytesTotal = 0;
 		
-		CURLEasy.reset (__curl);
-		CURLEasy.setopt (__curl, URL, url);
+		__curl.reset ();
+		__curl.setopt (URL, url);
 
 		switch (method) {
 			
 			case HEAD:
 				
-				CURLEasy.setopt(__curl, NOBODY, true);
+				__curl.setopt(NOBODY, true);
 			
 			case GET:
 				
-				CURLEasy.setopt(__curl, HTTPGET, true);
+				__curl.setopt(HTTPGET, true);
 				
 				if (uri.length > 0) {
 					
-					CURLEasy.setopt (__curl, URL, url + "?" + uri.readUTFBytes (uri.length));
+					__curl.setopt (URL, url + "?" + uri.readUTFBytes (uri.length));
 					
 				}
 			
 			case POST:
 				
-				CURLEasy.setopt(__curl, POST, true);
-				CURLEasy.setopt(__curl, READFUNCTION, readFunction.bind(_, uri));
-				CURLEasy.setopt(__curl, POSTFIELDSIZE, uri.length);
-				CURLEasy.setopt(__curl, INFILESIZE, uri.length);
+				__curl.setopt(POST, true);
+				__curl.setopt(READFUNCTION, readFunction.bind(_, uri));
+				__curl.setopt(POSTFIELDSIZE, uri.length);
+				__curl.setopt(INFILESIZE, uri.length);
 			
 			case PUT:
 				
-				CURLEasy.setopt(__curl, UPLOAD, true);
-				CURLEasy.setopt(__curl, READFUNCTION, readFunction.bind(_, uri));
-				CURLEasy.setopt(__curl, INFILESIZE, uri.length);
+				__curl.setopt(UPLOAD, true);
+				__curl.setopt(READFUNCTION, readFunction.bind(_, uri));
+				__curl.setopt(INFILESIZE, uri.length);
 			
 			case _:
 				var reqMethod:String = method;
 				
-				CURLEasy.setopt(__curl, CUSTOMREQUEST, reqMethod);
-				CURLEasy.setopt(__curl, READFUNCTION, readFunction.bind(_, uri));
-				CURLEasy.setopt(__curl, INFILESIZE, uri.length);
+				__curl.setopt(CUSTOMREQUEST, reqMethod);
+				__curl.setopt(READFUNCTION, readFunction.bind(_, uri));
+				__curl.setopt(INFILESIZE, uri.length);
 			
 		}
 		
@@ -412,30 +412,30 @@ class URLLoader extends EventDispatcher {
 			
 		}
 		
-		CURLEasy.setopt (__curl, FOLLOWLOCATION, true);
-		CURLEasy.setopt (__curl, AUTOREFERER, true);
-		CURLEasy.setopt (__curl, HTTPHEADER, headers);
+		__curl.setopt (FOLLOWLOCATION, true);
+		__curl.setopt (AUTOREFERER, true);
+		__curl.setopt (HTTPHEADER, headers);
 		
-		CURLEasy.setopt (__curl, PROGRESSFUNCTION, progressFunction);
-		CURLEasy.setopt (__curl, WRITEFUNCTION, writeFunction);
-		CURLEasy.setopt (__curl, HEADERFUNCTION, headerFunction);
+		__curl.setopt (PROGRESSFUNCTION, progressFunction);
+		__curl.setopt (WRITEFUNCTION, writeFunction);
+		__curl.setopt (HEADERFUNCTION, headerFunction);
 		
-		CURLEasy.setopt (__curl, SSL_VERIFYPEER, false);
-		CURLEasy.setopt (__curl, SSL_VERIFYHOST, 0);
-		CURLEasy.setopt (__curl, USERAGENT, "libcurl-agent/1.0");
-		CURLEasy.setopt (__curl, CONNECTTIMEOUT, 30);
-		CURLEasy.setopt (__curl, TRANSFERTEXT, dataFormat == BINARY ? 0 : 1);
+		__curl.setopt (SSL_VERIFYPEER, false);
+		__curl.setopt (SSL_VERIFYHOST, 0);
+		__curl.setopt (USERAGENT, "libcurl-agent/1.0");
+		__curl.setopt (CONNECTTIMEOUT, 30);
+		__curl.setopt (TRANSFERTEXT, dataFormat == BINARY ? 0 : 1);
 		
 		var worker = new BackgroundWorker ();
 		worker.doWork.add (function (_) {
 			
-			var result = CURLEasy.perform (__curl);
+			var result = __curl.perform ;
 			worker.sendComplete (result);
 			
 		});
 		worker.onComplete.add (function (result) {
 			
-			var responseCode = CURLEasy.getinfo (__curl, RESPONSE_CODE);
+			var responseCode = __curl.getinfo (RESPONSE_CODE);
 			
 			if (result == CURLCode.OK) {
 				
