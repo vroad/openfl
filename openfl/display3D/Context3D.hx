@@ -4,6 +4,7 @@ package openfl.display3D;
 import lime.app.Application;
 import lime.graphics.GLRenderContext;
 import lime.graphics.opengl.ExtensionBGRA;
+import lime.graphics.opengl.ExtensionPackedDepthStencil;
 import lime.graphics.opengl.GLES20;
 import lime.graphics.opengl.GLFramebuffer;
 import lime.graphics.opengl.GLUniformLocation;
@@ -578,7 +579,7 @@ import openfl.Lib;
 			if (supportsPackedDepthStencil) {
 				
 				gl.bindRenderbuffer (GLES20.RENDERBUFFER, depthStencilRenderBuffer);
-				gl.renderbufferStorage (GLES20.RENDERBUFFER, GLES20.DEPTH_STENCIL, texture.__width, texture.__height);
+				gl.renderbufferStorage (GLES20.RENDERBUFFER, ExtensionPackedDepthStencil.DEPTH24_STENCIL8_EXT, texture.__width, texture.__height);
 				
 			} else {
 				
