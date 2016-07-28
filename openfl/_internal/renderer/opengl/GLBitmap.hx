@@ -25,9 +25,9 @@ class GLBitmap {
 			
 			var shader;
 			
-			if (bitmap.filters != null && Std.is (bitmap.filters[0], ShaderFilter)) {
+			if (bitmap.__filters != null && Std.is (bitmap.__filters[0], ShaderFilter)) {
 				
-				shader = cast (bitmap.filters[0], ShaderFilter).shader;
+				shader = cast (bitmap.__filters[0], ShaderFilter).shader;
 				
 			} else {
 				
@@ -41,12 +41,12 @@ class GLBitmap {
 			
 			var renderer:GLRenderer = cast renderSession.renderer;
 			
-			gl.vertexAttrib1f (shader.data.aAlpha.index, bitmap.__worldAlpha);
+			gl.enableVertexAttribArray (shader.data.aAlpha.index);
 			gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (bitmap.__worldTransform));
 			
 			gl.bindTexture (GLES20.TEXTURE_2D, bitmap.bitmapData.getTexture (gl));
 			
-			if (bitmap.smoothing || bitmap.stage.__displayMatrix.a != 1 || bitmap.stage.__displayMatrix.d != 1) {
+			if (bitmap.smoothing || (bitmap.stage != null && (bitmap.stage.__displayMatrix.a != 1 || bitmap.stage.__displayMatrix.d != 1))) {
 				
 				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.LINEAR);
 				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.LINEAR);
@@ -58,9 +58,10 @@ class GLBitmap {
 				
 			}
 			
-			gl.bindBuffer (GLES20.ARRAY_BUFFER, bitmap.bitmapData.getBuffer (gl));
-			gl.vertexAttribPointer (shader.data.aPosition.index, 3, GLES20.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
-			gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, GLES20.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+			gl.bindBuffer (GLES20.ARRAY_BUFFER, bitmap.bitmapData.getBuffer (gl, bitmap.__worldAlpha));
+			gl.vertexAttribPointer (shader.data.aPosition.index, 3, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
+			gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+			gl.vertexAttribPointer (shader.data.aAlpha.index, 1, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
 			
 			gl.drawArrays (GLES20.TRIANGLE_STRIP, 0, 4);
 			

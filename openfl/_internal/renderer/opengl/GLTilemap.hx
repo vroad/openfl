@@ -26,9 +26,9 @@ class GLTilemap {
 		var gl = renderSession.gl;
 		var shader;
 		
-		if (tilemap.filters != null && Std.is (tilemap.filters[0], ShaderFilter)) {
+		if (tilemap.__filters != null && Std.is (tilemap.__filters[0], ShaderFilter)) {
 			
-			shader = cast (tilemap.filters[0], ShaderFilter).shader;
+			shader = cast (tilemap.__filters[0], ShaderFilter).shader;
 			
 		} else {
 			
@@ -75,7 +75,17 @@ class GLTilemap {
 				}
 				
 				var data = new Float32Array (count * 30);
-				data.set (bufferData);
+				
+				if (bufferData.length <= data.length) {
+					
+					data.set (bufferData);
+					
+				} else {
+					
+					data.set (bufferData.subarray (0, data.length));
+					
+				}
+				
 				bufferData = data;
 				
 			}
@@ -204,17 +214,50 @@ class GLTilemap {
 				
 			}
 			
-			if (tileset.bitmapData != cacheBitmapData || i == count - 1) {
+			if (tileset.bitmapData != cacheBitmapData) {
 				
 				if (cacheBitmapData != null) {
 					
 					gl.bindTexture (gl.TEXTURE_2D, cacheBitmapData.getTexture (gl));
-					gl.drawArrays (gl.TRIANGLES, lastIndex * 6, (i + 1) * 6);
+					
+					if (tilemap.smoothing /*|| tilemap.stage.__displayMatrix.a != 1 || tilemap.stage.__displayMatrix.d != 1*/) {
+						
+						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+						
+					} else {
+						
+						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						
+					}
+					
+					gl.drawArrays (gl.TRIANGLES, lastIndex * 6, (i - lastIndex) * 6);
 					
 				}
 				
 				cacheBitmapData = tileset.bitmapData;
 				lastIndex = i;
+				
+			}
+			
+			if (i == count - 1 && tileset.bitmapData != null) {
+				
+				gl.bindTexture (gl.TEXTURE_2D, tileset.bitmapData.getTexture (gl));
+				
+				if (tilemap.smoothing /*|| tilemap.stage.__displayMatrix.a != 1 || tilemap.stage.__displayMatrix.d != 1*/) {
+					
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					
+				} else {
+					
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					
+				}
+				
+				gl.drawArrays (gl.TRIANGLES, lastIndex * 6, (i + 1 - lastIndex) * 6);
 				
 			}
 			

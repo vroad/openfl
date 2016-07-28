@@ -1,6 +1,7 @@
 package openfl.display;
 
 
+import haxe.ds.Vector;
 import openfl._internal.renderer.cairo.CairoGraphics;
 import openfl._internal.renderer.cairo.CairoRenderer;
 import openfl._internal.renderer.canvas.CanvasGraphics;
@@ -296,6 +297,13 @@ class DisplayObjectContainer extends InteractiveObject {
 	}
 	
 	
+	public function stopAllMovieClips ():Void {
+		
+		__stopAllMovieClips ();
+		
+	}
+	
+	
 	public function swapChildren (child1:DisplayObject, child2:DisplayObject):Void {
 		
 		if (child1.parent == this && child2.parent == this) {
@@ -554,6 +562,23 @@ class DisplayObjectContainer extends InteractiveObject {
 	}
 	
 	
+	private override function __readGraphicsData (graphicsData:Vector<IGraphicsData>, recurse:Bool):Void {
+		
+		super.__readGraphicsData (graphicsData, recurse);
+		
+		if (recurse) {
+			
+			for (child in __children) {
+				
+				child.__readGraphicsData (graphicsData, recurse);
+				
+			}
+			
+		}
+		
+	}
+	
+	
 	public override function __renderCairo (renderSession:RenderSession):Void {
 		
 		if (!__renderable || __worldAlpha <= 0) return;
@@ -766,6 +791,17 @@ class DisplayObjectContainer extends InteractiveObject {
 				}
 				
 			}
+			
+		}
+		
+	}
+	
+	
+	private override function __stopAllMovieClips ():Void {
+		
+		for (child in __children) {
+			
+			child.__stopAllMovieClips ();
 			
 		}
 		

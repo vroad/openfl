@@ -86,6 +86,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public var window (default, null):Window;
 	
+	private var __cacheFocus:InteractiveObject;
 	private var __clearBeforeRender:Bool;
 	private var __color:Int;
 	private var __colorSplit:Array<Float>;
@@ -644,8 +645,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
-		var event = new FocusEvent (FocusEvent.FOCUS_IN, true, false, null, false, 0);
-		__broadcast (event, true);
+		focus = __cacheFocus;
 		
 	}
 	
@@ -654,8 +654,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
-		var event = new FocusEvent (FocusEvent.FOCUS_OUT, true, false, null, false, 0);
-		__broadcast (event, true);
+		__cacheFocus = focus;
+		focus = null;
 		
 	}
 	

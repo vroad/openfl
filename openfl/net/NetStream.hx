@@ -303,7 +303,10 @@ class NetStream extends EventDispatcher {
 	
 	
 	private function video_onTimeUpdate (event:Dynamic):Void {
-		
+
+		#if (js && html5)
+		time = __video.currentTime;
+		#end
 		__playStatus ("NetStream.Play.timeupdate");
 		
 	}
