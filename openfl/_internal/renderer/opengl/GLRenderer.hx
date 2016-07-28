@@ -9,6 +9,7 @@ import openfl.display.Stage;
 import openfl.geom.Matrix;
 
 @:access(openfl.display.Stage)
+@:access(openfl.display3D.Context3D)
 
 
 class GLRenderer extends AbstractRenderer {
@@ -76,6 +77,16 @@ class GLRenderer extends AbstractRenderer {
 			
 			renderSession.shaderManager.setShader (null);
 			renderSession.blendModeManager.setBlendMode (null);
+			
+		}
+		
+		for (stage3D in stage.stage3Ds) {
+			
+			if (stage3D.context3D != null) {
+				
+				stage3D.context3D.__moveStage3D (stage3D);
+				
+			}
 			
 		}
 		
