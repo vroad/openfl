@@ -676,11 +676,18 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion private inline function get_length ():Int {
 		
+		#if (!js && !cs)
 		return this.length;
+		#else
+		return this.data.length;
+		#end
 		
 	}
 	
 	
+	#if cs
+	@:access(Array)
+	#end
 	@:noCompletion private #if js inline #end function set_length (value:Int):Int {
 		
 		#if (!js && !cs)
@@ -703,8 +710,20 @@ abstract Vector<T>(VectorData<T>) {
 		}
 		
 		return value;
-		#else
-		return this.length = value;
+		#elseif js
+		return this.data.length = value;
+		#elseif cs
+		if (value > this.data.__a.Length) {
+			
+			var newLen = (value << 1) + 1;
+			var newarr = new cs.NativeArray (newLen);
+			this.data.__a.CopyTo (newarr, 0);
+			
+			this.data.__a = newarr;
+			
+		}
+		
+		return this.data.length = value;
 		#end
 		
 	}
@@ -736,7 +755,10 @@ abstract Vector<T>(VectorData<T>) {
 	public var data:haxe.ds.Vector<T>;
 	#end
 	public var fixed:Bool;
-	#if js
+	#if (js || cs)
+	#if cs
+	@:skipReflection
+	#end
 	public var length(get, set):Int;
 	#else
 	public var length:Int;
@@ -745,7 +767,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public function new () {
 		
-		#if !js
+		#if (!js && !cs)
 		length = 0;
 		#end
 		
@@ -754,7 +776,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion private inline function get_length ():Int
 	{
-		#if js
+		#if (js || cs)
 		return this.data.length;
 		#else
 		return this.length;
@@ -764,8 +786,8 @@ abstract Vector<T>(VectorData<T>) {
 	
 	@:noCompletion private inline function set_length(value:Int):Int
 	{
-		#if js
-		return untyped (this.data).length = value;
+		#if (js || cs)
+		return @:privateAccess this.data.length = value;
 		#else
 		return this.length = value;
 		#end
