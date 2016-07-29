@@ -685,7 +685,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	#if cs
+	#if (cs || js)
 	@:access(Array)
 	#end
 	@:noCompletion private #if js inline #end function set_length (value:Int):Int {
