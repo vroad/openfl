@@ -67,7 +67,6 @@ import openfl.Lib;
 	private var __drawing:Bool; // to mimic Stage3d behavior of not allowing calls to drawTriangles between present and clear
 	private var __framebuffer:GLFramebuffer;
 	private var __indexBuffersCreated:Array<IndexBuffer3D>; // to keep track of stuff to dispose when calling dispose
-	private var __ogl:OpenGLView;
 	private var __programsCreated:Array<Program3D>; // to keep track of stuff to dispose when calling dispose
 	private var __renderbuffer:GLRenderbuffer;
 	private var __samplerParameters:Array<SamplerState>; //TODO : use Tupple3
@@ -119,13 +118,7 @@ import openfl.Lib;
 		
 		var stage = Lib.current.stage;
 		
-		__ogl = new OpenGLView ();
-		var width:Float = stage.stageWidth;
-		var height:Float = stage.stageHeight;
-		__ogl.scrollRect = new Rectangle (0, 0, stage3D.x + width , stage3D.y + height);
-		__scrollRect = new Rectangle (stage3D.x, stage3D.y, width, height);
-		
-		stage.addChildAt (__ogl, 0);
+		__scrollRect = new Rectangle (stage3D.x, stage3D.y, stage.stageWidth, stage.stageHeight);
 		
 		__backBufferDepthAndStencil = false;
 		__rttDepthAndStencil = false;
@@ -855,8 +848,6 @@ import openfl.Lib;
 		__scrollRect.y = y;
 		__scrollRect.width = width;
 		__scrollRect.height = height;
-		__ogl.width = x + width;
-		__ogl.height = y + height;
 		
 		__updateBackBufferViewPort ();
 		
@@ -1307,9 +1298,9 @@ import openfl.Lib;
 		
 	}
 	
-	@:noCompletion private inline function get_gl ():GLRenderContext {
+	@:noCompletion private function get_gl ():GLRenderContext {
 		
-		return __ogl.gl;
+		return @:privateAccess lime.graphics.opengl.GL.context;
 		
 	}
 	
