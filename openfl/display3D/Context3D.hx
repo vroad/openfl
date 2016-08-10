@@ -146,7 +146,7 @@ import openfl.Lib;
 		
 		if (!__drawing) {
 			
-		 	//__updateBlendStatus ();
+		 	__updateBlendStatus ();
 		 	__drawing = true;
 		 	
 		}
