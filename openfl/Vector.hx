@@ -296,6 +296,7 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public function insertAt (index:Int, element:T):Void {
 		
+		#if (!js && !cs)
 		if (index < 0) {
 			
 			index = this.length + index;
@@ -327,6 +328,9 @@ abstract Vector<T>(VectorData<T>) {
 		}
 		
 		this.data[index] = element;
+		#else
+		this.data.insert (index, element);
+		#end
 		
 	}
 	
