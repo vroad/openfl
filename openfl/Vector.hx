@@ -24,7 +24,15 @@ package openfl; #if (!flash || display)
 	
 	public function concat (?a:Array<T>):Vector<T> {
 		
-		return this.concat (a);
+		if (a == null) {
+			
+			return this.copy ();
+			
+		} else {
+			
+			return this.concat (a);
+			
+		}
 		
 	}
 	
@@ -32,6 +40,13 @@ package openfl; #if (!flash || display)
 	public function copy ():Vector<T> {
 		
 		return this.copy ();
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:T):Void {
+		
+		this.insert (index, element);
 		
 	}
 	
@@ -148,7 +163,15 @@ package openfl; #if (!flash || display)
 	
 	public inline static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
 		
-		return new Vector<T> ().concat (cast a);
+		var vec = new Vector<T> ();
+		
+		if (a != null) {
+			
+			vec = vec.concat (cast a);
+			
+		}
+		
+		return vec;
 		
 	}
 	
@@ -216,7 +239,7 @@ abstract Vector<T>(VectorData<T>) {
 		
 		this = new VectorData<T> ();
 		#if cpp
-		this.data = new Array<T> ()
+		this.data = new Array<T> ();
 		this.data.__SetSizeExact (length);
 		#elseif js
 		this.data = untyped __new__(Array, length);
@@ -238,7 +261,10 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.fixed = false;
 		
 		#if (cpp || js || cs)
-		vectorData.data = this.data.slice (0, this.length).concat (a.data);
+		vectorData.data = this.data.slice (0, this.length);
+		if (a != null) {
+			vectorData.data = vectorData.data.concat (a.data);
+		}
 		#else
 		vectorData.data = new haxe.ds.Vector<T> (vectorData.length);
 		haxe.ds.Vector.blit (this.data, 0, vectorData.data, 0, this.length);
@@ -264,6 +290,43 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.length = length;
 		vectorData.fixed = fixed;
 		return cast vectorData;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:T):Void {
+		
+		if (index < 0) {
+			
+			index = this.length + index;
+			
+		}
+		
+		if (!this.fixed) {
+			
+			this.length++;
+			
+			if (this.data.length < this.length) {
+				
+				#if cpp
+				untyped (this.data).__SetSizeExact (((this.data.length + 1) * 3) >> 1);
+				#else
+				var data = new haxe.ds.Vector<T> (((this.data.length + 1) * 3) >> 1);
+				haxe.ds.Vector.blit (this.data, 0, data, 0, this.data.length);
+				this.data = data;
+				#end
+				
+			}
+			
+		}
+		
+		for (i in index...(this.length - 1)) {
+			
+			this.data[i + 1] = this.data[i];
+			
+		}
+		
+		this.data[index] = element;
 		
 	}
 	
@@ -432,7 +495,7 @@ abstract Vector<T>(VectorData<T>) {
 		
 		var vectorData = new VectorData<T> ();
 		vectorData.length = end - pos;
-		vectorData.fixed = true;
+		vectorData.fixed = this.fixed;
 		#if (cpp || js || cs)
 		vectorData.data = this.data.slice (pos, end);
 		#else
@@ -552,7 +615,7 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.data = haxe.ds.Vector.fromArrayCopy (a);
 		#end
 		vectorData.length = a.length;
-		vectorData.fixed = true;
+		vectorData.fixed = false;
 		return cast vectorData;
 		
 	}
@@ -606,7 +669,7 @@ abstract Vector<T>(VectorData<T>) {
 		vectorData.data = haxe.ds.Vector.fromArrayCopy (value);
 		#end
 		vectorData.length = value.length;
-		vectorData.fixed = true;
+		vectorData.fixed = false;
 		return cast vectorData;
 		
 	}
@@ -853,7 +916,15 @@ using cpp.NativeArray;
 	
 	public inline function concat (?a:Array<T>):Vector<T> {
 		
-		return this.concat (a);
+		if (a == null) {
+			
+			return this.copy ();
+			
+		} else {
+			
+			return this.concat (a);
+			
+		}
 		
 	}
 	
@@ -861,6 +932,13 @@ using cpp.NativeArray;
 	public inline function copy ():Vector<T> {
 		
 		return this.copy ();
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:T):Void {
+		
+		this.insert (index, element);
 		
 	}
 	
@@ -980,7 +1058,15 @@ using cpp.NativeArray;
 	
 	public inline static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
 		
-		return new Vector<T> ().concat (cast a);
+		var vec = new Vector<T> ();
+		
+		if (a != null) {
+			
+			vec = vec.concat (cast a);
+			
+		}
+		
+		return vec;
 		
 	}
 	
@@ -1070,7 +1156,15 @@ abstract Vector<T>(VectorData<T>) {
 	
 	public inline function concat (?a:VectorData<T>):Vector<T> {
 		
-		return this.concat (a);
+		if (a == null) {
+			
+			return this.concat ();
+			
+		} else {
+			
+			return this.concat (a);
+			
+		}
 		
 	}
 	
@@ -1086,6 +1180,15 @@ abstract Vector<T>(VectorData<T>) {
 		}
 		
 		return vec;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:T):Void {
+		
+		Reflect.callMethod (this.splice, this.splice, [ index, 0, element ]);
+		//this.splice (index, 0, element);
+		//this.insertAt (index, element);
 		
 	}
 	
