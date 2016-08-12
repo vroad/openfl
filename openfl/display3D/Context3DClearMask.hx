@@ -9,20 +9,4 @@ import openfl._internal.utils.NullUtils;
 	public var DEPTH = 0x02;
 	public var STENCIL = 0x04;
 	
-	#if cs
-	@:noCompletion @:op(A == B) private static function equals (a:Context3DClearMask, b:Context3DClearMask):Bool {
-		
-		return NullUtils.valueEquals (a, b, Int);
-		
-	}
-	#end
-	
-	#if cs
-	@:noCompletion @:op(A != B) private static function notEquals (a:Context3DClearMask, b:Context3DClearMask):Bool {
-		
-		return !equals (a, b);
-		
-	}
-	#end
-	
 }
