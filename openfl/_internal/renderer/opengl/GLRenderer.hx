@@ -89,7 +89,7 @@ class GLRenderer extends AbstractRenderer {
 			
 			if (stage3D.context3D != null) {
 				
-				stage3D.context3D.__moveStage3D (stage3D);
+				stage3D.context3D.__updateBackbufferViewport ();
 				
 			}
 			

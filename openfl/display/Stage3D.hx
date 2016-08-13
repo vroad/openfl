@@ -30,8 +30,8 @@ class Stage3D extends EventDispatcher {
 	
 	public var context3D (default, null):Context3D;
 	public var visible:Bool;
-	public var x:Float;
-	public var y:Float;
+	public var x(default, set):Float;
+	public var y(default, set):Float;
 	
 	private var __contextRequested:Bool;
 	
@@ -187,6 +187,24 @@ class Stage3D extends EventDispatcher {
 			
 		}
 		#end
+		
+	}
+	
+	
+	private function set_x (value:Float):Float {
+		
+		this.x = value;
+		context3D.__updateBackbufferViewport ();
+		return value;
+		
+	}
+	
+	
+	private function set_y (value:Float):Float {
+		
+		this.y = value;
+		context3D.__updateBackbufferViewport ();
+		return value;
 		
 	}
 	
