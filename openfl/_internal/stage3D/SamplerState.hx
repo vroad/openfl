@@ -4,12 +4,12 @@ package openfl._internal.stage3D;
 class SamplerState {
 	
 	
-	public var lodBias (default, null):Float;
-	public var magFilter (default, null):Int;
-	public var maxAniso (default, null):Float;
-	public var minFilter (default, null):Int;
-	public var wrapModeS (default, null):Int;
-	public var wrapModeT (default, null):Int;
+	public var lodBias:Float;
+	public var magFilter:Int;
+	public var maxAniso:Float;
+	public var minFilter:Int;
+	public var wrapModeS:Int;
+	public var wrapModeT:Int;
 	
 	
 	public function new (minFilter:Int, magFilter:Int, wrapModeS:Int, wrapModeT:Int, lodBias:Float = 0.0, maxAniso:Float = 0.0) {

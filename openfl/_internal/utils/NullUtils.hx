@@ -1,9 +1,13 @@
 package openfl._internal.utils;
+
+
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.ExprTools;
 
+
 class NullUtils {
+	
 	
 	public static macro function valueEquals (a:Expr, b:Expr, type:Expr):Expr {
 		
@@ -26,5 +30,6 @@ class NullUtils {
 		}
 		
 	}
+	
 	
 }

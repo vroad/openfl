@@ -5,11 +5,11 @@ import lime.graphics.GLRenderContext;
 import lime.graphics.opengl.GLES20;
 import lime.math.Matrix4;
 import openfl._internal.renderer.AbstractRenderer;
+import openfl.display.OpenGLView;
 import openfl.display.Stage;
 import openfl.geom.Matrix;
 
 @:access(openfl.display.Stage)
-@:access(openfl.display3D.Context3D)
 
 
 class GLRenderer extends AbstractRenderer {
@@ -80,16 +80,6 @@ class GLRenderer extends AbstractRenderer {
 				renderSession.shaderManager.setShader (null);
 				renderSession.blendModeManager.setBlendMode (null);
 				break;
-				
-			}
-			
-		}
-		
-		for (stage3D in stage.stage3Ds) {
-			
-			if (stage3D.context3D != null) {
-				
-				stage3D.context3D.__updateBackbufferViewport ();
 				
 			}
 			

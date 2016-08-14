@@ -248,7 +248,6 @@ private class SamplerReg {
 		var lodBias:Float = ((b << 24) >> 24) / 8.0;
 
 		var maxAniso:Float = 0.0;
-		// create sampler state
 		return new SamplerState(minFilter, magFilter, wrapModeS, wrapModeT, lodBias, maxAniso);
 	}
 }
@@ -820,8 +819,7 @@ class AGALConverter {
 		glsl.add("// AGAL " + ((programType == ProgramType.Vertex) ? "vertex" : "fragment") + " shader\n");
 		glsl.add("#version " + glslVersion + "\n");
 		// Required to set the default precision of vectors
-		var precision = programType == ProgramType.Vertex ? "mediump" : "highp";
-		glsl.add('precision $precision float;\n');
+		glsl.add("precision highp float;\n");
 		glsl.add(map.ToGLSL(false));
 		if (programType == ProgramType.Vertex) {
 			// this is needed for flipping render textures upside down

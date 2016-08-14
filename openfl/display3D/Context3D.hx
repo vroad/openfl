@@ -36,6 +36,7 @@ import openfl.profiler.Telemetry;
 @:access(openfl.display3D.IndexBuffer3D)
 @:access(openfl.display3D.Program3D)
 @:access(openfl.display3D.VertexBuffer3D)
+@:access(openfl._internal.stage3D.Context3DStateCache)
 @:access(openfl._internal.stage3D.GLUtils)
 
 
@@ -53,9 +54,9 @@ import openfl.profiler.Telemetry;
 	public var backBufferHeight (default, null):Int = 0;
 	public var backBufferWidth (default, null):Int = 0;
 	public var driverInfo (default, null):String = "OpenGL (Direct blitting)";
-	public var enableErrorChecking(default, set):Bool = false;
-	public var maxBackBufferHeight(default, null):Int;
-	public var maxBackBufferWidth(default, null):Int;
+	public var enableErrorChecking (default, set):Bool = false;
+	public var maxBackBufferHeight (default, null):Int;
+	public var maxBackBufferWidth (default, null):Int;
 	public var profile (default, null):Context3DProfile = BASELINE;
 	public var totalGPUMemory (default, null):Int = 0;
 	
@@ -76,7 +77,7 @@ import openfl.profiler.Telemetry;
 	private var __samplerTextures:Vector<TextureBase>;
 	private var __samplerStates:Array<SamplerState>;
 	private var __scissorRectangle:Rectangle;
-	private var __stage3D:Dynamic;
+	private var __stage3D:Stage3D;
 	private var __stats:Vector<Int>;
 	private var __statsCache:Vector<Int>;
 	private var __stencilCompareMode:Context3DCompareMode;
@@ -179,13 +180,6 @@ import openfl.profiler.Telemetry;
 		
 		var clearMask = 0;
 		
-		if (mask & Context3DClearMask.DEPTH != 0) {
-			
-			clearMask |= GL.DEPTH_BUFFER_BIT;
-			GLUtils.CheckGLError ();
-			
-		}
-		
 		if (mask & Context3DClearMask.COLOR != 0) {
 			
 			clearMask |= GL.COLOR_BUFFER_BIT;
@@ -196,6 +190,8 @@ import openfl.profiler.Telemetry;
 		}
 		
 		if (mask & Context3DClearMask.DEPTH != 0) {
+			
+			clearMask |= GL.DEPTH_BUFFER_BIT;
 			
 			GL.clearDepth (depth);
 			GLUtils.CheckGLError ();
@@ -332,50 +328,11 @@ import openfl.profiler.Telemetry;
 	
 	public function setBlendFactors (sourceFactor:Context3DBlendFactor, destinationFactor:Context3DBlendFactor):Void {
 		
-		var src = GL.ONE;
-		var dest = GL.ONE_MINUS_SRC_ALPHA;
-		var updateBlendFunction = false;
-		
-		if (__stateCache.updateBlendSrcFactor (sourceFactor) || __stateCache.updateBlendDestFactor (destinationFactor)) {
+		var updateSrc = __stateCache.updateBlendSrcFactor (sourceFactor);
+		var updateDest = __stateCache.updateBlendDestFactor (destinationFactor);
+		if (updateSrc || updateDest) {
 			
-			updateBlendFunction = true;
-			
-		}
-		
-		if (updateBlendFunction) {
-			
-			switch (sourceFactor) {
-				
-				case Context3DBlendFactor.ONE: src = GL.ONE;
-				case Context3DBlendFactor.ZERO: src = GL.ZERO;
-				case Context3DBlendFactor.SOURCE_ALPHA: src = GL.SRC_ALPHA;
-				case Context3DBlendFactor.DESTINATION_ALPHA: src = GL.DST_ALPHA;
-				case Context3DBlendFactor.DESTINATION_COLOR: src = GL.DST_COLOR;
-				case Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA: src = GL.ONE_MINUS_SRC_ALPHA;
-				case Context3DBlendFactor.ONE_MINUS_DESTINATION_ALPHA: src = GL.ONE_MINUS_DST_ALPHA;
-				case Context3DBlendFactor.ONE_MINUS_DESTINATION_COLOR: src = GL.ONE_MINUS_DST_COLOR;
-				default:
-					throw new IllegalOperationError ();
-				
-			}
-			
-			switch (destinationFactor) {
-				
-				case Context3DBlendFactor.ONE: dest = GL.ONE;
-				case Context3DBlendFactor.ZERO: dest = GL.ZERO;
-				case Context3DBlendFactor.SOURCE_ALPHA: dest = GL.SRC_ALPHA;
-				case Context3DBlendFactor.SOURCE_COLOR: dest = GL.SRC_COLOR;
-				case Context3DBlendFactor.DESTINATION_ALPHA: dest = GL.DST_ALPHA;
-				case Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA: dest = GL.ONE_MINUS_SRC_ALPHA;
-				case Context3DBlendFactor.ONE_MINUS_SOURCE_COLOR: dest = GL.ONE_MINUS_SRC_COLOR;
-				case Context3DBlendFactor.ONE_MINUS_DESTINATION_ALPHA: dest = GL.ONE_MINUS_DST_ALPHA;
-				default:
-					throw new IllegalOperationError ();
-				
-			}
-			
-			GL.enable (GL.BLEND);
-			GL.blendFunc (src, dest);
+			__updateBlendFactors ();
 			
 		}
 		
@@ -773,32 +730,29 @@ import openfl.profiler.Telemetry;
 			
 		}
 		
-		var glWrapModeS;
-		var glWrapModeT;
-		var glMagFilter;
-		var glMinFilter;
+		var state = __samplerStates[sampler];
 		
 		switch (wrap) {
 			
 			case Context3DWrapMode.CLAMP:
 				
-				glWrapModeS = GL.CLAMP_TO_EDGE;
-				glWrapModeT = GL.CLAMP_TO_EDGE;
+				state.wrapModeS = GL.CLAMP_TO_EDGE;
+				state.wrapModeT = GL.CLAMP_TO_EDGE;
 				
 			case Context3DWrapMode.CLAMP_U_REPEAT_V:
 				
-				glWrapModeS = GL.CLAMP_TO_EDGE;
-				glWrapModeT = GL.REPEAT;
+				state.wrapModeS = GL.CLAMP_TO_EDGE;
+				state.wrapModeT = GL.REPEAT;
 				
 			case Context3DWrapMode.REPEAT:
 				
-				glWrapModeS = GL.REPEAT;
-				glWrapModeT = GL.REPEAT;
+				state.wrapModeS = GL.REPEAT;
+				state.wrapModeT = GL.REPEAT;
 				
 			case Context3DWrapMode.REPEAT_U_CLAMP_V:
 				
-				glWrapModeS = GL.REPEAT;
-				glWrapModeT = GL.CLAMP_TO_EDGE;
+				state.wrapModeS = GL.REPEAT;
+				state.wrapModeT = GL.CLAMP_TO_EDGE;
 				
 			default:
 				
@@ -810,31 +764,31 @@ import openfl.profiler.Telemetry;
 			
 			case Context3DTextureFilter.LINEAR:
 				
-				glMagFilter = GL.LINEAR;
+				state.magFilter = GL.LINEAR;
 				
 			case Context3DTextureFilter.NEAREST:
 				
-				glMagFilter = GL.NEAREST;
+				state.magFilter = GL.NEAREST;
 				
 			case Context3DTextureFilter.ANISOTROPIC2X:
 					
 				// TODO
-				glMagFilter = GL.LINEAR;
+				state.magFilter = GL.LINEAR;
 				 
 			case Context3DTextureFilter.ANISOTROPIC4X:
 					
 				// TODO
-				glMagFilter = GL.LINEAR;
+				state.magFilter = GL.LINEAR;
 				
 			case Context3DTextureFilter.ANISOTROPIC8X:
 				
 				// TODO
-				glMagFilter = GL.LINEAR;
+				state.magFilter = GL.LINEAR;
 				
 			case Context3DTextureFilter.ANISOTROPIC16X:
 				
 				// TODO
-				glMagFilter = GL.LINEAR;
+				state.magFilter = GL.LINEAR;
 				
 			default:
 				
@@ -846,23 +800,21 @@ import openfl.profiler.Telemetry;
 						
 			case Context3DMipFilter.MIPLINEAR:
 				
-				glMinFilter = GL.LINEAR_MIPMAP_LINEAR;
+				state.minFilter = GL.LINEAR_MIPMAP_LINEAR;
 			
 			case Context3DMipFilter.MIPNEAREST:
 				
-				glMinFilter = GL.NEAREST_MIPMAP_NEAREST;
+				state.minFilter = GL.NEAREST_MIPMAP_NEAREST;
 			
 			case Context3DMipFilter.MIPNONE:
 				
-				glMinFilter = filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR;
+				state.minFilter = filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR;
 				
 			default:
 				
 				throw new Error ("mipfiter bad enum");
 				
 		}
-		
-		__samplerStates[sampler] = new SamplerState (glMinFilter, glMagFilter, glWrapModeS, glWrapModeT);
 		
 	}
 	
@@ -991,16 +943,17 @@ import openfl.profiler.Telemetry;
 					GL.bindTexture (target, texture.__textureID);
 					GLUtils.CheckGLError ();
 					
-					var state = __program.__getSamplerState(sampler);	
-					texture.__setSamplerState (__samplerStates[sampler]);
-					
 					#if 0
+					var state = __program.__getSamplerState(sampler);
+					
 					if (state != null) {
 						
 						texture.__setSamplerState (state);
 						
 					}
 					#end
+					
+					texture.__setSamplerState (__samplerStates[sampler]);
 					
 				} else {
 					
@@ -1185,7 +1138,55 @@ import openfl.profiler.Telemetry;
 	}
 	
 	
-	private function __updateScissorRectangle () {
+	private function __updateBlendFactors ():Void {
+		
+		if (__stateCache._srcBlendFactor == null || __stateCache._destlendFactor == null) {
+			
+			return;
+			
+		}
+		
+		var src = GL.ONE;
+		var dest = GL.ZERO;
+		switch (__stateCache._srcBlendFactor) {
+			
+			case Context3DBlendFactor.ONE: src = GL.ONE;
+			case Context3DBlendFactor.ZERO: src = GL.ZERO;
+			case Context3DBlendFactor.SOURCE_ALPHA: src = GL.SRC_ALPHA;
+			case Context3DBlendFactor.DESTINATION_ALPHA: src = GL.DST_ALPHA;
+			case Context3DBlendFactor.DESTINATION_COLOR: src = GL.DST_COLOR;
+			case Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA: src = GL.ONE_MINUS_SRC_ALPHA;
+			case Context3DBlendFactor.ONE_MINUS_DESTINATION_ALPHA: src = GL.ONE_MINUS_DST_ALPHA;
+			case Context3DBlendFactor.ONE_MINUS_DESTINATION_COLOR: src = GL.ONE_MINUS_DST_COLOR;
+			default:
+				throw new IllegalOperationError ();
+			
+		}
+		
+		switch (__stateCache._destlendFactor) {
+			
+			case Context3DBlendFactor.ONE: dest = GL.ONE;
+			case Context3DBlendFactor.ZERO: dest = GL.ZERO;
+			case Context3DBlendFactor.SOURCE_ALPHA: dest = GL.SRC_ALPHA;
+			case Context3DBlendFactor.SOURCE_COLOR: dest = GL.SRC_COLOR;
+			case Context3DBlendFactor.DESTINATION_ALPHA: dest = GL.DST_ALPHA;
+			case Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA: dest = GL.ONE_MINUS_SRC_ALPHA;
+			case Context3DBlendFactor.ONE_MINUS_SOURCE_COLOR: dest = GL.ONE_MINUS_SRC_COLOR;
+			case Context3DBlendFactor.ONE_MINUS_DESTINATION_ALPHA: dest = GL.ONE_MINUS_DST_ALPHA;
+			default:
+				throw new IllegalOperationError ();
+			
+		}
+		
+		GL.enable (GL.BLEND);
+		GLUtils.CheckGLError ();
+		GL.blendFunc (src, dest);
+		GLUtils.CheckGLError ();
+		
+	}
+	
+	
+	private function __updateScissorRectangle ():Void {
 		
 		if (__scissorRectangle == null) {
 			
@@ -1234,7 +1235,7 @@ import openfl.profiler.Telemetry;
 		
 		if (__renderToTexture == null) {
 			
-			__setViewport (__stage3D.x, __stage3D.y, backBufferWidth, backBufferHeight);
+			__setViewport (Std.int (__stage3D.x), Std.int (__stage3D.y), backBufferWidth, backBufferHeight);
 			
 		}
 		

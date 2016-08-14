@@ -1,5 +1,4 @@
 package openfl.display3D;
-import openfl._internal.utils.NullUtils;
 
 
 @:enum abstract Context3DClearMask(UInt) from UInt to UInt from Int to Int {
