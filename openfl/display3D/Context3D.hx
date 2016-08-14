@@ -131,7 +131,11 @@ import openfl.profiler.Telemetry;
 		__stencilCompareMode = Context3DCompareMode.ALWAYS;
 		__stencilRef = 0;
 		__stencilReadMask = 0xFF;
+		#if (js && html5)
+		__supportsPackedDepthStencil = true;
+		#else
 		__supportsPackedDepthStencil = __hasGLExtension ("GL_OES_packed_depth_stencil") || __hasGLExtension ("GL_EXT_packed_depth_stencil");
+		#end
 		
 		__stats = new Vector<Int> (Context3DTelemetry.length);
 		__statsCache = new Vector<Int> (Context3DTelemetry.length);
@@ -649,7 +653,7 @@ import openfl.profiler.Telemetry;
 				
 				GL.bindRenderbuffer (GL.RENDERBUFFER, __depthStencilRenderBuffer);
 				GLUtils.CheckGLError ();
-				GL.renderbufferStorage (GL.RENDERBUFFER, ExtensionPackedDepthStencil.DEPTH24_STENCIL8_EXT, width, height);
+				GL.renderbufferStorage (GL.RENDERBUFFER, #if (js && html5) GL.DEPTH_STENCIL #else ExtensionPackedDepthStencil.DEPTH24_STENCIL8_EXT #end, width, height);
 				GLUtils.CheckGLError ();
 				
 				GL.framebufferRenderbuffer (GL.FRAMEBUFFER, GL.DEPTH_STENCIL_ATTACHMENT, GL.RENDERBUFFER, __depthStencilRenderBuffer);
@@ -1140,7 +1144,7 @@ import openfl.profiler.Telemetry;
 	
 	private function __updateBlendFactors ():Void {
 		
-		if (__stateCache._srcBlendFactor == null || __stateCache._destlendFactor == null) {
+		if (__stateCache._srcBlendFactor == null || __stateCache._destBlendFactor == null) {
 			
 			return;
 			
@@ -1163,7 +1167,7 @@ import openfl.profiler.Telemetry;
 			
 		}
 		
-		switch (__stateCache._destlendFactor) {
+		switch (__stateCache._destBlendFactor) {
 			
 			case Context3DBlendFactor.ONE: dest = GL.ONE;
 			case Context3DBlendFactor.ZERO: dest = GL.ZERO;
