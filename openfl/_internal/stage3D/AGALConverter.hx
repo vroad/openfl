@@ -1,12 +1,12 @@
 package openfl._internal.stage3D;
 
+
+import haxe.Int64;
+import lime.graphics.opengl.GL;
 import openfl._internal.stage3D.SamplerState;
 import openfl.utils.ByteArray;
 import openfl.errors.IllegalOperationError;
-import openfl.errors.IllegalOperationError;
-import openfl.gl.GL;
-
-import haxe.Int64;
+import openfl.utils.Endian;
 
 
 @:enum
@@ -143,12 +143,13 @@ private class SourceReg {
 			str += o;
 			var indexComponent:String = String.fromCharCode('x'.charCodeAt(0) + q);
 			var indexRegister = AGALConverter.PrefixFromType(itype, programType) + this.n + "." + indexComponent;
-			str += "[ Int(" + indexRegister + ") +" + offset + "]";
+			str += "[ int(" + indexRegister + ") +" + offset + "]";
 		}
 
 		if (emitSwizzle && swizzle != "") {
 			str += "." + swizzle;
 		}
+		
 		return str;
 	}
 }
@@ -473,7 +474,8 @@ class AGALConverter {
 	public static function ConvertToGLSL(agal:ByteArray, outSamplers:Array<SamplerState>):String
 	{
 		agal.position = 0;
-
+		agal.endian = Endian.LITTLE_ENDIAN;
+		
 		var magic:Int = agal.readByte() & 0xFF;
 		if (magic == 0xB0) {
 			// use embedded GLSL shader instead
