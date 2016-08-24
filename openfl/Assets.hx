@@ -450,7 +450,7 @@ class Assets {
 	
 	private static function isValidSound (sound:Sound):Bool {
 		
-		#if ((tools && !display) && lime_native)
+		#if ((tools && !display) && lime_cffi)
 		
 		return true;
 		//return (sound.__handle != null && sound.__handle != 0);
