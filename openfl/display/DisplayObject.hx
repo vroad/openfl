@@ -56,12 +56,12 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	@:keep public var height (get, set):Float;
 	public var loaderInfo (default, null):LoaderInfo;
 	public var mask (get, set):DisplayObject;
-	public var mouseX (get, null):Float;
-	public var mouseY (get, null):Float;
+	public var mouseX (get, never):Float;
+	public var mouseY (get, never):Float;
 	public var name (get, set):String;
 	public var opaqueBackground:Null <Int>;
 	public var parent (default, null):DisplayObjectContainer;
-	public var root (get, null):DisplayObject;
+	public var root (get, never):DisplayObject;
 	@:keep public var rotation (get, set):Float;
 	public var scale9Grid:Rectangle;
 	@:keep public var scaleX (get, set):Float;
@@ -605,6 +605,23 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	}
 	
 	
+	private function __setStageReference (stage:Stage):Void {
+		
+		if (stage == null && this.stage != null) {
+
+			if (this.stage.focus == this) {
+							
+				this.stage.focus = null;
+							
+			}
+
+		}
+
+		this.stage = stage;
+		
+	}
+
+
 	private function __stopAllMovieClips ():Void {
 		
 		
