@@ -1,948 +1,53 @@
 package openfl; #if (!flash || display)
 
 
-// Haxe abstracts resolve to Dynamic types, which are slower on C++
-// ...by using Array directly, instead of haxe.ds.Vector, we can eliminate
-// some of this performance overhead, but not completely. Should probably
-// switch to the haxe.ds.Vector type for every target when this is resolved
+import haxe.Constraints.Function;
+import openfl.utils.ByteArray;
 
-#if java
+@:multiType(T)
 
-@:arrayAccess abstract Vector<T>(Array<T>) from Array<T> to Array<T> {
+
+abstract Vector<T>(IVector<T>) {
 	
 	
-	public var length (get, set):Int;
 	public var fixed (get, set):Bool;
-	
-	
-	public function new (?length:Int, ?fixed:Bool):Void {
-		
-		this = new Array<T> ();
-		
-	}
-	
-	
-	public function concat (?a:Array<T>):Vector<T> {
-		
-		if (a == null) {
-			
-			return this.copy ();
-			
-		} else {
-			
-			return this.concat (a);
-			
-		}
-		
-	}
-	
-	
-	public function copy ():Vector<T> {
-		
-		return this.copy ();
-		
-	}
-	
-	
-	public function insertAt (index:Int, element:T):Void {
-		
-		this.insert (index, element);
-		
-	}
-	
-	
-	public function iterator<T> ():Iterator<T> {
-		
-		return this.iterator ();
-		
-	}
-	
-	
-	public function join (sep:String):String {
-		
-		return this.join (sep);
-		
-	}
-	
-	
-	public inline function pop ():Null<T> {
-		
-		return this.pop ();
-		
-	}
-	
-	
-	public inline function push (x:T):Int {
-		
-		return this.push (x);
-		
-	}
-	
-	
-	public function reverse ():Void {
-		
-		this.reverse ();
-		
-	}
-	
-	
-	public inline function shift ():Null<T> {
-		
-		return this.shift ();
-		
-	}
-	
-	
-	public inline function unshift (x:T):Void {
-		
-		this.unshift (x);
-		
-	}
-	
-	
-	public function slice (?pos:Int, ?end:Int):Vector<T> {
-		
-		return this.slice (pos, end);
-		
-	}
-	
-	
-	public function sort (f:T -> T -> Int):Void {
-		
-		this.sort (f);
-		
-	}
-	
-	
-	public function splice (pos:Int, len:Int):Vector<T> {
-		
-		return this.splice (pos, len);
-		
-	}
-	
-	
-	public function toString ():String {
-		
-		return this.toString ();
-		
-	}
-	
-	
-	public function indexOf (x:T, ?from:Int = 0):Int {
-		
-		for (i in from...this.length) {
-			
-			if (this[i] == x) {
-				
-				return i;
-				
-			}
-			
-		}
-		
-		return -1;
-		
-	}
-	
-	
-	public function lastIndexOf (x:T, ?from:Int = 0):Int {
-		
-		var i = this.length - 1;
-		
-		while (i >= from) {
-			
-			if (this[i] == x) return i;
-			i--;
-			
-		}
-		
-		return -1;
-		
-	}
-	
-	
-	public inline static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
-		
-		var vec = new Vector<T> ();
-		
-		if (a != null) {
-			
-			vec = vec.concat (cast a);
-			
-		}
-		
-		return vec;
-		
-	}
-	
-	
-	public inline static function convert<T,U> (v:Array<T>):Vector<U> {
-		
-		return cast v;
-		
-	}
-	
-	
-	
-	
-	// Getters & Setters
-	
-	
-	
-	
-	@:noCompletion private inline function get_length ():Int {
-		
-		return this.length;
-		
-	}
-	
-	
-	@:noCompletion private inline function set_length (value:Int):Int {
-		
-		return value;
-		
-	}
-	
-	
-	@:noCompletion private inline function get_fixed ():Bool {
-		
-		return false;
-		
-	}
-	
-	
-	@:noCompletion private inline function set_fixed (value:Bool):Bool {
-		
-		return value;
-		
-	}
-	
-	
-}
-
-
-typedef VectorData<T> = Array<T>;
-typedef VectorDataIterator<T> = Iterator<T>;
-
-
-#elseif (!cpp || display)
-
-
-abstract Vector<T>(VectorData<T>) {
-	
-	
 	public var length (get, set):Int;
-	public var fixed (get, set):Bool;
 	
 	
-	public function new (?length:Int = 0, ?fixed:Bool = false):Void {
-		
-		this = new VectorData<T> ();
-		#if cpp
-		this.data = new Array<T> ();
-		this.data.__SetSizeExact (length);
-		#elseif js
-		this.data = untyped __new__(Array, length);
-		#elseif cs
-		this.data = new Array(new cs.NativeArray<T>(length));
-		#else
-		this.data = new haxe.ds.Vector<T> (length);
-		#end
-		this.length = length;
-		this.fixed = fixed;
-		
-	}
-	
-	
-	public function concat (?a:VectorData<T>):Vector<T> {
-		
-		var vectorData = new VectorData<T> ();
-		vectorData.length = (a != null) ? this.length + a.length : this.length;
-		vectorData.fixed = false;
-		
-		#if (cpp || js || cs)
-		vectorData.data = this.data.slice (0, this.length);
-		if (a != null) {
-			vectorData.data = vectorData.data.concat (a.data);
-		}
-		#else
-		vectorData.data = new haxe.ds.Vector<T> (vectorData.length);
-		haxe.ds.Vector.blit (this.data, 0, vectorData.data, 0, this.length);
-		if (a != null) {
-			haxe.ds.Vector.blit (a.data, 0, vectorData.data, this.length, a.length);
-		}
-		#end
-		
-		return cast vectorData;
-		
-	}
-	
-	
-	public function copy ():Vector<T> {
-		
-		var vectorData = new VectorData<T> ();
-		#if (cpp || js || cs)
-		vectorData.data = this.data.copy ();
-		#else
-		vectorData.data = new haxe.ds.Vector<T> (length);
-		haxe.ds.Vector.blit (this.data, 0, vectorData.data, 0, this.length);
-		#end
-		vectorData.length = length;
-		vectorData.fixed = fixed;
-		return cast vectorData;
-		
-	}
-	
-	
-	public function insertAt (index:Int, element:T):Void {
-		
-		#if (!js && !cs)
-		if (index < 0) {
-			
-			index = this.length + index;
-			
-		}
-		
-		if (!this.fixed) {
-			
-			this.length++;
-			
-			if (this.data.length < this.length) {
-				
-				#if cpp
-				untyped (this.data).__SetSizeExact (((this.data.length + 1) * 3) >> 1);
-				#else
-				var data = new haxe.ds.Vector<T> (((this.data.length + 1) * 3) >> 1);
-				haxe.ds.Vector.blit (this.data, 0, data, 0, this.data.length);
-				this.data = data;
-				#end
-				
-			}
-			
-		}
-		
-		for (i in index...(this.length - 1)) {
-			
-			this.data[i + 1] = this.data[i];
-			
-		}
-		
-		this.data[index] = element;
-		#else
-		this.data.insert (index, element);
-		#end
-		
-	}
-	
-	
-	public inline function iterator<T> ():Iterator<T> {
-		
-		return new VectorDataIterator<T> (this);
-		
-	}
-	
-	
-	public function join (sep:String):String {
-		
-		var output = "";
-		
-		for (i in 0...this.length) {
-			
-			if (i > 0) output += sep;
-			output += this.data[i];
-			
-		}
-		
-		return output;
-		
-	}
-	
-	
-	public function pop ():Null<T> {
-		
-		#if (!js && !cs)
-		var value = null;
-		
-		if (!this.fixed) {
-			
-			if (this.length > 0) {
-				
-				this.length--;
-				value = this.data[this.length];
-				
-			}
-			
-		}
-		
-		return value;
-		#else
-		return this.data.pop();
-		#end
-		
-	}
-	
-	
-	public #if js inline #end function push (x:T):Int {
-		
-		#if (!js && !cs)
-		if (!this.fixed) {
-			
-			this.length++;
-			
-			if (this.data.length < this.length) {
-				
-				#if cpp
-				untyped (this.data).__SetSizeExact (((this.data.length + 1) * 3) >> 1);
-				#else
-				var data = new haxe.ds.Vector<T> (((this.data.length + 1) * 3) >> 1);
-				haxe.ds.Vector.blit (this.data, 0, data, 0, this.data.length);
-				this.data = data;
-				#end
-				
-			}
-			
-			this.data[this.length - 1] = x;
-			
-		}
-		
-		return this.length;
-		
-		#else
-		return this.data.push (x);
-		#end
-		
-	}
-	
-	
-	public function reverse ():Void {
-		
-		#if cpp
-		untyped (this.data).__SetSizeExact (this.length);
-		this.data.reverse ();
-		#elseif (js || cs)
-		this.data.reverse ();
-		#else
-		var data = new haxe.ds.Vector<T> (this.length);
-		for (i in 0...this.length) {
-			data[this.length - 1 - i] = this.data[i];
-		}
-		this.data = data;
-		#end
-
-	}
-	
-	
-	public function shift ():Null<T> {
-		
-		if (!this.fixed && this.length > 0) {
-			
-			this.length--;
-			
-			#if (cpp || js || cs)
-			return this.data.shift ();
-			#else
-			var value = this.data[0];
-			haxe.ds.Vector.blit (this.data, 1, this.data, 0, this.length);
-			return value;
-			#end
-			
-		}
-		
-		return null;
-		
-	}
-	
-	
-	public function unshift (x:T):Void {
-		
-		if (!this.fixed) {
-			
-			this.length++;
-			
-			if (this.data.length < this.length) {
-				
-				#if cpp
-				untyped (this.data).__SetSizeExact (((this.length + 1) * 3) >> 1);
-				#elseif (js || cs)
-				#else
-				var data = new haxe.ds.Vector<T> (((this.length + 1) * 3) >> 1);
-				haxe.ds.Vector.blit (this.data, 0, data, 1, this.data.length);
-				this.data = data;
-				#end
-				
-			} else {
-				
-				#if (!cpp && !js && !cs)
-				haxe.ds.Vector.blit (this.data, 0, this.data, 1, this.length - 1);
-				#end
-				
-			}
-			
-			#if (cpp || js || cs)
-			this.data.unshift (x);
-			#else
-			this.data[0] = x;
-			#end
-			
-		}
-		
-	}
-	
-	
-	public function slice (?pos:Int = 0, ?end:Int = 0):Vector<T> {
-		
-		if (pos < 0) pos += this.length;
-		if (end <= 0) end += this.length;
-		if (end > this.length) end = this.length;
-		var length = end - pos;
-		if (length <= 0 || length > this.length) length = this.length;
-		
-		var vectorData = new VectorData<T> ();
-		vectorData.length = end - pos;
-		vectorData.fixed = this.fixed;
-		#if (cpp || js || cs)
-		vectorData.data = this.data.slice (pos, end);
-		#else
-		vectorData.data = new haxe.ds.Vector<T> (length);
-		haxe.ds.Vector.blit (this.data, pos, vectorData.data, 0, length);
-		#end
-		return cast vectorData;
-		
-	}
-	
-	
-	public function sort (f:T -> T -> Int):Void {
-		
-		#if (cpp || js || cs)
-		this.data.sort (f);
-		#else
-		var array = this.data.toArray ();
-		array.sort (f);
-		this.data = haxe.ds.Vector.fromArrayCopy (array);
-		#end
-		
-	}
-	
-	
-	public function splice (pos:Int, len:Int):Vector<T> {
-		
-		if (pos < 0) pos += this.length;
-		if (pos + len > this.length) len = this.length - pos;
-		if (len < 0) len = 0;
-		
-		var vectorData = new VectorData<T> ();
-		vectorData.length = len;
-		vectorData.fixed = false;
-		
-		#if (cpp || js || cs)
-		vectorData.data = this.data.splice (pos, len);
-		#else
-		vectorData.data = new haxe.ds.Vector<T> (len);
-		haxe.ds.Vector.blit (this.data, pos, vectorData.data, 0, len);
-		#end
-		
-		if (len > 0) {
-			
-			this.length -= len;
-			#if (!cpp && !js && !cs)
-			haxe.ds.Vector.blit (this.data, pos + len, this.data, pos, this.length - pos);
-			#end
-			
-		}
-		
-		return cast vectorData;
-		//return this.splice (pos, len);
-		
-	}
-	
-	
-	public inline function toString ():String {
-		
-		#if (cpp || js || cs)
-		return this.data.toString ();
-		#else
-		return this.data.toArray ().toString ();
-		#end
-		
-	}
-	
-	
-	public function indexOf (x:T, ?from:Int = 0):Int {
-		
-		var value = -1;
-		
-		for (i in from...this.length) {
-			
-			if (this.data[i] == x) {
-				
-				value = i;
-				break;
-				
-			}
-			
-		}
-		
-		return value;
-		
-	}
-	
-	
-	public function lastIndexOf (x:T, ?from:Int = 0):Int {
-		
-		var value = -1;
-		var i = this.length - 1;
-		
-		while (i >= from) {
-			
-			if (this.data[i] == x) {
-				
-				value = i;
-				break;
-				
-			}
-			
-			i--;
-			
-		}
-		
-		return value;
-		
-	}
-	
-	
-	public static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
-		
-		var vectorData = new VectorData<T> ();
-		#if (cpp || js || cs)
-		vectorData.data = cast a;
-		#else
-		vectorData.data = haxe.ds.Vector.fromArrayCopy (a);
-		#end
-		vectorData.length = a.length;
-		vectorData.fixed = false;
-		return cast vectorData;
-		
-	}
-	
-	
-	public inline static function convert<T,U> (v:Vector<T>):Vector<U> {
-		
-		return cast v;
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:arrayAccess public inline function get (index:Int):Null<T> {
-		
-		return this.data[index];
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:arrayAccess public #if js inline #end function set (key:Int, value:T):T {
-		
-		#if (!js && !cs)
-		if (!this.fixed) {
-			
-			if (key >= this.length) {
-				this.length = key + 1;
-			}
-			
-			if (this.data.length < this.length) {
-				
-				var data = new haxe.ds.Vector<T> (((this.data.length + 1) * 3) >> 1);
-				haxe.ds.Vector.blit (cast this.data, 0, data, 0, this.data.length);
-				this.data = cast data;
-				
-			}
-			
-		}
-		#end
-		
-		return this.data[key] = value;
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:from public static function fromArray<T> (value:Array<T>):Vector<T> {
-		
-		var vectorData = new VectorData<T> ();
-		#if (cpp || js || cs)
-		vectorData.data = cast value;
-		#else
-		vectorData.data = haxe.ds.Vector.fromArrayCopy (value);
-		#end
-		vectorData.length = value.length;
-		vectorData.fixed = false;
-		return cast vectorData;
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:to public function toArray<T> ():Array<T> {
-		
-		#if (cpp || js || cs)
-		return this.data;
-		#else
-		var value = new Array ();
-		for (i in 0...this.data.length) {
-			value.push (this.data[i]);
-		}
-		return value;
-		#end
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:from public static function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
-		
-		var vectorData = new VectorData<T> ();
-		#if (cpp || js || cs)
-		vectorData.data = cast value;
-		#else
-		vectorData.data = value;
-		#end
-		vectorData.length = value.length;
-		vectorData.fixed = true;
-		return cast vectorData;
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:to public inline function toHaxeVector<T> ():haxe.ds.Vector<T> {
-		
-		#if (cpp || js || cs)
-		return cast this.data;
-		#else
-		return this.data;
-		#end
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:from public static inline function fromVectorData<T> (value:VectorData<T>):Vector<T> {
-		
-		return cast value;
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:to public inline function toVectorData<T> ():VectorData<T> {
-		
-		return cast this;
-		
-	}
-	
-	
-	
-	
-	// Getters & Setters
-	
-	
-	
-	
-	@:noCompletion private inline function get_length ():Int {
-		
-		#if (!js && !cs)
-		return this.length;
-		#else
-		return this.data.length;
-		#end
-		
-	}
-	
-	
-	#if (cs || js)
-	@:access(Array)
-	#end
-	@:noCompletion private #if js inline #end function set_length (value:Int):Int {
-		
-		#if (!js && !cs)
-		if (!fixed) {
-			
-			if (value > this.length) {
-				
-				#if cpp
-				untyped (this.data).__SetSizeExact (value);
-				#else
-				var data = new haxe.ds.Vector<T> (value);
-				haxe.ds.Vector.blit (this.data, 0, data, 0, Std.int (Math.min (this.data.length, value)));
-				this.data = data;
-				#end
-				
-			}
-			
-			this.length = value;
-			
-		}
-		
-		return value;
-		#elseif js
-		return this.data.length = value;
-		#elseif cs
-		if (value > this.data.__a.Length) {
-			
-			var newLen = (value << 1) + 1;
-			var newarr = new cs.NativeArray (newLen);
-			this.data.__a.CopyTo (newarr, 0);
-			
-			this.data.__a = newarr;
-			
-		}
-		
-		return this.data.length = value;
-		#end
-		
-	}
-	
-	
-	@:noCompletion private inline function get_fixed ():Bool {
-		
-		return this.fixed;
-		
-	}
-	
-	
-	@:noCompletion private inline function set_fixed (value:Bool):Bool {
-		
-		return this.fixed = value;
-		
-	}
-	
-	
-}
-
-
-@:dox(hide) class VectorData<T> {
-	
-	
-	#if (cpp || js || cs)
-	public var data:Array<T>;
-	#else
-	public var data:haxe.ds.Vector<T>;
-	#end
-	public var fixed:Bool;
-	#if (js || cs)
-	#if cs
-	@:skipReflection
-	#end
-	public var length(get, set):Int;
-	#else
-	public var length:Int;
-	#end
-	
-	
-	public function new () {
-		
-		#if (!js && !cs)
-		length = 0;
-		#end
-		
-	}
-	
-	
-	@:noCompletion private inline function get_length ():Int
-	{
-		#if (js || cs)
-		return this.data.length;
-		#else
-		return this.length;
-		#end
-	}
-	
-	
-	@:noCompletion private inline function set_length(value:Int):Int
-	{
-		#if (js || cs)
-		return @:privateAccess this.data.length = value;
-		#else
-		return this.length = value;
-		#end
-	}
-	
-}
-
-
-@:dox(hide) class VectorDataIterator<T> {
-	
-	
-	private var index:Int;
-	private var vectorData:VectorData<T>;
-	
-	
-	public function new (data:VectorData<T>) {
-		
-		index = 0;
-		vectorData = data;
-		
-	}
-	
-	
-	public function hasNext ():Bool {
-		
-		return index < vectorData.length;
-		
-	}
-	
-	
-	public function next ():T {
-		
-		return vectorData.data[index++];
-		
-	}
-	
-	
-}
-
-
-#else
-
-
-#if (haxe_ver > 3.101)
-using cpp.NativeArray;
-#end
-
-
-@:arrayAccess abstract Vector<T>(Array<T>) from Array<T> to Array<T> {
-	
-	
-	public var length (get, set):Int;
-	public var fixed (get, set):Bool;
-	
-	
-	public inline function new (?length:Int, ?fixed:Bool):Void {
-		
-		this = new Array<T> ();
-		untyped this.__SetSizeExact (length);
-		
-	}
+	public function new (?length:Int, ?fixed:Bool):Void;
 	
 	
-	public inline function concat (?a:Array<T>):Vector<T> {
+	public inline function concat (?a:Vector<T>):Vector<T> {
 		
-		if (a == null) {
-			
-			return this.copy ();
-			
-		} else {
-			
-			return this.concat (a);
-			
-		}
+		return cast this.concat (cast a);
 		
 	}
 	
 	
 	public inline function copy ():Vector<T> {
 		
-		return this.copy ();
+		return cast this.copy ();
 		
 	}
 	
 	
-	public function insertAt (index:Int, element:T):Void {
+	@:arrayAccess public inline function get (index:Int):T {
 		
-		this.insert (index, element);
+		return this.get (index);
+		
+	}
+	
+	
+	public inline function indexOf (x:T, ?from:Int = 0):Int {
+		
+		return this.indexOf (x, from);
+		
+	}
+	
+	
+	public inline function insertAt (index:Int, element:T):Void {
+		
+		this.insertAt (index, element);
 		
 	}
 	
@@ -961,7 +66,14 @@ using cpp.NativeArray;
 	}
 	
 	
-	public inline function pop ():Null<T> {
+	public inline function lastIndexOf (x:T, ?from:Int = 0):Int {
+		
+		return this.lastIndexOf (x, from);
+		
+	}
+	
+	
+	public inline function pop ():T {
 		
 		return this.pop ();
 		
@@ -982,28 +94,28 @@ using cpp.NativeArray;
 	}
 	
 	
-	public inline function shift ():Null<T> {
+	@:arrayAccess public inline function set (index:Int, value:T):T {
+		
+		return this.set (index, value);
+		
+	}
+	
+	
+	public inline function shift ():T {
 		
 		return this.shift ();
 		
 	}
 	
 	
-	public inline function unshift (x:T):Void {
-		
-		this.unshift (x);
-		
-	}
-	
-	
 	public inline function slice (?pos:Int, ?end:Int):Vector<T> {
 		
-		return this.slice (pos, end);
+		return cast this.slice (pos, end);
 		
 	}
 	
 	
-	public inline function sort (f:T -> T -> Int):Void {
+	public inline function sort (f:T->T->Int):Void {
 		
 		this.sort (f);
 		
@@ -1012,7 +124,7 @@ using cpp.NativeArray;
 	
 	public inline function splice (pos:Int, len:Int):Vector<T> {
 		
-		return this.splice (pos, len);
+		return cast this.splice (pos, len);
 		
 	}
 	
@@ -1024,74 +136,101 @@ using cpp.NativeArray;
 	}
 	
 	
-	public inline function indexOf (x:T, ?from:Int = 0):Int {
+	public inline function unshift (x:T):Void {
 		
-		return this.indexOf (x, from);
-		
-	}
-	
-	
-	public inline function lastIndexOf (x:T, ?from:Int):Int {
-		
-		return this.lastIndexOf (x, from);
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:arrayAccess public inline function get (index:Int):Null<T> {
-		
-		//#if (haxe_ver > 3.100)
-		//return this.unsafeGet (index);
-		//#else
-		return this[index];
-		//#end
-		
-	}
-	
-	
-	@:noCompletion @:dox(hide) @:arrayAccess public inline function set (index:Int, value:T):T {
-		
-		//#if (haxe_ver > 3.100)
-		//return this.unsafeSet (index, value);
-		//#else
-		return this[index] = value;
-		//#end
+		this.unshift (x);
 		
 	}
 	
 	
 	public inline static function ofArray<T> (a:Array<Dynamic>):Vector<T> {
 		
-		var vec = new Vector<T> ();
+		var vector = new Vector<T> ();
 		
-		if (a != null) {
+		for (i in 0...a.length) {
 			
-			vec = vec.concat (cast a);
+			vector[i] = cast a[i];
 			
 		}
 		
-		return vec;
+		return vector;
 		
 	}
 	
 	
-	public inline static function convert<T,U> (v:Array<T>):Vector<U> {
+	public inline static function convert<T,U> (v:IVector<T>):IVector<U> {
 		
 		return cast v;
 		
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:from public static inline function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
+	@:to static #if (!js && !flash) inline #end function toBoolVector<T:Bool> (t:IVector<T>, length:Int, fixed:Bool):BoolVector {
 		
-		return cast value;
+		return new BoolVector (length, fixed);
 		
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:to public inline function toHaxeVector<T> ():haxe.ds.Vector<T> {
+	@:to static #if (!js && !flash) inline #end function toIntVector<T:Int> (t:IVector<T>, length:Int, fixed:Bool):IntVector {
 		
-		return cast this;
+		return new IntVector (length, fixed);
+		
+	}
+	
+	
+	@:to static #if (!js && !flash) inline #end function toFloatVector<T:Float> (t:IVector<T>, length:Int, fixed:Bool):FloatVector {
+		
+		return new FloatVector (length, fixed);
+		
+	}
+	
+	
+	@:to static #if (!js && !flash) inline #end function toFunctionVector<T:Function> (t:IVector<T>, length:Int, fixed:Bool):FunctionVector {
+		
+		return new FunctionVector (length, fixed);
+		
+	}
+	
+	
+	@:to static #if (!js && !flash) inline #end function toObjectVector<T> (t:IVector<T>, length:Int, fixed:Bool):ObjectVector<T> {
+		
+		return new ObjectVector<T> (length, fixed);
+		
+	}
+	
+	
+	@:from static inline function fromBoolVector<T> (vector:BoolVector):Vector<T> {
+		
+		return cast vector;
+		
+	}
+	
+	
+	@:from static inline function fromIntVector<T> (vector:IntVector):Vector<T> {
+		
+		return cast vector;
+		
+	}
+	
+	
+	@:from static inline function fromFloatVector<T> (vector:FloatVector):Vector<T> {
+		
+		return cast vector;
+		
+	}
+	
+	
+	@:from static inline function fromFunctionVector<T> (vector:FunctionVector):Vector<T> {
+		
+		return cast vector;
+		
+	}
+	
+	
+	@:from static inline function fromObjectVector<T> (vector:ObjectVector<T>):Vector<T> {
+		
+		return cast vector;
 		
 	}
 	
@@ -1103,6 +242,20 @@ using cpp.NativeArray;
 	
 	
 	
+	@:noCompletion private inline function get_fixed ():Bool {
+		
+		return this.fixed;
+		
+	}
+	
+	
+	@:noCompletion private inline function set_fixed (value:Bool):Bool {
+		
+		return this.fixed = value;
+		
+	}
+	
+	
 	@:noCompletion private inline function get_length ():Int {
 		
 		return this.length;
@@ -1112,22 +265,7 @@ using cpp.NativeArray;
 	
 	@:noCompletion private inline function set_length (value:Int):Int {
 		
-		untyped (this).__SetSizeExact (value);
-		return value;
-		
-	}
-	
-	
-	@:noCompletion private inline function get_fixed ():Bool {
-		
-		return false;
-		
-	}
-	
-	
-	@:noCompletion private inline function set_fixed (value:Bool):Bool {
-		
-		return value;
+		return this.length = value;
 		
 	}
 	
@@ -1135,24 +273,1487 @@ using cpp.NativeArray;
 }
 
 
-typedef VectorData<T> = Array<T>;
-typedef VectorDataIterator<T> = Iterator<T>;
 
 
-#end
+@:dox(hide) private class BoolVector implements IVector<Bool> {
+	
+	
+	public var fixed:Bool;
+	public var length (get, set):Int;
+	
+	private var __array:Array<Bool>;
+	
+	
+	public function new (?length:Int, ?fixed:Bool, ?array:Array<Bool>):Void {
+		
+		if (array == null) {
+			
+			array = new Array<Bool> ();
+			
+		}
+		
+		__array = array;
+		
+		if (length != null) {
+			
+			this.length = length;
+			
+		}
+		
+		this.fixed = (fixed == true);
+		
+	}
+	
+	
+	public function concat (?a:IVector<Bool>):IVector<Bool> {
+		
+		if (a == null) {
+			
+			return new BoolVector (__array.copy ());
+			
+		} else {
+			
+			return new BoolVector (__array.concat (cast (a, BoolVector).__array));
+			
+		}
+		
+	}
+	
+	
+	public function copy ():IVector<Bool> {
+		
+		return new BoolVector (fixed, __array.copy ());
+		
+	}
+	
+	
+	public function get (index:Int):Bool {
+		
+		if (index >= __array.length) {
+			
+			return false;
+			
+		} else {
+			
+			return __array[index];
+			
+		}
+		
+	}
+	
+	
+	public function indexOf (x:Bool, ?from:Int = 0):Int {
+		
+		for (i in from...__array.length) {
+			
+			if (__array[i] == x) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:Bool):Void {
+		
+		if (!fixed || index < __array.length) {
+			
+			__array.insert (index, element);
+			
+		}
+		
+	}
+	
+	
+	public function iterator<Bool> ():Iterator<Bool> {
+		
+		return cast __array.iterator ();
+		
+	}
+	
+	
+	public function join (sep:String):String {
+		
+		return __array.join (sep);
+		
+	}
+	
+	
+	public function lastIndexOf (x:Bool, ?from:Int = 0):Int {
+		
+		var i = __array.length - 1;
+		
+		while (i >= from) {
+			
+			if (__array[i] == x) return i;
+			i--;
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function pop ():Bool {
+		
+		if (!fixed) {
+			
+			return __array.pop ();
+			
+		} else {
+			
+			return false;
+			
+		}
+		
+	}
+	
+	
+	public function push (x:Bool):Int {
+		
+		if (!fixed) {
+			
+			return __array.push (x);
+			
+		} else {
+			
+			return __array.length;
+			
+		}
+		
+	}
+	
+	
+	public function reverse ():Void {
+		
+		__array.reverse ();
+		
+	}
+	
+	
+	public function set (index:Int, value:Bool):Bool {
+		
+		if (!fixed || index < __array.length) {
+			
+			return __array[index] = value;
+			
+		} else {
+			
+			return value;
+			
+		}
+		
+	}
+	
+	
+	public function shift ():Bool {
+		
+		if (!fixed) {
+			
+			return __array.shift ();
+			
+		} else {
+			
+			return false;
+			
+		}
+		
+	}
+	
+	
+	public function slice (?startIndex:Int = 0, ?endIndex:Int = 16777215):IVector<Bool> {
+		
+		return new BoolVector (__array.slice (startIndex, endIndex));
+		
+	}
+	
+	
+	public function sort (f:Bool->Bool->Int):Void {
+		
+		__array.sort (f);
+		
+	}
+	
+	
+	public function splice (pos:Int, len:Int):IVector<Bool> {
+		
+		return new BoolVector (__array.splice (pos, len));
+		
+	}
+	
+	
+	public function toString ():String {
+		
+		return __array.toString ();
+		
+	}
+	
+	
+	public function unshift (x:Bool):Void {
+		
+		if (!fixed) {
+			
+			__array.unshift (x);
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Getters & Setters
+	
+	
+	
+	
+	@:noCompletion private function get_length ():Int {
+		
+		return __array.length;
+		
+	}
+	
+	
+	@:noCompletion private function set_length (value:Int):Int {
+		
+		if (!fixed) {
+			
+			#if cpp
+			
+			cpp.NativeArray.setSize (__array, value);
+			
+			#else
+			
+			var currentLength = __array.length;
+			if (value < 0) value = 0;
+			
+			if (value > currentLength) {
+				
+				for (i in currentLength...value) {
+					
+					__array[i] = false;
+					
+				}
+				
+			} else {
+				
+				while (__array.length > value) {
+					
+					__array.pop ();
+					
+				}
+				
+			}
+			
+			#end
+			
+		}
+		
+		return __array.length;
+		
+	}
+	
+	
+}
+
+
+
+
+@:dox(hide) private class FloatVector implements IVector<Float> {
+	
+	
+	public var fixed:Bool;
+	public var length (get, set):Int;
+	
+	private var __array:Array<Float>;
+	
+	
+	public function new (?length:Int, ?fixed:Bool, ?array:Array<Float>):Void {
+		
+		if (array == null) {
+			
+			array = new Array<Float> ();
+			
+		}
+		
+		__array = array;
+		
+		if (length != null) {
+			
+			this.length = length;
+			
+		}
+		
+		this.fixed = (fixed == true);
+		
+	}
+	
+	
+	public function concat (?a:IVector<Float>):IVector<Float> {
+		
+		if (a == null) {
+			
+			return new FloatVector (__array.copy ());
+			
+		} else {
+			
+			return new FloatVector (__array.concat (cast (a, FloatVector).__array));
+			
+		}
+		
+	}
+	
+	
+	public function copy ():IVector<Float> {
+		
+		return new FloatVector (fixed, __array.copy ());
+		
+	}
+	
+	
+	public function get (index:Int):Float {
+		
+		return __array[index];
+		
+	}
+	
+	
+	public function indexOf (x:Float, ?from:Int = 0):Int {
+		
+		for (i in from...__array.length) {
+			
+			if (__array[i] == x) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:Float):Void {
+		
+		if (!fixed || index < __array.length) {
+			
+			__array.insert (index, element);
+			
+		}
+		
+	}
+	
+	
+	public function iterator<Float> ():Iterator<Float> {
+		
+		return cast __array.iterator ();
+		
+	}
+	
+	
+	public function join (sep:String):String {
+		
+		return __array.join (sep);
+		
+	}
+	
+	
+	public function lastIndexOf (x:Float, ?from:Int = 0):Int {
+		
+		var i = __array.length - 1;
+		
+		while (i >= from) {
+			
+			if (__array[i] == x) return i;
+			i--;
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function pop ():Float {
+		
+		if (!fixed) {
+			
+			return __array.pop ();
+			
+		} else {
+			
+			return 0.0;
+			
+		}
+		
+	}
+	
+	
+	public function push (x:Float):Int {
+		
+		if (!fixed) {
+			
+			return __array.push (x);
+			
+		} else {
+			
+			return __array.length;
+			
+		}
+		
+	}
+	
+	
+	public function reverse ():Void {
+		
+		__array.reverse ();
+		
+	}
+	
+	
+	public function set (index:Int, value:Float):Float {
+		
+		if (!fixed || index < __array.length) {
+			
+			return __array[index] = value;
+			
+		} else {
+			
+			return value;
+			
+		}
+		
+	}
+	
+	
+	public function shift ():Float {
+		
+		if (!fixed) {
+			
+			return __array.shift ();
+			
+		} else {
+			
+			return 0.0;
+			
+		}
+		
+	}
+	
+	
+	public function slice (?startIndex:Int = 0, ?endIndex:Int = 16777215):IVector<Float> {
+		
+		return new FloatVector (__array.slice (startIndex, endIndex));
+		
+	}
+	
+	
+	public function sort (f:Float->Float->Int):Void {
+		
+		__array.sort (f);
+		
+	}
+	
+	
+	public function splice (pos:Int, len:Int):IVector<Float> {
+		
+		return new FloatVector (__array.splice (pos, len));
+		
+	}
+	
+	
+	public function toString ():String {
+		
+		return __array.toString ();
+		
+	}
+	
+	
+	public function unshift (x:Float):Void {
+		
+		if (!fixed) {
+			
+			__array.unshift (x);
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Getters & Setters
+	
+	
+	
+	
+	@:noCompletion private function get_length ():Int {
+		
+		return __array.length;
+		
+	}
+	
+	
+	@:noCompletion private function set_length (value:Int):Int {
+		
+		if (!fixed) {
+			
+			#if cpp
+			
+			cpp.NativeArray.setSize (__array, value);
+			
+			#else
+			
+			var currentLength = __array.length;
+			if (value < 0) value = 0;
+			
+			if (value > currentLength) {
+				
+				for (i in currentLength...value) {
+					
+					__array[i] = 0;
+					
+				}
+				
+			} else {
+				
+				while (__array.length > value) {
+					
+					__array.pop ();
+					
+				}
+				
+			}
+			
+			#end
+			
+		}
+		
+		return __array.length;
+		
+	}
+	
+	
+}
+
+
+
+
+@:dox(hide) private class FunctionVector implements IVector<Function> {
+	
+	
+	public var fixed:Bool;
+	public var length (get, set):Int;
+	
+	private var __array:Array<Function>;
+	
+	
+	public function new (?length:Int, ?fixed:Bool, ?array:Array<Function>):Void {
+		
+		if (array == null) {
+			
+			array = new Array<Function> ();
+			
+		}
+		
+		__array = array;
+		
+		if (length != null) {
+			
+			this.length = length;
+			
+		}
+		
+		this.fixed = (fixed == true);
+		
+	}
+	
+	
+	public function concat (?a:IVector<Function>):IVector<Function> {
+		
+		if (a == null) {
+			
+			return new FunctionVector (__array.copy ());
+			
+		} else {
+			
+			return new FunctionVector (__array.concat (cast (a, FunctionVector).__array));
+			
+		}
+		
+	}
+	
+	
+	public function copy ():IVector<Function> {
+		
+		return new FunctionVector (fixed, __array.copy ());
+		
+	}
+	
+	
+	public function get (index:Int):Function {
+		
+		if (index >= __array.length) {
+			
+			return null;
+			
+		} else {
+			
+			return __array[index];
+			
+		}
+		
+	}
+	
+	
+	public function indexOf (x:Function, ?from:Int = 0):Int {
+		
+		for (i in from...__array.length) {
+			
+			if (Reflect.compareMethods (__array[i], x)) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:Function):Void {
+		
+		if (!fixed || index < __array.length) {
+			
+			__array.insert (index, element);
+			
+		}
+		
+	}
+	
+	
+	public function iterator<Function> ():Iterator<Function> {
+		
+		return cast __array.iterator ();
+		
+	}
+	
+	
+	public function join (sep:String):String {
+		
+		return __array.join (sep);
+		
+	}
+	
+	
+	public function lastIndexOf (x:Function, ?from:Int = 0):Int {
+		
+		var i = __array.length - 1;
+		
+		while (i >= from) {
+			
+			if (Reflect.compareMethods (__array[i], x)) return i;
+			i--;
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function pop ():Null<Function> {
+		
+		if (!fixed) {
+			
+			return __array.pop ();
+			
+		} else {
+			
+			return null;
+			
+		}
+		
+	}
+	
+	
+	public function push (x:Function):Int {
+		
+		if (!fixed) {
+			
+			return __array.push (x);
+			
+		} else {
+			
+			return __array.length;
+			
+		}
+		
+	}
+	
+	
+	public function reverse ():Void {
+		
+		__array.reverse ();
+		
+	}
+	
+	
+	public function set (index:Int, value:Function):Function {
+		
+		if (!fixed || index < __array.length) {
+			
+			return __array[index] = value;
+			
+		} else {
+			
+			return value;
+			
+		}
+		
+	}
+	
+	
+	public function shift ():Function {
+		
+		if (!fixed) {
+			
+			return __array.shift ();
+			
+		} else {
+			
+			return null;
+			
+		}
+		
+	}
+	
+	
+	public function slice (?startIndex:Int = 0, ?endIndex:Int = 16777215):IVector<Function> {
+		
+		return new FunctionVector (__array.slice (startIndex, endIndex));
+		
+	}
+	
+	
+	public function sort (f:Function->Function->Int):Void {
+		
+		__array.sort (f);
+		
+	}
+	
+	
+	public function splice (pos:Int, len:Int):IVector<Function> {
+		
+		return new FunctionVector (__array.splice (pos, len));
+		
+	}
+	
+	
+	public function toString ():String {
+		
+		return __array.toString ();
+		
+	}
+	
+	
+	public function unshift (x:Function):Void {
+		
+		if (!fixed) {
+			
+			__array.unshift (x);
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Getters & Setters
+	
+	
+	
+	
+	@:noCompletion private function get_length ():Int {
+		
+		return __array.length;
+		
+	}
+	
+	
+	@:noCompletion private function set_length (value:Int):Int {
+		
+		if (!fixed) {
+			
+			#if cpp
+			
+			cpp.NativeArray.setSize (__array, value);
+			
+			#else
+			
+			var currentLength = __array.length;
+			if (value < 0) value = 0;
+			
+			if (value > currentLength) {
+				
+				for (i in currentLength...value) {
+					
+					__array[i] = null;
+					
+				}
+				
+			} else {
+				
+				while (__array.length > value) {
+					
+					__array.pop ();
+					
+				}
+				
+			}
+			
+			#end
+			
+		}
+		
+		return __array.length;
+		
+	}
+	
+	
+}
+
+
+
+
+@:dox(hide) private class IntVector implements IVector<Int> {
+	
+	
+	public var fixed:Bool;
+	public var length (get, set):Int;
+	
+	private var __array:Array<Int>;
+	
+	
+	public function new (?length:Int, ?fixed:Bool, ?array:Array<Int>):Void {
+		
+		if (array == null) {
+			
+			array = new Array<Int> ();
+			
+		}
+		
+		__array = array;
+		
+		if (length != null) {
+			
+			this.length = length;
+			
+		}
+		
+		this.fixed = (fixed == true);
+		
+	}
+	
+	
+	public function concat (?a:IVector<Int>):IVector<Int> {
+		
+		if (a == null) {
+			
+			return new IntVector (__array.copy ());
+			
+		} else {
+			
+			return new IntVector (__array.concat (cast (a, IntVector).__array));
+			
+		}
+		
+	}
+	
+	
+	public function copy ():IVector<Int> {
+		
+		return new IntVector (fixed, __array.copy ());
+		
+	}
+	
+	
+	public function get (index:Int):Int {
+		
+		return __array[index];
+		
+	}
+	
+	
+	public function indexOf (x:Int, ?from:Int = 0):Int {
+		
+		for (i in from...__array.length) {
+			
+			if (__array[i] == x) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:Int):Void {
+		
+		if (!fixed || index < __array.length) {
+			
+			__array.insert (index, element);
+			
+		}
+		
+	}
+	
+	
+	public function iterator<Int> ():Iterator<Int> {
+		
+		return cast __array.iterator ();
+		
+	}
+	
+	
+	public function join (sep:String):String {
+		
+		return __array.join (sep);
+		
+	}
+	
+	
+	public function lastIndexOf (x:Int, ?from:Int = 0):Int {
+		
+		var i = __array.length - 1;
+		
+		while (i >= from) {
+			
+			if (__array[i] == x) return i;
+			i--;
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function pop ():Int {
+		
+		if (!fixed) {
+			
+			return __array.pop ();
+			
+		} else {
+			
+			return 0;
+			
+		}
+		
+	}
+	
+	
+	public function push (x:Int):Int {
+		
+		if (!fixed) {
+			
+			return __array.push (x);
+			
+		} else {
+			
+			return __array.length;
+			
+		}
+		
+	}
+	
+	
+	public function reverse ():Void {
+		
+		__array.reverse ();
+		
+	}
+	
+	
+	public function set (index:Int, value:Int):Int {
+		
+		if (!fixed || index < __array.length) {
+			
+			return __array[index] = value;
+			
+		} else {
+			
+			return value;
+			
+		}
+		
+	}
+	
+	
+	public function shift ():Int {
+		
+		if (!fixed) {
+			
+			return __array.shift ();
+			
+		} else {
+			
+			return 0;
+			
+		}
+		
+	}
+	
+	
+	public function slice (?startIndex:Int = 0, ?endIndex:Int = 16777215):IVector<Int> {
+		
+		return new IntVector (__array.slice (startIndex, endIndex));
+		
+	}
+	
+	
+	public function sort (f:Int->Int->Int):Void {
+		
+		__array.sort (f);
+		
+	}
+	
+	
+	public function splice (pos:Int, len:Int):IVector<Int> {
+		
+		return new IntVector (__array.splice (pos, len));
+		
+	}
+	
+	
+	public function toString ():String {
+		
+		return __array.toString ();
+		
+	}
+	
+	
+	public function unshift (x:Int):Void {
+		
+		if (!fixed) {
+			
+			__array.unshift (x);
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Getters & Setters
+	
+	
+	
+	
+	@:noCompletion private function get_length ():Int {
+		
+		return __array.length;
+		
+	}
+	
+	
+	@:noCompletion private function set_length (value:Int):Int {
+		
+		if (!fixed) {
+			
+			#if cpp
+			
+			cpp.NativeArray.setSize (__array, value);
+			
+			#else
+			
+			var currentLength = __array.length;
+			if (value < 0) value = 0;
+			
+			if (value > currentLength) {
+				
+				for (i in currentLength...value) {
+					
+					__array[i] = 0;
+					
+				}
+				
+			} else {
+				
+				while (__array.length > value) {
+					
+					__array.pop ();
+					
+				}
+				
+			}
+			
+			#end
+			
+		}
+		
+		return __array.length;
+		
+	}
+	
+	
+}
+
+
+
+
+@:dox(hide) private class ObjectVector<T> implements IVector<T> {
+	
+	
+	public var fixed:Bool;
+	public var length (get, set):Int;
+	
+	private var __array:Array<T>;
+	
+	
+	public function new (?length:Int, ?fixed:Bool, ?array:Array<T>):Void {
+		
+		if (array == null) {
+			
+			array = new Array<T> ();
+			
+		}
+		
+		__array = array;
+		
+		if (length != null) {
+			
+			this.length = length;
+			
+		}
+		
+		this.fixed = (fixed == true);
+		
+	}
+	
+	
+	public function concat (?a:IVector<T>):IVector<T> {
+		
+		if (a == null) {
+			
+			return new ObjectVector (__array.copy ());
+			
+		} else {
+			
+			return new ObjectVector (__array.concat (cast (cast (a, ObjectVector<Dynamic>).__array)));
+			
+		}
+		
+	}
+	
+	
+	public function copy ():IVector<T> {
+		
+		return new ObjectVector (__array.copy ());
+		
+	}
+	
+	
+	public function get (index:Int):T {
+		
+		return __array[index];
+		
+	}
+	
+	
+	public function indexOf (x:T, ?from:Int = 0):Int {
+		
+		for (i in from...__array.length) {
+			
+			if (__array[i] == x) {
+				
+				return i;
+				
+			}
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function insertAt (index:Int, element:T):Void {
+		
+		if (!fixed || index < __array.length) {
+			
+			__array.insert (index, element);
+			
+		}
+		
+	}
+	
+	
+	public function iterator<T> ():Iterator<T> {
+		
+		return cast __array.iterator ();
+		
+	}
+	
+	
+	public function join (sep:String):String {
+		
+		return __array.join (sep);
+		
+	}
+	
+	
+	public function lastIndexOf (x:T, ?from:Int = 0):Int {
+		
+		var i = __array.length - 1;
+		
+		while (i >= from) {
+			
+			if (__array[i] == x) return i;
+			i--;
+			
+		}
+		
+		return -1;
+		
+	}
+	
+	
+	public function pop ():T {
+		
+		if (!fixed) {
+			
+			return __array.pop ();
+			
+		} else {
+			
+			return null;
+			
+		}
+		
+	}
+	
+	
+	public function push (x:T):Int {
+		
+		if (!fixed) {
+			
+			return __array.push (x);
+			
+		} else {
+			
+			return __array.length;
+			
+		}
+		
+	}
+	
+	
+	public function reverse ():Void {
+		
+		__array.reverse ();
+		
+	}
+	
+	
+	public function set (index:Int, value:T):T {
+		
+		if (!fixed || index < __array.length) {
+			
+			return __array[index] = value;
+			
+		} else {
+			
+			return value;
+			
+		}
+		
+	}
+	
+	
+	public function shift ():T {
+		
+		if (!fixed) {
+			
+			return __array.shift ();
+			
+		} else {
+			
+			return null;
+			
+		}
+		
+	}
+	
+	
+	public function slice (?startIndex:Int = 0, ?endIndex:Int = 16777215):IVector<T> {
+		
+		return new ObjectVector (__array.slice (startIndex, endIndex));
+		
+	}
+	
+	
+	public function sort (f:T->T->Int):Void {
+		
+		__array.sort (f);
+		
+	}
+	
+	
+	public function splice (pos:Int, len:Int):IVector<T> {
+		
+		return new ObjectVector (__array.splice (pos, len));
+		
+	}
+	
+	
+	public function toString ():String {
+		
+		return __array.toString ();
+		
+	}
+	
+	
+	public function unshift (x:T):Void {
+		
+		if (!fixed) {
+			
+			__array.unshift (x);
+			
+		}
+		
+	}
+	
+	
+	
+	
+	// Getters & Setters
+	
+	
+	
+	
+	@:noCompletion private function get_length ():Int {
+		
+		return __array.length;
+		
+	}
+	
+	
+	@:noCompletion private function set_length (value:Int):Int {
+		
+		if (!fixed) {
+			
+			#if cpp
+			
+			cpp.NativeArray.setSize (__array, value);
+			
+			#else
+			
+			var currentLength = __array.length;
+			if (value < 0) value = 0;
+			
+			if (value > currentLength) {
+				
+				for (i in currentLength...length) {
+					
+					__array.push (null);
+					
+				}
+				
+			} else {
+				
+				while (__array.length > value) {
+					
+					__array.pop ();
+					
+				}
+				
+			}
+			
+			#end
+			
+		}
+		
+		return __array.length;
+		
+	}
+	
+	
+}
+
+
+
+
+@:dox(hide) private interface IVector<T> {
+	
+	public var fixed:Bool;
+	public var length (get, set):Int;
+	
+	public function concat (?a:IVector<T>):IVector<T>;
+	public function copy ():IVector<T>;
+	public function get (index:Int):T;
+	public function indexOf (x:T, ?from:Int = 0):Int;
+	public function insertAt (index:Int, element:T):Void;
+	public function iterator<T> ():Iterator<T>;
+	public function join (sep:String):String;
+	public function lastIndexOf (x:T, ?from:Int = 0):Int;
+	public function pop ():T;
+	public function push (x:T):Int;
+	public function reverse ():Void;
+	public function set (index:Int, value:T):T;
+	public function shift ():T;
+	public function slice (?pos:Int, ?end:Int):IVector<T>;
+	public function sort (f:T -> T -> Int):Void;
+	public function splice (pos:Int, len:Int):IVector<T>;
+	public function toString ():String;
+	public function unshift (x:T):Void;
+	
+}
+
+
+
+
 #else
+
+
 
 
 abstract Vector<T>(VectorData<T>) {
 	
 	
-	public var length (get, set):Int;
 	public var fixed (get, set):Bool;
+	public var length (get, set):Int;
 	
 	
-	public inline function new (length:Int = 0, fixed:Bool = false):Void {
+	
+	public inline function new (?length:Int, ?fixed:Bool, ?array:Array<T>):Void {
 		
-		this = new VectorData<T> (length, fixed);
+		if (array != null) {
+			
+			this = VectorData.ofArray (array);
+			
+		} else {
+			
+			this = new VectorData<T> (length, fixed);
+			
+		}
 		
 		
 	}
@@ -1188,6 +1789,13 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
+	public inline function indexOf (x:T, from:Int = 0):Int {
+		
+		return this.indexOf (x, from);
+		
+	}
+	
+	
 	public function insertAt (index:Int, element:T):Void {
 		
 		Reflect.callMethod (this.splice, this.splice, [ index, 0, element ]);
@@ -1211,7 +1819,14 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function pop ():Null<T> {
+	public inline function lastIndexOf (x:T, from:Int = 0x7fffffff):Int {
+		
+		return this.lastIndexOf (x, from);
+		
+	}
+	
+	
+	public inline function pop ():T {
 		
 		return this.pop ();
 		
@@ -1232,16 +1847,9 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function shift ():Null<T> {
+	public inline function shift ():T {
 		
 		return this.shift ();
-		
-	}
-	
-	
-	public inline function unshift (x:T):Void {
-		
-		this.unshift (x);
 		
 	}
 	
@@ -1274,16 +1882,9 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	public inline function indexOf (x:T, from:Int = 0):Int {
+	public inline function unshift (x:T):Void {
 		
-		return this.indexOf (x, from);
-		
-	}
-	
-	
-	public inline function lastIndexOf (x:T, from:Int = 0x7fffffff):Int {
-		
-		return this.lastIndexOf (x, from);
+		this.unshift (x);
 		
 	}
 	
@@ -1302,7 +1903,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:arrayAccess public inline function get (index:Int):Null<T> {
+	@:noCompletion @:dox(hide) @:arrayAccess public inline function get (index:Int):T {
 		
 		return this[index];
 		
@@ -1316,7 +1917,7 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
-	@:noCompletion @:dox(hide) @:from public static inline function fromArray<T> (value:Array<T>):Vector<T> {
+	/*@:noCompletion @:dox(hide) @:from public static inline function fromArray<T> (value:Array<T>):Vector<T> {
 		
 		return VectorData.ofArray (value);
 		
@@ -1335,7 +1936,7 @@ abstract Vector<T>(VectorData<T>) {
 		
 		return array;
 		
-	}
+	}*/
 	
 	
 	@:noCompletion @:dox(hide) @:from public static inline function fromHaxeVector<T> (value:haxe.ds.Vector<T>):Vector<T> {
@@ -1373,20 +1974,6 @@ abstract Vector<T>(VectorData<T>) {
 	
 	
 	
-	@:noCompletion private inline function get_length ():Int {
-		
-		return this.length;
-		
-	}
-	
-	
-	@:noCompletion private inline function set_length (value:Int):Int {
-		
-		return this.length = value;
-		
-	}
-	
-	
 	@:noCompletion private inline function get_fixed ():Bool {
 		
 		return this.fixed;
@@ -1401,10 +1988,24 @@ abstract Vector<T>(VectorData<T>) {
 	}
 	
 	
+	@:noCompletion private inline function get_length ():Int {
+		
+		return this.length;
+		
+	}
+	
+	
+	@:noCompletion private inline function set_length (value:Int):Int {
+		
+		return this.length = value;
+		
+	}
+	
+	
 }
 
 
-private class VectorDataIterator<T> {
+@:dox(hide) private class VectorDataIterator<T> {
 	
 	
 	private var index:Int;
