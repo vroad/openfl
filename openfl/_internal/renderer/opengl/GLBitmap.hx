@@ -42,11 +42,11 @@ class GLBitmap {
 			var renderer:GLRenderer = cast renderSession.renderer;
 			
 			gl.enableVertexAttribArray (shader.data.aAlpha.index);
-			gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (bitmap.__worldTransform));
+			gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (bitmap.__renderTransform));
 			
 			gl.bindTexture (GLES20.TEXTURE_2D, bitmap.bitmapData.getTexture (gl));
 			
-			if (bitmap.smoothing || (bitmap.stage != null && (bitmap.stage.__displayMatrix.a != 1 || bitmap.stage.__displayMatrix.d != 1))) {
+			if (renderSession.allowSmoothing && (bitmap.smoothing || renderSession.upscaled)) {
 				
 				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.LINEAR);
 				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.LINEAR);

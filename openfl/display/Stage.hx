@@ -113,11 +113,12 @@ class Stage extends DisplayObjectContainer implements IModule {
 	private var __mouseDownLeft:InteractiveObject;
 	private var __mouseDownMiddle:InteractiveObject;
 	private var __mouseDownRight:InteractiveObject;
-	private var __mouseOutStack:Array<DisplayObject>;
+	private var __mouseOverTarget:InteractiveObject;
 	private var __mouseX:Float;
 	private var __mouseY:Float;
 	private var __renderer:AbstractRenderer;
 	private var __rendering:Bool;
+	private var __rollOutStack:Array<DisplayObject>;
 	private var __stack:Array<DisplayObject>;
 	private var __transparent:Bool;
 	private var __wasDirty:Bool;
@@ -183,7 +184,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		__clearBeforeRender = true;
 		__stack = [];
-		__mouseOutStack = [];
+		__rollOutStack = [];
 		
 		if (Lib.current.stage == null) {
 			
@@ -588,27 +589,27 @@ class Stage extends DisplayObjectContainer implements IModule {
 				case OPENGL (gl):
 					
 					#if (!disable_cffi && (!html5 || !canvas))
-					__renderer = new GLRenderer (stageWidth, stageHeight, gl);
+					__renderer = new GLRenderer (this, gl);
 					#end
 				
 				case CANVAS (context):
 					
-					__renderer = new CanvasRenderer (stageWidth, stageHeight, context);
+					__renderer = new CanvasRenderer (this, context);
 				
 				case DOM (element):
 					
-					__renderer = new DOMRenderer (stageWidth, stageHeight, element);
+					__renderer = new DOMRenderer (this, element);
 				
 				case CAIRO (cairo):
 					
 					#if !html5
-					__renderer = new CairoRenderer (stageWidth, stageHeight, cairo);
+					__renderer = new CairoRenderer (this, cairo);
 					#end
 				
 				case CONSOLE (ctx):
 					
 					#if !html5
-					__renderer = new ConsoleRenderer (stageWidth, stageHeight, ctx);
+					__renderer = new ConsoleRenderer (this, ctx);
 					#end
 				
 				default:
@@ -666,9 +667,12 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
+		__resize ();
+		
 		if (__displayState == NORMAL) {
 			
 			__displayState = FULL_SCREEN_INTERACTIVE;
+			__dispatchEvent (new FullScreenEvent (FullScreenEvent.FULL_SCREEN, false, false, false, true));
 			
 		}
 		
@@ -702,15 +706,14 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
+		__resize ();
+		
 		if (__displayState != NORMAL && !window.fullscreen) {
 			
 			__displayState = NORMAL;
+			__dispatchEvent (new FullScreenEvent (FullScreenEvent.FULL_SCREEN, false, false, true, true));
 			
 		}
-		
-		__resize ();
-		
-		__dispatchEvent (new Event (Event.RESIZE));
 		
 	}
 	
@@ -718,6 +721,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 	public function onWindowRestore (window:Window):Void {
 		
 		//if (this.window == null || this.window != window) return;
+		
+		//__resize ();
 		
 	}
 	
@@ -744,7 +749,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (__renderer != null) {
 			
-			__renderer.init (this);
+			__renderer.clear ();
 			
 		}
 		
@@ -786,7 +791,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 				
 			}
 			
-			__renderer.render (this);
+			__renderer.render ();
 			
 		}
 		
@@ -829,7 +834,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		var parent = __dragObject.parent;
 		if (parent != null) {
 			
-			mouse = parent.globalToLocal (mouse);
+			parent.__getWorldTransform ().__transformInversePoint (mouse);
 			
 		}
 		
@@ -1148,14 +1153,27 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		var event, localPoint;
 		
-		for (target in __mouseOutStack) {
+		if (target != __mouseOverTarget) {
+			
+			if (__mouseOverTarget != null) {
+				
+				localPoint = (__mouseOverTarget == this ? targetPoint : __mouseOverTarget.globalToLocal (targetPoint));
+				
+				event = MouseEvent.__create (MouseEvent.MOUSE_OUT, button, __mouseX, __mouseY, localPoint, cast __mouseOverTarget);
+				__mouseOverTarget.__dispatchEvent (event);
+				
+			}
+			
+		}
+		
+		for (target in __rollOutStack) {
 			
 			if (stack.indexOf (target) == -1) {
 				
-				__mouseOutStack.remove (target);
+				__rollOutStack.remove (target);
 				
-				localPoint = target.globalToLocal (targetPoint);
-				event = MouseEvent.__create (MouseEvent.MOUSE_OUT, button, __mouseX, __mouseY, localPoint, cast target);
+				localPoint = __mouseOverTarget.globalToLocal (targetPoint);
+				event = MouseEvent.__create (MouseEvent.ROLL_OUT, button, __mouseX, __mouseY, localPoint, cast __mouseOverTarget);
 				event.bubbles = false;
 				target.__dispatchEvent (event);
 				
@@ -1165,24 +1183,40 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		for (target in stack) {
 			
-			if (__mouseOutStack.indexOf (target) == -1) {
+			if (__rollOutStack.indexOf (target) == -1) {
 				
-				if (target.hasEventListener (MouseEvent.MOUSE_OVER)) {
+				if (target.hasEventListener (MouseEvent.ROLL_OVER)) {
 					
 					localPoint = target.globalToLocal (targetPoint);
-					event = MouseEvent.__create (MouseEvent.MOUSE_OVER, button, __mouseX, __mouseY, localPoint, cast target);
+					event = MouseEvent.__create (MouseEvent.ROLL_OVER, button, __mouseX, __mouseY, localPoint, cast target);
 					event.bubbles = false;
 					target.__dispatchEvent (event);
 					
 				}
 				
-				if (target.hasEventListener (MouseEvent.MOUSE_OUT)) {
+				if (target.hasEventListener (MouseEvent.ROLL_OUT)) {
 					
-					__mouseOutStack.push (target);
+					__rollOutStack.push (target);
 					
 				}
 				
 			}
+			
+		}
+		
+		if (target != __mouseOverTarget) {
+			
+			if (target != null) {
+				
+				localPoint = (target == this ? targetPoint : target.globalToLocal (targetPoint));
+				
+				event = MouseEvent.__create (MouseEvent.MOUSE_OVER, button, __mouseX, __mouseY, localPoint, cast target);
+				event.bubbles = true;
+				target.__dispatchEvent (event);
+				
+			}
+			
+			__mouseOverTarget = target;
 			
 		}
 		
@@ -1281,6 +1315,9 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	private function __resize ():Void {
 		
+		var cacheWidth = stageWidth;
+		var cacheHeight = stageHeight;
+		
 		var windowWidth = Std.int (window.width * window.scale);
 		var windowHeight = Std.int (window.height * window.scale);
 		
@@ -1316,7 +1353,13 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (__renderer != null) {
 			
-			__renderer.resize (stageWidth, stageHeight);
+			__renderer.resize (windowWidth, windowHeight);
+			
+		}
+		
+		if (stageWidth != cacheWidth || stageHeight != cacheHeight) {
+			
+			__dispatchEvent (new Event (Event.RESIZE));
 			
 		}
 		
@@ -1342,8 +1385,8 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 			if (lockCenter) {
 				
-				__dragOffsetX = -__dragObject.width / 2;
-				__dragOffsetY = -__dragObject.height / 2;
+				__dragOffsetX = 0;
+				__dragOffsetY = 0;
 				
 			} else {
 				
@@ -1352,7 +1395,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 				
 				if (parent != null) {
 					
-					mouse = parent.globalToLocal (mouse);
+					parent.__getWorldTransform ().__transformInversePoint (mouse);
 					
 				}
 				
@@ -1477,11 +1520,6 @@ class Stage extends DisplayObjectContainer implements IModule {
 						//window.minimized = false;
 						window.fullscreen = false;
 						
-						__resize ();
-						
-						dispatchEvent (new Event (Event.FULLSCREEN));
-						dispatchEvent (new FullScreenEvent (FullScreenEvent.FULL_SCREEN, false, false, false, true));
-						
 					}
 				
 				default:
@@ -1490,11 +1528,6 @@ class Stage extends DisplayObjectContainer implements IModule {
 						
 						//window.minimized = false;
 						window.fullscreen = true;
-						
-						__resize ();
-						
-						dispatchEvent (new Event (Event.FULLSCREEN));
-						dispatchEvent (new FullScreenEvent (FullScreenEvent.FULL_SCREEN, false, false, true, true));
 						
 					}
 				

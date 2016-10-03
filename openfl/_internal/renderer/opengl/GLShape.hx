@@ -29,9 +29,9 @@ class GLShape {
 		if (graphics != null) {
 			
 			#if (js && html5)
-			CanvasGraphics.render (graphics, renderSession, shape.__worldTransform);
+			CanvasGraphics.render (graphics, renderSession, shape.__renderTransform);
 			#elseif lime_cairo
-			CairoGraphics.render (graphics, renderSession, shape.__worldTransform);
+			CairoGraphics.render (graphics, renderSession, shape.__renderTransform);
 			#end
 			
 			var bounds = graphics.__bounds;
@@ -61,8 +61,17 @@ class GLShape {
 				
 				gl.bindTexture (GLES20.TEXTURE_2D, graphics.__bitmap.getTexture (gl));
 				
-				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.LINEAR);
-				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.LINEAR);
+				if (renderSession.allowSmoothing) {
+					
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					
+				} else {
+					
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					
+				}
 				
 				gl.bindBuffer (GLES20.ARRAY_BUFFER, graphics.__bitmap.getBuffer (gl, shape.__worldAlpha));
 				gl.vertexAttribPointer (shader.data.aPosition.index, 3, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);

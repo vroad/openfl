@@ -25,9 +25,9 @@ class DOMRenderer extends AbstractRenderer {
 	private var element:DOMRenderContext;
 	
 	
-	public function new (width:Int, height:Int, element:DOMRenderContext) {
+	public function new (stage:Stage, element:DOMRenderContext) {
 		
-		super (width, height);
+		super (stage);
 		
 		this.element = element;
 		
@@ -71,7 +71,7 @@ class DOMRenderer extends AbstractRenderer {
 		
 		if (setTransform && displayObject.__worldTransformChanged) {
 			
-			style.setProperty (renderSession.transformProperty, displayObject.__worldTransform.to3DString (renderSession.roundPixels), null);
+			style.setProperty (renderSession.transformProperty, displayObject.__renderTransform.to3DString (renderSession.roundPixels), null);
 			
 		}
 		
@@ -107,7 +107,7 @@ class DOMRenderer extends AbstractRenderer {
 				var clip = Rectangle.__temp;
 				var matrix = Matrix.__temp;
 				
-				matrix.copyFrom (displayObject.__worldTransform);
+				matrix.copyFrom (displayObject.__renderTransform);
 				matrix.invert ();
 				
 				displayObject.__worldClip.__transform (clip, matrix);
@@ -143,7 +143,9 @@ class DOMRenderer extends AbstractRenderer {
 	#end
 	
 	
-	public override function render (stage:Stage):Void {
+	public override function render ():Void {
+		
+		renderSession.allowSmoothing = (stage.quality != LOW);
 		
 		if (!stage.__transparent) {
 			

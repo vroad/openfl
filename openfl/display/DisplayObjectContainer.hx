@@ -15,6 +15,7 @@ import openfl.Vector;
 
 @:access(openfl.events.Event)
 @:access(openfl.display.Graphics)
+@:access(openfl.geom.Point)
 @:access(openfl.geom.Rectangle)
 
 
@@ -74,8 +75,8 @@ class DisplayObjectContainer extends InteractiveObject {
 			var addedToStage = (stage != null && child.stage == null);
 			
 			if (addedToStage) {
-
-				this.__setStageReference(stage);
+				
+				this.__setStageReference (stage);
 				
 			}
 			
@@ -89,19 +90,7 @@ class DisplayObjectContainer extends InteractiveObject {
 			
 			if (addedToStage) {
 				
-				var event = new Event (Event.ADDED_TO_STAGE, false, false);
-				
-				child.dispatchEvent (event);
-				
-				if (child.__children != null) {
-					
-					for (_child in child.__children) {
-						
-						_child.dispatchEvent (event);
-						
-					}
-					
-				}
+				child.__dispatchChildren (new Event (Event.ADDED_TO_STAGE, false, false));
 				
 			}
 			
@@ -186,24 +175,21 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (child != null && child.parent == this) {
 			
+			child.__setTransformDirty ();
+			child.__setRenderDirty ();
+			__setRenderDirty();
+			
 			child.__dispatchEvent (new Event (Event.REMOVED, true));
 			
 			if (stage != null) {
 				
-				var event = new Event (Event.REMOVED_FROM_STAGE, false, false);
-				
-				child.dispatchEvent (event);
-				
-				if (child.__children != null) {
+				if (child.stage != null && stage.focus == child) {
 					
-					for (_child in child.__children) {
-						
-						_child.dispatchEvent (event);
-						
-					}
+					stage.focus = null;
 					
 				}
 				
+				child.__dispatchChildren (new Event (Event.REMOVED_FROM_STAGE, false, false));
 				child.__setStageReference (null);
 				
 			}
@@ -212,8 +198,6 @@ class DisplayObjectContainer extends InteractiveObject {
 			__children.remove (child);
 			__removedChildren.push (child);
 			child.__setTransformDirty ();
-			child.__setRenderDirty ();
-			__setRenderDirty();
 			
 		}
 		
@@ -312,7 +296,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (child1.parent == this && child2.parent == this) {
 			
-			#if (haxe_ver > 3.100)
+			#if (haxe_ver > 3.1)
 			
 			var index1 = __children.indexOf (child1);
 			var index2 = __children.indexOf (child2);
@@ -352,6 +336,31 @@ class DisplayObjectContainer extends InteractiveObject {
 		__children[index1] = __children[index2];
 		__children[index2] = swap;
 		swap = null;
+		
+	}
+	
+	
+	private override function __dispatchChildren (event:Event):Bool {
+		
+		var success = __dispatchEvent (event);
+		
+		if (success) {
+			
+			for (child in __children) {
+				
+				event.target = child;
+				
+				if (!child.__dispatchChildren (event)) {
+					
+					return false;
+					
+				}
+				
+			}
+			
+		}
+		
+		return success;
 		
 	}
 	
@@ -440,7 +449,20 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (!hitObject.visible || __isMask || (interactiveOnly && !mouseEnabled && !mouseChildren)) return false;
 		if (mask != null && !mask.__hitTestMask (x, y)) return false;
-		if (scrollRect != null && !scrollRect.containsPoint (globalToLocal (new Point (x, y)))) return false;
+		
+		if (__scrollRect != null) {
+			
+			var point = Point.__temp;
+			point.setTo (x, y);
+			__getRenderTransform ().__transformInversePoint (point);
+			
+			if (!__scrollRect.containsPoint (point)) {
+				
+				return false;
+				
+			}
+			
+		}
 		
 		var i = __children.length;
 		if (interactiveOnly) {
@@ -738,7 +760,7 @@ class DisplayObjectContainer extends InteractiveObject {
 	
 	
 	private override function __setStageReference (stage:Stage):Void {
-	
+		
 		super.__setStageReference (stage);
 		
 		if (__children != null) {
@@ -768,13 +790,6 @@ class DisplayObjectContainer extends InteractiveObject {
 	public override function __update (transformOnly:Bool, updateChildren:Bool, ?maskGraphics:Graphics = null):Void {
 		
 		super.__update (transformOnly, updateChildren, maskGraphics);
-		
-		// nested objects into a mask are non renderables but are part of the mask
-		if (!__renderable && !__isMask #if dom && !__worldAlphaChanged && !__worldClipChanged && !__worldTransformChanged && !__worldVisibleChanged #end) {
-			
-			return;
-			
-		}
 		
 		if (updateChildren) {
 			

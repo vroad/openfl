@@ -386,8 +386,9 @@ class BitmapData implements IBitmapDrawable {
 		#if (js && html5)
 		
 		if (colorTransform != null) {
-			
-			var copy = new BitmapData (Reflect.getProperty (source, "width"), Reflect.getProperty (source, "height"), true, 0);
+			var width:Int = Math.ceil (Reflect.getProperty (source, "width"));
+			var height:Int = Math.ceil (Reflect.getProperty (source, "height"));
+			var copy = new BitmapData (width, height, true, 0);
 			copy.draw (source);
 			copy.colorTransform (copy.rect, colorTransform);
 			source = copy;
@@ -400,6 +401,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		var renderSession = new RenderSession ();
 		renderSession.context = cast buffer.__srcContext;
+		renderSession.allowSmoothing = smoothing;
 		renderSession.roundPixels = true;
 		renderSession.maskManager = new CanvasMaskManager (renderSession);
 		
@@ -475,6 +477,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		var renderSession = new RenderSession ();
 		renderSession.cairo = cairo;
+		renderSession.allowSmoothing = smoothing;
 		renderSession.roundPixels = true;
 		renderSession.maskManager = new CairoMaskManager (renderSession);
 		renderSession.blendModeManager = new CairoBlendModeManager (renderSession);
@@ -623,11 +626,38 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (__buffer == null) {
 			
+			#if openfl_power_of_two
+			
+			var newWidth = 1;
+			var newHeight = 1;
+			
+			while (newWidth < width) {
+				
+				newWidth <<= 1;
+				
+			}
+			
+			while (newHeight < height) {
+				
+				newHeight <<= 1;
+				
+			}
+			
+			var uvWidth = width / newWidth;
+			var uvHeight = height / newHeight;
+			
+			#else
+			
+			var uvWidth = 1;
+			var uvHeight = 1;
+			
+			#end
+			
 			__bufferData = new Float32Array ([
 				
-				width, height, 0, 1, 1, alpha,
-				0, height, 0, 0, 1, alpha,
-				width, 0, 0, 1, 0, alpha,
+				width, height, 0, uvWidth, uvHeight, alpha,
+				0, height, 0, 0, uvHeight, alpha,
+				width, 0, 0, uvWidth, 0, alpha,
 				0, 0, 0, 0, 0, alpha
 				
 			]);
@@ -800,12 +830,15 @@ class BitmapData implements IBitmapDrawable {
 				textureImage = textureImage.clone ();
 				textureImage.format = RGBA32;
 				textureImage.buffer.premultiplied = true;
+				#if openfl_power_of_two
+				textureImage.powerOfTwo = true;
+				#end
 				
 			}
 			
 			if (textureImage.type == DATA) {
 				
-				gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, width, height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
+				gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, textureImage.buffer.width, textureImage.buffer.height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
 				
 			} else {
 				
@@ -815,14 +848,17 @@ class BitmapData implements IBitmapDrawable {
 			
 			#else
 			
-			if ((!textureImage.premultiplied && textureImage.transparent)) {
+			if (#if openfl_power_of_two !textureImage.powerOfTwo || #end (!textureImage.premultiplied && textureImage.transparent)) {
 				
 				textureImage = textureImage.clone ();
 				textureImage.premultiplied = true;
+				#if openfl_power_of_two
+				textureImage.powerOfTwo = true;
+				#end
 				
 			}
 			
-			gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, width, height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
+			gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, textureImage.buffer.width, textureImage.buffer.height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
 			
 			#end
 			
@@ -1099,7 +1135,7 @@ class BitmapData implements IBitmapDrawable {
 	
 	public function perlinNoise (baseX:Float, baseY:Float, numOctaves:UInt, randomSeed:Int, stitch:Bool, fractalNoise:Bool, channelOptions:UInt = 7, grayScale:Bool = false, offsets:Array<Point> = null):Void {
 		
-		openfl.Lib.notImplemented ("BitmapData.perlinNoise");
+		openfl.Lib.notImplemented ();
 		
 	}
 	
@@ -1290,7 +1326,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			var pattern = CairoPattern.createForSurface (surface);
 			
-			if (cairo.antialias == NONE) {
+			if (!renderSession.allowSmoothing || cairo.antialias == NONE) {
 				
 				pattern.filter = CairoFilter.NEAREST;
 				

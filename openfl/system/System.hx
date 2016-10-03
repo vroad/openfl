@@ -42,14 +42,14 @@ import cpp.vm.Gc;
 	
 	public static function pause ():Void {
 		
-		openfl.Lib.notImplemented ("System.pause");
+		openfl.Lib.notImplemented ();
 		
 	}
 	
 	
 	public static function resume ():Void {
 		
-		openfl.Lib.notImplemented ("System.resume");
+		openfl.Lib.notImplemented ();
 		
 	}
 	
@@ -76,6 +76,8 @@ import cpp.vm.Gc;
 		return untyped __global__.__hxcpp_gc_used_bytes ();
 		#elseif (js && html5)
 		return untyped __js__ ("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
+		#else
+		return 0;
 		#elseif nodejs
 		return untyped __process.memoryUsage().heapTotal;
 		#else

@@ -16,12 +16,15 @@ class AbstractRenderer {
 	public var viewport:Rectangle;
 	
 	private var renderSession:RenderSession;
+	private var stage:Stage;
 	
 	
-	private function new (width:Int, height:Int) {
+	private function new (stage:Stage) {
 		
-		this.width = width;
-		this.height = height;
+		this.stage = stage;
+		
+		width = stage.stageWidth;
+		height = stage.stageHeight;
 		
 	}
 	
@@ -32,32 +35,32 @@ class AbstractRenderer {
 	}
 	
 	
-	public function init (stage:Stage):Void {
+	public function clear ():Void {
 		
 		
 		
 	}
 	
 	
-	public function render (stage:Stage):Void {
+	public function render ():Void {
 		
 		
 		
 	}
 	
 	
-	public function renderShape (shape:Shape):Void {
-		
-		
-		
-	}
+	//public function renderShape (shape:Shape):Void {
+		//
+		//
+		//
+	//}
 	
 	
-	public function setViewport (x:Int, y:Int, width:Int, height:Int):Void {
-		
-		
-		
-	}
+	//public function setViewport (x:Int, y:Int, width:Int, height:Int):Void {
+		//
+		//
+		//
+	//}
 	
 	
 	public function resize (width:Int, height:Int):Void {

@@ -441,7 +441,7 @@ import js.html.CanvasRenderingContext2D;
 	
 	public function drawRoundRectComplex (x:Float, y:Float, width:Float, height:Float, topLeftRadius:Float, topRightRadius:Float, bottomLeftRadius:Float, bottomRightRadius:Float):Void {
 		
-		openfl.Lib.notImplemented ("Graphics.drawRoundRectComplex");
+		openfl.Lib.notImplemented ();
 		
 	}
 	
@@ -867,7 +867,7 @@ import js.html.CanvasRenderingContext2D;
 		__worldTransform.d = 1 / __renderTransform.d;
 		__worldTransform.tx = __bounds.x;
 		__worldTransform.ty = __bounds.y;
-		__worldTransform.concat (__owner.__worldTransform);
+		__worldTransform.concat (__owner.__renderTransform);
 		
 	}
 	

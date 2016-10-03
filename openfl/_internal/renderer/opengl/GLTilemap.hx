@@ -14,9 +14,13 @@ import openfl.geom.Rectangle;
 @:access(openfl.display.Tilemap)
 @:access(openfl.display.Tileset)
 @:access(openfl.display.Tile)
+@:access(openfl.geom.Rectangle)
 
 
 class GLTilemap {
+	
+	
+	private static var __skippedTiles = new Map<Int, Bool> ();
 	
 	
 	public static function render (tilemap:Tilemap, renderSession:RenderSession):Void {
@@ -40,10 +44,14 @@ class GLTilemap {
 		renderSession.shaderManager.setShader (shader);
 		renderSession.maskManager.pushObject (tilemap);
 		
+		var rect = Rectangle.__temp;
+		rect.setTo (0, 0, tilemap.__width, tilemap.__height);
+		renderSession.maskManager.pushRect (rect, tilemap.__renderTransform);
+		
 		var renderer:GLRenderer = cast renderSession.renderer;
 		
 		gl.enableVertexAttribArray (shader.data.aAlpha.index);
-		gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (tilemap.__worldTransform));
+		gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (tilemap.__renderTransform));
 		
 		var defaultTileset = tilemap.tileset;
 		var worldAlpha = tilemap.__worldAlpha;
@@ -116,24 +124,44 @@ class GLTilemap {
 		
 		gl.bindBuffer (gl.ARRAY_BUFFER, tilemap.__buffer);
 		
+		var drawCount = 0;
+		
 		for (i in 0...count) {
+			
+			offset = i * 30;
 			
 			tile = tiles[i];
 			
 			alpha = tile.alpha;
 			visible = tile.visible;
 			
-			if (!visible || alpha <= 0) continue;
+			if (!visible || alpha <= 0) {
+				
+				__skipTile (tile, i, offset, bufferData);
+				continue;
+				
+			}
 			
 			tileset = (tile.tileset != null) ? tile.tileset : defaultTileset;
 			
-			if (tileset == null) continue;
+			if (tileset == null) {
+				
+				__skipTile (tile, i, offset, bufferData);
+				continue;
+				
+			}
 			
 			tileData = tileset.__data[tile.id];
+			
+			if (tileData == null) {
+				
+				__skipTile (tile, i, offset, bufferData);
+				continue;
+				
+			}
+			
 			tileWidth = tileData.width;
 			tileHeight = tileData.height;
-			
-			offset = i * 30;
 			
 			// TODO: Handle all cases where tileset may change for the tile?
 			
@@ -191,6 +219,10 @@ class GLTilemap {
 			bufferData[offset + 25] = x4;
 			bufferData[offset + 26] = y4;
 			
+			drawCount = i;
+			
+			__skippedTiles.set (i, false);
+			
 		}
 		
 		gl.bufferData (gl.ARRAY_BUFFER, bufferData, gl.DYNAMIC_DRAW);
@@ -199,20 +231,20 @@ class GLTilemap {
 		gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
 		gl.vertexAttribPointer (shader.data.aAlpha.index, 1, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
 		
+		var smoothing = (renderSession.allowSmoothing && tilemap.smoothing);
 		var cacheBitmapData = null;
 		var lastIndex = 0;
 		
-		for (i in 0...count) {
+		for (i in 0...(drawCount + 1)) {
 			
-			tile = tiles[i];
-			tileset = (tile.tileset != null) ? tile.tileset : defaultTileset;
-			
-			if (tileset == null) {
+			if (__skippedTiles.get (i)) {
 				
-				cacheBitmapData = null;
 				continue;
 				
 			}
+			
+			tile = tiles[i];
+			tileset = (tile.tileset != null) ? tile.tileset : defaultTileset;
 			
 			if (tileset.bitmapData != cacheBitmapData) {
 				
@@ -220,7 +252,7 @@ class GLTilemap {
 					
 					gl.bindTexture (gl.TEXTURE_2D, cacheBitmapData.getTexture (gl));
 					
-					if (tilemap.smoothing /*|| tilemap.stage.__displayMatrix.a != 1 || tilemap.stage.__displayMatrix.d != 1*/) {
+					if (smoothing) {
 						
 						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 						gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -241,11 +273,11 @@ class GLTilemap {
 				
 			}
 			
-			if (i == count - 1 && tileset.bitmapData != null) {
+			if (i == drawCount && tileset.bitmapData != null) {
 				
 				gl.bindTexture (gl.TEXTURE_2D, tileset.bitmapData.getTexture (gl));
 				
-				if (tilemap.smoothing /*|| tilemap.stage.__displayMatrix.a != 1 || tilemap.stage.__displayMatrix.d != 1*/) {
+				if (smoothing) {
 					
 					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 					gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -267,7 +299,25 @@ class GLTilemap {
 		
 		tilemap.__dirty = false;
 		tilemap.__cacheAlpha = worldAlpha;
+		renderSession.maskManager.popRect ();
 		renderSession.maskManager.popObject (tilemap);
+		
+	}
+	
+	
+	private static function __skipTile (tile:Tile, i:Int, tileOffset:Int, bufferData:Float32Array):Void {
+		
+		var tileOffset = i * 30;
+		
+		bufferData[tileOffset + 4] = 0;
+		bufferData[tileOffset + 9] = 0;
+		bufferData[tileOffset + 14] = 0;
+		bufferData[tileOffset + 19] = 0;
+		bufferData[tileOffset + 24] = 0;
+		bufferData[tileOffset + 29] = 0;
+		
+		__skippedTiles.set (i, true);
+		tile.__alphaDirty = true;
 		
 	}
 	
@@ -291,6 +341,9 @@ class GLTilemap {
 	private static function __updateTileUV (tile:Tile, tileset:Tileset, tileOffset:Int, bufferData:Float32Array):Void {
 		
 		var tileData = tileset.__data[tile.id];
+		
+		if (tileData == null) return;
+		
 		var x = tileData.__uvX;
 		var y = tileData.__uvY;
 		var x2 = tileData.__uvWidth;

@@ -15,9 +15,9 @@ class CanvasRenderer extends AbstractRenderer {
 	private var context:CanvasRenderContext;
 	
 	
-	public function new (width:Int, height:Int, context:CanvasRenderContext) {
+	public function new (stage:Stage, context:CanvasRenderContext) {
 		
-		super (width, height);
+		super (stage);
 		
 		this.context = context;
 		
@@ -32,7 +32,9 @@ class CanvasRenderer extends AbstractRenderer {
 	}
 	
 	
-	public override function render (stage:Stage):Void {
+	public override function render ():Void {
+		
+		renderSession.allowSmoothing = (stage.quality != LOW);
 		
 		context.setTransform (1, 0, 0, 1, 0, 0);
 		context.globalAlpha = 1;

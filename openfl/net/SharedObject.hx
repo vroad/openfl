@@ -93,7 +93,7 @@ class SharedObject extends EventDispatcher {
 	
 	public function connect (myConnection:NetConnection, params:String = null):Void {
 		
-		openfl.Lib.notImplemented ("SharedObject.connect");
+		openfl.Lib.notImplemented ();
 		
 	}
 	
@@ -235,7 +235,7 @@ class SharedObject extends EventDispatcher {
 	
 	public static function getRemote (name:String, remotePath:String = null, persistence:Dynamic = false, secure:Bool = false):SharedObject {
 		
-		openfl.Lib.notImplemented ("SharedObject.getRemote");
+		openfl.Lib.notImplemented ();
 		
 		return null;
 		
@@ -244,7 +244,7 @@ class SharedObject extends EventDispatcher {
 	
 	public function send (arguments:Array<Dynamic>):Void {
 		
-		openfl.Lib.notImplemented ("SharedObject.send");
+		openfl.Lib.notImplemented ();
 		
 	}
 	

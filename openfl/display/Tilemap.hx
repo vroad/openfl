@@ -56,6 +56,7 @@ class Tilemap extends #if !flash DisplayObject #else Bitmap implements IDisplayO
 		__height = height;
 		#else
 		bitmapData = new BitmapData (width, height, true, 0);
+		this.smoothing = smoothing;
 		FlashRenderer.register (this);
 		#end
 		
@@ -184,10 +185,10 @@ class Tilemap extends #if !flash DisplayObject #else Bitmap implements IDisplayO
 		if (!hitObject.visible || __isMask) return false;
 		if (mask != null && !mask.__hitTestMask (x, y)) return false;
 		
-		__getWorldTransform ();
+		__getRenderTransform ();
 		
-		var px = __worldTransform.__transformInverseX (x, y);
-		var py = __worldTransform.__transformInverseY (x, y);
+		var px = __renderTransform.__transformInverseX (x, y);
+		var py = __renderTransform.__transformInverseY (x, y);
 		
 		if (px > 0 && py > 0 && px <= __width && py <= __height) {
 			
@@ -259,11 +260,25 @@ class Tilemap extends #if !flash DisplayObject #else Bitmap implements IDisplayO
 		return __height;
 		
 	}
+	#end
 	
 	
+	#if !flash
 	private override function set_height (value:Float):Float {
 		
 		return __height = Std.int (value);
+		
+	}
+	#else
+	@:setter(height) private function set_height (value:Float):Void {
+		
+		if (value != bitmapData.height) {
+			
+			var cacheSmoothing = smoothing;
+			bitmapData = new BitmapData (bitmapData.width, Std.int (value), true, 0);
+			smoothing = cacheSmoothing;
+			
+		}
 		
 	}
 	#end
@@ -283,11 +298,25 @@ class Tilemap extends #if !flash DisplayObject #else Bitmap implements IDisplayO
 		return __width;
 		
 	}
+	#end
 	
 	
+	#if !flash
 	private override function set_width (value:Float):Float {
 		
 		return __width = Std.int (value);
+		
+	}
+	#else
+	@:setter(width) private function set_width (value:Float):Void {
+		
+		if (value != bitmapData.width) {
+			
+			var cacheSmoothing = smoothing;
+			bitmapData = new BitmapData (Std.int (value), bitmapData.height, true, 0);
+			smoothing = cacheSmoothing;
+			
+		}
 		
 	}
 	#end
