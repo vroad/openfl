@@ -657,8 +657,9 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (this.window == null || this.window != window) return;
 		
-		__cacheFocus = focus;
+		var currentFocus = focus;
 		focus = null;
+		__cacheFocus = currentFocus;
 		
 	}
 	
@@ -1235,14 +1236,20 @@ class Stage extends DisplayObjectContainer implements IModule {
 		var y = __mouseY;
 		
 		var stack = [];
+		var target:InteractiveObject = null;
 		
-		if (!__hitTest (x, y, false, stack, true, this)) {
+		if (__hitTest (__mouseX, __mouseY, true, stack, true, this)) {
 			
+			target = cast stack[stack.length - 1];
+			
+		} else {
+			
+			target = this;
 			stack = [ this ];
 			
 		}
 		
-		var target:InteractiveObject = cast stack[stack.length - 1];
+		if (target == null) target = this;
 		var targetPoint = new Point (x, y);
 		__displayMatrix.__transformInversePoint (targetPoint);
 		var delta = Std.int (deltaY);
@@ -1553,24 +1560,25 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 			var oldFocus = __focus;
 			__focus = value;
+			__cacheFocus = value;
 			
 			if (oldFocus != null) {
 				
 				var event = new FocusEvent (FocusEvent.FOCUS_OUT, true, false, __focus, false, 0);
-				__stack = [];
-				oldFocus.__getInteractive (__stack);
-				__stack.reverse ();
-				__fireEvent (event, __stack);
+				var stack = new Array <DisplayObject> ();
+				oldFocus.__getInteractive (stack);
+				stack.reverse ();
+				__fireEvent (event, stack);
 				
 			}
 			
 			if (__focus != null) {
 				
 				var event = new FocusEvent (FocusEvent.FOCUS_IN, true, false, oldFocus, false, 0);
-				__stack = [];
-				value.__getInteractive (__stack);
-				__stack.reverse ();
-				__fireEvent (event, __stack);
+				var stack = new Array <DisplayObject> ();
+				value.__getInteractive (stack);
+				stack.reverse ();
+				__fireEvent (event, stack);
 				
 			}
 			

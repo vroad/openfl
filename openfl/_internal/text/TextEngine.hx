@@ -63,7 +63,6 @@ class TextEngine {
 	public var bottomScrollV (default, null):Int;
 	public var bounds:Rectangle;
 	public var caretIndex:Int;
-	public var displayAsPassword:Bool;
 	public var embedFonts:Bool;
 	public var gridFitType:GridFitType;
 	public var height:Float;
@@ -129,7 +128,6 @@ class TextEngine {
 		
 		type = TextFieldType.DYNAMIC;
 		autoSize = TextFieldAutoSize.NONE;
-		displayAsPassword = false;
 		embedFonts = false;
 		selectable = true;
 		borderColor = 0x000000;
@@ -199,6 +197,43 @@ class TextEngine {
 		
 		bounds.width = width + padding;
 		bounds.height = height + padding;
+		
+	}
+	
+	
+	public static function getFormatHeight (format:TextFormat):Float {
+		
+		var ascent, descent, leading;
+		
+		#if (js && html5)
+		
+		__context.font = getFont (format);
+		
+		ascent = format.size;
+		descent = format.size * 0.185;
+		leading = format.leading;
+		
+		#elseif (lime_cffi)
+		
+		var font = getFontInstance (format);
+		
+		if (font != null) {
+			
+			ascent = (font.ascender / font.unitsPerEM) * format.size;
+			descent = Math.abs ((font.descender / font.unitsPerEM) * format.size);
+			leading = format.leading;
+			
+		} else {
+			
+			ascent = format.size;
+			descent = format.size * 0.185;
+			leading = format.leading;
+			
+		}
+		
+		#end
+		
+		return ascent + descent + leading;
 		
 	}
 	

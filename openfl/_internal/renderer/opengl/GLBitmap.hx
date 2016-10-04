@@ -5,11 +5,11 @@ import lime.graphics.opengl.GLES20;
 import lime.utils.Float32Array;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.Bitmap;
-import openfl.filters.ShaderFilter;
 
 @:access(openfl.display.Bitmap)
 @:access(openfl.display.BitmapData)
 @:access(openfl.display.Stage)
+@:access(openfl.filters.BitmapFilter)
 
 
 class GLBitmap {
@@ -23,26 +23,14 @@ class GLBitmap {
 		
 		if (bitmap.bitmapData != null && bitmap.bitmapData.__isValid) {
 			
-			var shader;
-			
-			if (bitmap.__filters != null && Std.is (bitmap.__filters[0], ShaderFilter)) {
-				
-				shader = cast (bitmap.__filters[0], ShaderFilter).shader;
-				
-			} else {
-				
-				shader = renderSession.shaderManager.defaultShader;
-				
-			}
-			
 			renderSession.blendModeManager.setBlendMode (bitmap.blendMode);
-			renderSession.shaderManager.setShader (shader);
+			renderSession.filterManager.pushObject (bitmap);
 			renderSession.maskManager.pushObject (bitmap);
 			
 			var renderer:GLRenderer = cast renderSession.renderer;
+			var shader = renderSession.shaderManager.currentShader;
 			
-			gl.enableVertexAttribArray (shader.data.aAlpha.index);
-			gl.uniformMatrix4fv (shader.data.uMatrix.index, false, renderer.getMatrix (bitmap.__renderTransform));
+			gl.uniformMatrix4fv (shader.data.uMatrix.getUniformLocation (), false, renderer.getMatrix (bitmap.__renderTransform));
 			
 			gl.bindTexture (GLES20.TEXTURE_2D, bitmap.bitmapData.getTexture (gl));
 			
@@ -59,13 +47,14 @@ class GLBitmap {
 			}
 			
 			gl.bindBuffer (GLES20.ARRAY_BUFFER, bitmap.bitmapData.getBuffer (gl, bitmap.__worldAlpha));
-			gl.vertexAttribPointer (shader.data.aPosition.index, 3, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-			gl.vertexAttribPointer (shader.data.aTexCoord.index, 2, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-			gl.vertexAttribPointer (shader.data.aAlpha.index, 1, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+			gl.vertexAttribPointer (shader.data.aPosition.getAttributeLocation (), 3, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
+			gl.vertexAttribPointer (shader.data.aTexCoord.getAttributeLocation (), 2, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+			gl.vertexAttribPointer (shader.data.aAlpha.getAttributeLocation (), 1, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
 			
 			gl.drawArrays (GLES20.TRIANGLE_STRIP, 0, 4);
 			
 			renderSession.maskManager.popObject (bitmap);
+			renderSession.filterManager.popObject (bitmap);
 			
 		}
 		

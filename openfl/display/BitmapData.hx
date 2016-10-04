@@ -51,6 +51,7 @@ import js.Browser;
 @:access(lime.math.Rectangle)
 @:access(openfl.display.DisplayObject)
 @:access(openfl.display.Graphics)
+@:access(openfl.filters.BitmapFilter)
 @:access(openfl.geom.ColorTransform)
 @:access(openfl.geom.Matrix)
 @:access(openfl.geom.Point)
@@ -489,10 +490,10 @@ class BitmapData implements IBitmapDrawable {
 		}
 		
 		var matrixCache = source.__worldTransform;
-		source.__updateTransforms(matrix != null ? matrix : new Matrix ());
+		source.__updateTransforms (matrix != null ? matrix : new Matrix ());
 		source.__updateChildren (false);
 		source.__renderCairo (renderSession);
-		source.__updateTransforms(matrixCache);
+		source.__updateTransforms (matrixCache);
 		source.__updateChildren (true);
 		
 		if (clipRect != null) {
@@ -858,7 +859,7 @@ class BitmapData implements IBitmapDrawable {
 				
 			}
 			
-			gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, textureImage.buffer.width, textureImage.buffer.height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
+			gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, textureImage.buffer.width, textureImage.buffer.height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
 			
 			#end
 			

@@ -39,6 +39,7 @@ class GLRenderer extends AbstractRenderer {
 		renderSession.roundPixels = true;
 		renderSession.renderer = this;
 		renderSession.blendModeManager = new GLBlendModeManager (gl);
+		renderSession.filterManager = new GLFilterManager (renderSession);
 		renderSession.shaderManager = new GLShaderManager (gl);
 		renderSession.maskManager = new GLMaskManager (renderSession);
 		
@@ -85,6 +86,13 @@ class GLRenderer extends AbstractRenderer {
 		var _matrix = Matrix.__temp;
 		_matrix.copyFrom (transform);
 		_matrix.concat (displayMatrix);
+		
+		if (renderSession.roundPixels) {
+			
+			_matrix.tx = Math.round (_matrix.tx);
+			_matrix.ty = Math.round (_matrix.ty);
+			
+		}
 		
 		matrix.identity ();
 		matrix[0] = _matrix.a;

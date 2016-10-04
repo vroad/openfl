@@ -1,6 +1,7 @@
 package openfl._internal.renderer.opengl;
 
 
+import lime.graphics.opengl.GLES20;
 import lime.math.color.ARGB;
 import openfl._internal.renderer.RenderSession;
 import openfl.display.DisplayObject;
@@ -31,7 +32,7 @@ class GLDisplayObject {
 			
 			var color:ARGB = (displayObject.opaqueBackground:ARGB);
 			gl.clearColor (color.r / 0xFF, color.g / 0xFF, color.b / 0xFF, 1);
-			gl.clear (gl.COLOR_BUFFER_BIT);
+			gl.clear (GLES20.COLOR_BUFFER_BIT);
 			
 			renderSession.maskManager.popRect ();
 			renderSession.maskManager.popObject (displayObject);
