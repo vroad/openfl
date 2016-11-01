@@ -15,7 +15,6 @@ import openfl.Lib;
 #if (js && html5)
 import js.html.CanvasElement;
 import js.Browser;
-import js.html.webgl.ContextAttributes;
 #end
 
 @:access(lime.graphics.opengl.GL)
@@ -32,10 +31,8 @@ class OpenGLView extends DirectRenderer {
 	private var __added:Bool;
 	private var __initialized:Bool;
 	
-	public var gl (get, never):GLRenderContext;
 	
-	
-	public function new (depth:Bool = true, stencil:Bool = false) {
+	public function new () {
 		
 		super ("OpenGLView");
 		
@@ -47,9 +44,10 @@ class OpenGLView extends DirectRenderer {
 			__canvas.width = Lib.current.stage.stageWidth;
 			__canvas.height = Lib.current.stage.stageHeight;
 			
-			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha: false, antialias:false, depth:depth, stencil:stencil};
-			__context = cast __canvas.getContextWebGL(attributes);
+			var window = Lib.current.stage.window;
 			
+			var options = {
+				
 				alpha: (Reflect.hasField (window.config, "background") && window.config.background == null) ? true : false,
 				antialias: Reflect.hasField (window.config, "antialiasing") ? window.config.antialiasing > 0 : false,
 				depth: Reflect.hasField (window.config, "depthBuffer") ? window.config.depthBuffer : true,
@@ -66,7 +64,6 @@ class OpenGLView extends DirectRenderer {
 			#end
 			
 			GL.context = cast __context;
-			Lib.current.stage.addEventListener(Event.RESIZE, __onResize);
 			__initialized = true;
 			
 		}
@@ -206,42 +203,9 @@ class OpenGLView extends DirectRenderer {
 	
 	
 	
-	#if html5
-	@:noCompletion private function __onResize (e:Event):Void {
-		
-		__canvas.width = Lib.current.stage.stageWidth;
-		__canvas.height = Lib.current.stage.stageHeight;
-		
-	}
-	#end
-	
-	
-	
-	
 	// Getters & Setters
 	
 	
-	
-	
-	private function get_gl ():GLRenderContext {
-		
-		#if (js && html5)
-		
-		return cast __context;
-		
-		#elseif native
-		
-		// TODO: support multiple contexts
-		return GL.context;
-		
-		#else
-		
-		return null;
-		
-		#end
-		
-		
-	}
 	
 	
 	private static function get_isSupported ():Bool {
@@ -269,7 +233,13 @@ class OpenGLView extends DirectRenderer {
 		} else {
 			
 			var canvas:CanvasElement = cast Browser.document.createElement ("canvas");
-			var context = canvas.getContextWebGL();
+			var context = cast canvas.getContext ("webgl");
+			
+			if (context == null) {
+				
+				context = cast canvas.getContext ("experimental-webgl");
+				
+			}
 			
 			return (context != null);
 			
