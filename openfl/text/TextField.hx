@@ -37,6 +37,19 @@ class TextField extends InteractiveObject {
 	
 	
 	private static var __defaultTextFormat:TextFormat;
+	private static var __regexAlign = ~/align=("([^"]+)"|'([^']+)')/i;
+	private static var __regexColor = ~/color=("#([^"]+)"|'#([^']+)')/i;
+	private static var __regexBlockIndent = ~/blockindent=("([^"]+)"|'([^']+)')/i;
+	private static var __regexBreakTag = ~/<br\s*\/?>/gi;
+	private static var __regexEntities = [ ~/&quot;/g, ~/&apos;/g, ~/&amp;/g, ~/&lt;/g, ~/&gt;/g ];
+	private static var __regexFace = ~/face=("([^"]+)"|'([^']+)')/i;
+	private static var __regexHTMLTag = ~/<.*?>/g;
+	private static var __regexIndent = ~/ indent=("([^"]+)"|'([^']+)')/i;
+	private static var __regexLeading = ~/leading=("([^"]+)"|'([^']+)')/i;
+	private static var __regexLeftMargin = ~/leftmargin=("([^"]+)"|'([^']+)')/i;
+	private static var __regexRightMargin = ~/rightmargin=("([^"]+)"|'([^']+)')/i;
+	private static var __regexTabStops = ~/tabstops=("([^"]+)"|'([^']+)')/i;
+	private static var __regexSize = ~/size=("([^"]+)"|'([^']+)')/i;
 	
 	public var antiAliasType (get, set):AntiAliasType;
 	public var autoSize (get, set):TextFieldAutoSize;
@@ -544,6 +557,13 @@ class TextField extends InteractiveObject {
 	}
 	
 	
+	private function __getAttributeMatch (regex:EReg):String {
+		
+		return regex.matched (2) != null ? regex.matched (2) : regex.matched (3);
+		
+	}
+	
+	
 	private override function __getBounds (rect:Rectangle, matrix:Matrix):Void {
 		
 		__updateLayout ();
@@ -841,29 +861,12 @@ class TextField extends InteractiveObject {
 		
 		if (__layoutDirty) {
 			
+			var cacheWidth = __textEngine.width;
+			var cacheHeight = __textEngine.height;
+			
 			__textEngine.update ();
 			
 			if (__textEngine.autoSize != NONE) {
-				
-				var cacheWidth = __textEngine.width;
-				var cacheHeight = __textEngine.height;
-				
-				switch (__textEngine.autoSize) {
-					
-					case LEFT, RIGHT, CENTER:
-						
-						if (!__textEngine.wordWrap) {
-							
-							__textEngine.width = __textEngine.textWidth + 4;
-							
-						}
-						
-						__textEngine.height = __textEngine.textHeight + 4;
-					
-					default:
-						
-					
-				}
 				
 				if (__textEngine.width != cacheWidth) {
 					
@@ -899,6 +902,12 @@ class TextField extends InteractiveObject {
 	private function __updateText (value:String):Void {
 		
 		__text = value;
+		
+		if (__text.length < __caretIndex) {
+			
+			__selectionIndex = __caretIndex = __text.length;
+			
+		}
 		
 		if (!__displayAsPassword) {
 			
@@ -1195,29 +1204,10 @@ class TextField extends InteractiveObject {
 		
 		if (#if (js && html5) #if dom false && #end __div == null #else true #end) {
 			
-			inline function decodeHTMLEntities (text) {
-				
-				var entities = [
-					[ 'quot', '"' ],
-					[ 'apos', '\'' ],
-					[ 'amp', '&' ],
-					[ 'lt', '<' ],
-					[ 'gt', '>' ]
-				];
-				
-				for (i in 0...entities.length) {
-					
-					text = new EReg ('&' + entities[i][0] + ';', 'g').replace (text, entities[i][1]);
-					
-				}
-				
-				return text;
-				
-			}
-			
-			value = new EReg ("<br>", "g").replace (value, "\n");
-			value = new EReg ("<br/>", "g").replace (value, "\n");
-			value = decodeHTMLEntities (value);
+			value = __regexBreakTag.replace (value, "\n");
+			value = __regexEntities[0].replace (value, "\"");
+			value = __regexEntities[1].replace (value, "'");
+			value = __regexEntities[2].replace (value, "&");
 			
 			// crude solution
 			
@@ -1225,13 +1215,16 @@ class TextField extends InteractiveObject {
 			
 			if (segments.length == 1) {
 				
-				value = new EReg ("<.*?>", "g").replace (value, "");
+				value = __regexHTMLTag.replace (value, "");
 				
 				if (__textEngine.textFormatRanges.length > 1) {
 					
 					__textEngine.textFormatRanges.splice (1, __textEngine.textFormatRanges.length - 1);
 					
 				}
+				
+				value = __regexEntities[3].replace (value, "<");
+				value = __regexEntities[4].replace (value, ">");
 				
 				var range = __textEngine.textFormatRanges[0];
 				range.format = __textFormat;
@@ -1247,10 +1240,20 @@ class TextField extends InteractiveObject {
 				__textEngine.textFormatRanges.splice (0, __textEngine.textFormatRanges.length);
 				
 				value = "";
+				var segment;
 				
-				var formatStack:Array<TextFormat> = [__textFormat.clone()];
+				for (i in 0...segments.length) {
+					
+					segment = segments[i];
+					segment = __regexEntities[3].replace (segment, "<");
+					segment = __regexEntities[4].replace (segment, ">");
+					segments[i] = segment;
+					
+				}
+				
+				var formatStack = [ __textFormat.clone () ];
 				var sub:String;
-				var noLineBreak:Bool = false;
+				var noLineBreak = false;
 				
 				for (segment in segments) {
 					
@@ -1260,7 +1263,7 @@ class TextField extends InteractiveObject {
 					var tagEndIndex = segment.indexOf (">");
 					var start = tagEndIndex + 1;
 					var spaceIndex = segment.indexOf (" ");
-					var tagName:String = segment.substring (isClosingTag ? 1 : 0, spaceIndex > -1 && spaceIndex < tagEndIndex ? spaceIndex : tagEndIndex);
+					var tagName = segment.substring (isClosingTag ? 1 : 0, spaceIndex > -1 && spaceIndex < tagEndIndex ? spaceIndex : tagEndIndex);
 					var format:TextFormat;
 					
 					if (isClosingTag) {
@@ -1300,37 +1303,29 @@ class TextField extends InteractiveObject {
 										
 									}
 									
-									var alignEreg = ~/align="([^"]+)/i;
-									
-									if (alignEreg.match (segment)) {
+									if (__regexAlign.match (segment)) {
 										
-										format.align = alignEreg.matched (1).toLowerCase ();
+										format.align = __getAttributeMatch (__regexAlign).toLowerCase ();
 										
 									}
 								
 								case "font":
 									
-									var faceEreg = ~/face="([^"]+)/i;
-									
-									if (faceEreg.match (segment)) {
+									if (__regexFace.match (segment)) {
 										
-										format.font = faceEreg.matched (1);
+										format.font = __getAttributeMatch (__regexFace);
 										
 									}
 									
-									var colorEreg = ~/color="#([^"]+)/i;
-									
-									if (colorEreg.match (segment)) {
+									if (__regexColor.match (segment)) {
 										
-										format.color = Std.parseInt ("0x" + colorEreg.matched (1));
+										format.color = Std.parseInt ("0x" + __getAttributeMatch (__regexColor));
 										
 									}
 									
-									var sizeEreg = ~/size="([^"]+)/i;
-									
-									if (sizeEreg.match (segment)) {
+									if (__regexSize.match (segment)) {
 										
-										format.size = Std.parseInt (sizeEreg.matched (1));
+										format.size = Std.parseInt (__getAttributeMatch (__regexSize));
 										
 									}
 								
@@ -1345,6 +1340,53 @@ class TextField extends InteractiveObject {
 								case "i", "em":
 									
 									format.italic = true;
+								
+								case "textformat":
+									
+									if (__regexBlockIndent.match (segment)) {
+										
+										format.blockIndent = Std.parseInt (__getAttributeMatch (__regexBlockIndent));
+										
+									}
+									
+									if (__regexIndent.match (segment)) {
+										
+										format.indent = Std.parseInt (__getAttributeMatch (__regexIndent));
+										
+									}
+									
+									if (__regexLeading.match (segment)) {
+										
+										format.leading = Std.parseInt (__getAttributeMatch (__regexLeading));
+										
+									}
+									
+									if (__regexLeftMargin.match (segment)) {
+										
+										format.leftMargin = Std.parseInt (__getAttributeMatch (__regexLeftMargin));
+										
+									}
+									
+									if (__regexRightMargin.match (segment)) {
+										
+										format.rightMargin = Std.parseInt (__getAttributeMatch (__regexRightMargin));
+										
+									}
+									
+									if (__regexTabStops.match (segment)) {
+										
+										var values = __getAttributeMatch (__regexTabStops).split (" ");
+										var tabStops = [];
+										
+										for (stop in values) {
+											
+											tabStops.push (Std.parseInt (stop));
+											
+										}
+										
+										format.tabStops = tabStops;
+										
+									}
 								
 							}
 							
@@ -1501,6 +1543,8 @@ class TextField extends InteractiveObject {
 	
 	private function set_scrollH (value:Int):Int {
 		
+		__updateLayout ();
+		
 		if (value > __textEngine.maxScrollH) value = __textEngine.maxScrollH;
 		if (value < 0) value = 0;
 		
@@ -1523,6 +1567,8 @@ class TextField extends InteractiveObject {
 	
 	
 	private function set_scrollV (value:Int):Int {
+		
+		__updateLayout ();
 		
 		if (value > __textEngine.maxScrollV) value = __textEngine.maxScrollV;
 		if (value < 1) value = 1;
@@ -1873,6 +1919,11 @@ class TextField extends InteractiveObject {
 		
 		switch (key) {
 			
+			case RETURN, NUMPAD_ENTER:
+
+				replaceSelectedText ("\n");
+				dispatchEvent (new Event (Event.CHANGE, true));
+
 			case BACKSPACE:
 				
 				if (__selectionIndex == __caretIndex && __caretIndex > 0) {

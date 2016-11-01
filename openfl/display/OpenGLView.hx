@@ -50,7 +50,18 @@ class OpenGLView extends DirectRenderer {
 			var attributes:ContextAttributes = {alpha:false, premultipliedAlpha: false, antialias:false, depth:depth, stencil:stencil};
 			__context = cast __canvas.getContextWebGL(attributes);
 			
-			#if debug
+				alpha: (Reflect.hasField (window.config, "background") && window.config.background == null) ? true : false,
+				antialias: Reflect.hasField (window.config, "antialiasing") ? window.config.antialiasing > 0 : false,
+				depth: Reflect.hasField (window.config, "depthBuffer") ? window.config.depthBuffer : true,
+				premultipliedAlpha: true,
+				stencil: Reflect.hasField (window.config, "stencilBuffer") ? window.config.stencilBuffer : false,
+				preserveDrawingBuffer: false
+				
+			};
+			
+			__context = cast __canvas.getContextWebGL (options);
+			
+			#if webgl_debug
 			__context = untyped WebGLDebugUtils.makeDebugContext (__context);
 			#end
 			
@@ -112,7 +123,7 @@ class OpenGLView extends DirectRenderer {
 						
 					}
 					
-					#if debug
+					#if webgl_debug
 					__context = untyped WebGLDebugUtils.makeDebugContext (__context);
 					#end
 					

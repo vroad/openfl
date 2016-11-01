@@ -16,6 +16,8 @@ import openfl.errors.TypeError;
 import openfl.events.Event;
 import openfl.events.EventPhase;
 import openfl.events.EventDispatcher;
+import openfl.events.MouseEvent;
+import openfl.events.TouchEvent;
 import openfl.filters.BitmapFilter;
 import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
@@ -176,6 +178,27 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	}
 	
 	
+	public override function dispatchEvent (event:Event):Bool {
+		
+		if (Std.is (event, MouseEvent)) {
+			
+			var mouseEvent:MouseEvent = cast event;
+			mouseEvent.stageX = __getRenderTransform ().__transformX (mouseEvent.localX, mouseEvent.localY);
+			mouseEvent.stageY = __getRenderTransform ().__transformY (mouseEvent.localX, mouseEvent.localY);
+			
+		} else if (Std.is (event, TouchEvent)) {
+			
+			var touchEvent:TouchEvent = cast event;
+			touchEvent.stageX = __getRenderTransform ().__transformX (touchEvent.localX, touchEvent.localY);
+			touchEvent.stageY = __getRenderTransform ().__transformY (touchEvent.localX, touchEvent.localY);
+			
+		}
+		
+		return super.dispatchEvent (event);
+		
+	}
+	
+	
 	public function getBounds (targetCoordinateSpace:DisplayObject):Rectangle {
 		
 		var matrix;
@@ -235,16 +258,15 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 	
 	public function hitTestPoint (x:Float, y:Float, shapeFlag:Bool = false):Bool {
 		
-		if (parent != null) {
+		if (stage != null) {
 			
-			var bounds = new Rectangle ();
-			__getBounds (bounds, __getRenderTransform ());
+			return __hitTest (x, y, shapeFlag, null, false, this);
 			
-			return bounds.containsPoint (new Point (x, y));
+		} else {
+			
+			return false;
 			
 		}
-		
-		return false;
 		
 	}
 	
@@ -307,7 +329,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 			
 			if (event.__isCanceled) {
 				
-				return false;
+				return true;
 				
 			}
 			
@@ -333,7 +355,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if !disa
 		
 		if (event.__isCanceled) {
 			
-			return false;
+			return true;
 			
 		}
 		

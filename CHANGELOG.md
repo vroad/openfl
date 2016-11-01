@@ -1,3 +1,84 @@
+4.4.0 (10/31/2016)
+------------------
+
+* Added initial support for modular HTML5 builds (generates separate openfl.js)
+* Added initial support for VideoTexture in HTML5 Stage3D
+* Added initial high-DPI support for HTML5
+* Added an error when using a non-matching Lime version
+* Updated several fields with typed values for better performance
+* Updated event.target and event.currentTarget to be IEventDispatcher
+* Updated shaders to use premultiplied alpha blend mode by default
+* Improved behavior of non-renderable TextFields
+* Improved support for mipmapping in Stage3D Texture
+* Improved the behavior of graphics.drawTriangles
+* Improved re-entrant behavior in EventDispatcher
+* Improved removeEventListener when called during the same event dispatch
+* Improved premultiplied alpha in Stage3D textures
+* Improved the preloader system (deprecated NMEPreloader)
+* Fixed support for smoothing within sprite.graphics
+* Fixed dead-code-elimination when using a static main entry point
+* Fixed dispatch of Context3D creation error where Stage3D is not supported
+* Fixed sound.length on HTML5
+* Fixed support for using the same listener with multiple event phases
+* Fixed some issues with event bubbling
+* Fixed some issues with TextField caret positioning
+* Fixed BIG_ENDIAN support in ByteArray
+* Fixed use of ColorMatrixFilter on Flash
+* Fixed some issues with -Ddom OpenGL context creation
+
+
+4.3.1 (10/13/2016)
+------------------
+
+* Added basic support for bitmapData.perlinNoise
+* Added initial support for `<textformat>` in TextField htmlText
+* Improved the behavior of premultiplied alpha on HTML5
+* Optimized addChild/addChildAt if child remains at the same depth
+* Optimized conversion of Image to Canvas in some cases
+* Fixed an issue with cached scissor rectangles in Stage3D
+* Fixed htmlText parsing when attributes use single quotes
+* Fixed a rendering issue where changing text format could omit one letter
+* Fixed the default GL min filter value for Stage3D samplers
+* Fixed an GL error caused by switching Stage3D and display list shaders
+
+
+4.3.0 (10/10/2016)
+------------------
+
+* Added support for ColorMatrixFilter and ConvolutionFilter
+* Added support for custom shaders with additional uniforms/samplers
+* Added ByteArray.fromFile and improved conversion from null values
+* Added support for rounding coordinates in the GL renderer
+* Updated Sound to rely only on lime.sound.AudioSource
+* Updated Capabilities.language to use lime.system.Locale
+* Updated HTML5 templates for favicon support
+* Updated Flash web template to enable Stage3D support
+* Improved the behavior of displayAsPassword input text
+* Improved the behavior of Tile rotation
+* Improved Graphics to be more efficient with garbage collection
+* Improved the behavior of touch events
+* Improved use of "-lib openfl" from plain HXML
+* Implemented hitTestPoint with shapeFlag
+* Fixed width and height values when scaleX or scaleY is negative
+* Fixed set of stageX and stageY when dispatching a custom MouseEvent
+* Fixed Tilemap smoothing on Flash
+* Fixed TextField auto-size remaining too small and cropping text
+* Fixed the return value of Multitouch.supportsTouchEvents on macOS
+* Fixed retained references after changing stage.focus
+* Fixed the "target" field of mouse wheel events
+* Fixed unregistration of sound channels when complete
+* Fixed display of TextField caret when no text has been entered yet
+* Fixed support for AGAL shader sampler states
+* Fixed drawTriangles support for HTML5
+* Fixed rendering of Graphics with negative scale values
+* Fixed Assets.loadBytes to always return a lime.app.Future
+* Fixed the behavior of -Dopenfl-disable-graphics-upscaling
+* Fixed Tilemap width/height to reflect the scaled value
+* Fixed some issues with scaled Cairo and Canvas Tilemap rendering
+* Fixed soundChannel.position on native platforms
+* Fixed support for `openfl create <lib>`
+
+
 4.2.0 (09/19/2016)
 ------------------
 
@@ -161,7 +242,7 @@
 ------------------
 
 * Formalized the extern classes more, fixed some Flash behaviors
-* Improved the standard HTML5 template for <window resizable="false" />
+* Improved the standard HTML5 template for `<window resizable="false" />`
 * Fixed the use of binary request data in HTML5 URLLoaders
 * Improved compatibility for ByteArrayData (legacy)
 

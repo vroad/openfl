@@ -10,6 +10,8 @@ import openfl.display.Stage;
 import openfl.geom.Matrix;
 
 @:access(openfl.display.Stage)
+@:access(openfl.display3D.Context3D)
+@:access(openfl.display3D.Program3D)
 @:access(openfl.geom.Matrix)
 
 
@@ -25,6 +27,7 @@ class GLRenderer extends AbstractRenderer {
 	private var matrix:Matrix4;
 	private var offsetX:Int;
 	private var offsetY:Int;
+	private var values:Array<Float>;
 	
 	
 	public function new (stage:Stage, gl:GLRenderContext) {
@@ -33,6 +36,7 @@ class GLRenderer extends AbstractRenderer {
 		
 		this.gl = gl;
 		matrix = new Matrix4 ();
+		values = new Array ();
 		
 		renderSession = new RenderSession ();
 		renderSession.gl = gl;
@@ -68,20 +72,14 @@ class GLRenderer extends AbstractRenderer {
 		
 		for (stage3D in stage.stage3Ds) {
 			
-			if (stage3D.context3D != null) {
-				
-				renderSession.shaderManager.setShader (null);
-				renderSession.blendModeManager.setBlendMode (null);
-				break;
-				
-			}
+			stage3D.__renderGL (stage, renderSession);
 			
 		}
 		
 	}
 	
 	
-	public function getMatrix (transform:Matrix):Matrix4 {
+	public function getMatrix (transform:Matrix):Array<Float> {
 		
 		var _matrix = Matrix.__temp;
 		_matrix.copyFrom (transform);
@@ -103,7 +101,13 @@ class GLRenderer extends AbstractRenderer {
 		matrix[13] = _matrix.ty;
 		matrix.append (projection);
 		
-		return matrix;
+		for (i in 0...16) {
+			
+			values[i] = matrix[i];
+			
+		}
+		
+		return values;
 		
 	}
 	

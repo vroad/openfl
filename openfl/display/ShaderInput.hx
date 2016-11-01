@@ -2,7 +2,10 @@ package openfl.display;
 import lime.graphics.opengl.GLUniformLocation;
 
 
-@:final #if !js @:generic #end  class ShaderInput<T> /*implements Dynamic*/ {
+#if !js @:generic #end
+
+
+@:final class ShaderInput<T> /*implements Dynamic*/ {
 	
 	
 	public var channels (default, null):Int;
@@ -10,6 +13,7 @@ import lime.graphics.opengl.GLUniformLocation;
 	public var index (default, null):ShaderInputIndex;
 	public var input:T;
 	@:noCompletion public var name:String;
+	public var smoothing:Bool;
 	public var width:Int;
 	
 	

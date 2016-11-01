@@ -10,13 +10,14 @@ import openfl._internal.renderer.RenderSession;
 import openfl._internal.stage3D.Context3DStateCache;
 import openfl._internal.stage3D.GLUtils;
 import openfl._internal.stage3D.SamplerState;
+import openfl.display.BitmapData;
 import openfl.display.Stage3D;
-import openfl.display3D.textures.TextureBase;
-import openfl.display3D.textures.Texture;
 import openfl.display3D.textures.CubeTexture;
 import openfl.display3D.textures.RectangleTexture;
+import openfl.display3D.textures.Texture;
+import openfl.display3D.textures.TextureBase;
+import openfl.display3D.textures.VideoTexture;
 import openfl.display3D.Context3DProgramType;
-import openfl.display.BitmapData;
 import openfl.events.EventDispatcher;
 import openfl.errors.Error;
 import openfl.errors.IllegalOperationError;
@@ -43,7 +44,7 @@ import openfl.profiler.Telemetry;
 @:final class Context3D extends EventDispatcher {
 	
 	
-	public static var supportsVideoTexture (default, null):Bool = false;
+	public static var supportsVideoTexture (default, null):Bool = #if (js && html5) true #else false #end;
 	
 	private static inline var MAX_SAMPLERS = 8;
 	private static inline var MAX_ATTRIBUTES = 16;
@@ -271,6 +272,17 @@ import openfl.profiler.Telemetry;
 	public function createVertexBuffer (numVertices:Int, data32PerVertex:Int, bufferUsage:Context3DBufferUsage = STATIC_DRAW):VertexBuffer3D {
 		
 		return new VertexBuffer3D (this, numVertices, data32PerVertex, bufferUsage);
+		
+	}
+	
+	
+	public function createVideoTexture ():VideoTexture {
+		
+		#if (js && html5)
+		return new VideoTexture (this);
+		#else
+		throw new Error ("Video textures are not supported on this platform");
+		#end
 		
 	}
 	
@@ -590,6 +602,7 @@ import openfl.profiler.Telemetry;
 		GLUtils.CheckGLError ();
 		
 		__renderToTexture = null;
+		__scissorRectangle = null;
 		__updateBackbufferViewport ();
 		__updateScissorRectangle ();
 		__updateDepthAndStencilState ();
@@ -719,6 +732,7 @@ import openfl.profiler.Telemetry;
 		}
 		
 		__renderToTexture = texture;
+		__scissorRectangle = null;
 		__rttDepthAndStencil = enableDepthAndStencil;
 		__updateScissorRectangle ();
 		__updateDepthAndStencilState ();
@@ -742,26 +756,26 @@ import openfl.profiler.Telemetry;
 				
 				state.wrapModeS = GL.CLAMP_TO_EDGE;
 				state.wrapModeT = GL.CLAMP_TO_EDGE;
-				
+			
 			case Context3DWrapMode.CLAMP_U_REPEAT_V:
 				
 				state.wrapModeS = GL.CLAMP_TO_EDGE;
 				state.wrapModeT = GL.REPEAT;
-				
+			
 			case Context3DWrapMode.REPEAT:
 				
 				state.wrapModeS = GL.REPEAT;
 				state.wrapModeT = GL.REPEAT;
-				
+			
 			case Context3DWrapMode.REPEAT_U_CLAMP_V:
 				
 				state.wrapModeS = GL.REPEAT;
 				state.wrapModeT = GL.CLAMP_TO_EDGE;
-				
+			
 			default:
 				
 				throw new Error ("wrap bad enum");
-				
+			
 		}
 		
 		switch (filter) {
@@ -769,21 +783,21 @@ import openfl.profiler.Telemetry;
 			case Context3DTextureFilter.LINEAR:
 				
 				state.magFilter = GL.LINEAR;
-				
+			
 			case Context3DTextureFilter.NEAREST:
 				
 				state.magFilter = GL.NEAREST;
-				
+			
 			case Context3DTextureFilter.ANISOTROPIC2X:
-					
-				// TODO
-				state.magFilter = GL.LINEAR;
-				 
-			case Context3DTextureFilter.ANISOTROPIC4X:
-					
-				// TODO
-				state.magFilter = GL.LINEAR;
 				
+				// TODO
+				state.magFilter = GL.LINEAR;
+			
+			case Context3DTextureFilter.ANISOTROPIC4X:
+				
+				// TODO
+				state.magFilter = GL.LINEAR;
+			
 			case Context3DTextureFilter.ANISOTROPIC8X:
 				
 				// TODO
@@ -793,15 +807,15 @@ import openfl.profiler.Telemetry;
 				
 				// TODO
 				state.magFilter = GL.LINEAR;
-				
+			
 			default:
 				
 				throw new Error ("filter bad enum");
-				
+			
 		}
 		
 		switch (mipfilter) {
-						
+			
 			case Context3DMipFilter.MIPLINEAR:
 				
 				state.minFilter = GL.LINEAR_MIPMAP_LINEAR;
@@ -813,11 +827,11 @@ import openfl.profiler.Telemetry;
 			case Context3DMipFilter.MIPNONE:
 				
 				state.minFilter = filter == Context3DTextureFilter.NEAREST ? GL.NEAREST : GL.LINEAR;
-				
+			
 			default:
 				
 				throw new Error ("mipfiter bad enum");
-				
+			
 		}
 		
 	}
@@ -825,7 +839,7 @@ import openfl.profiler.Telemetry;
 	
 	public function setScissorRectangle (rectangle:Rectangle):Void {
 		
-		__scissorRectangle = rectangle;
+		__scissorRectangle = rectangle != null ? rectangle.clone () : null;
 		__updateScissorRectangle ();
 		
 	}
@@ -944,7 +958,7 @@ import openfl.profiler.Telemetry;
 					
 					var target = texture.__textureTarget;
 					
-					GL.bindTexture (target, texture.__textureID);
+					GL.bindTexture (target, texture.__getTexture ());
 					GLUtils.CheckGLError ();
 					
 					var state = __program.__getSamplerState(sampler);

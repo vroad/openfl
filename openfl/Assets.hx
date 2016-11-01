@@ -297,7 +297,6 @@ class Assets {
 			
 		}
 		
-		#if !html5
 		var buffer = LimeAssets.getAudioBuffer (id, false);
 		
 		if (buffer != null) {
@@ -317,15 +316,6 @@ class Assets {
 			return sound;
 			
 		}
-		#else
-		var path = LimeAssets.getPath (id);
-		
-		if (path != null) {
-			
-			return new Sound (new URLRequest (path));
-			
-		}
-		#end
 		
 		#end
 		
@@ -653,7 +643,7 @@ class Assets {
 		
 		var promise = new Promise<Sound> ();
 		
-		LimeAssets.loadAudioBuffer (id, useCache, true).onComplete (function (buffer) {
+		LimeAssets.loadAudioBuffer (id, useCache).onComplete (function (buffer) {
 			
 			if (buffer != null) {
 				
@@ -751,11 +741,9 @@ class Assets {
 		
 		if (useCache == null) useCache = true;
 		
-		#if !html5
-		
 		var promise = new Promise<Sound> ();
 		
-		LimeAssets.loadAudioBuffer (id, useCache, false).onComplete (function (buffer) {
+		LimeAssets.loadAudioBuffer (id, useCache).onComplete (function (buffer) {
 			
 			if (buffer != null) {
 				
@@ -781,12 +769,6 @@ class Assets {
 			
 		}).onError (promise.error).onProgress (promise.progress);
 		return promise.future;
-		
-		#else
-		
-		return new Future<Sound> (function () return getSound (id, useCache));
-		
-		#end
 		
 	}
 	

@@ -69,7 +69,7 @@ class GLBlendModeManager extends AbstractBlendModeManager {
 			default:
 				
 				gl.blendEquation (GLES20.FUNC_ADD);
-				gl.blendFunc (GLES20.SRC_ALPHA, GLES20.ONE_MINUS_SRC_ALPHA);
+				gl.blendFunc (GLES20.ONE, GLES20.ONE_MINUS_SRC_ALPHA);
 			
 		}
 		

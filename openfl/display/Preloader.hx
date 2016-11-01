@@ -1,35 +1,56 @@
 package openfl.display;
 
 
-import haxe.io.Path;
 import lime.app.Preloader in LimePreloader;
 import lime.Assets;
 import openfl.events.Event;
-import openfl.events.IOErrorEvent;
-import openfl.media.Sound;
-import openfl.net.URLRequest;
 import openfl.Lib;
+import openfl.events.IEventDispatcher;
 
 
 class Preloader extends LimePreloader {
 	
 	
-	private var display:Sprite;
+	private var display:Dynamic;
 	private var displayComplete:Bool;
+	private var displayHasInit:Bool;
+	private var displayHasLoaded:Bool;
+	private var displayHasUpdate:Bool;
 	
 	
-	public function new (display:Sprite = null) {
+	public function new (display:Dynamic = null) {
 		
 		super ();
 		
-		if (display != null) {
+		this.display = display;
+		
+	}
+	
+	
+	private function init ():Void {
+		
+		if (!complete && display != null) {
 			
-			this.display = display;
-			Lib.current.addChild (display);
+			var classType = Type.getClass (display);
+			var fields = Type.getInstanceFields (classType);
 			
-			if (Std.is (display, OpenFLPreloader)) {
+			for (field in fields) {
 				
-				cast (display, OpenFLPreloader).onInit ();
+				if (field == "onInit") displayHasInit = true;
+				if (field == "onUpdate") displayHasUpdate = true;
+				if (field == "onLoaded") displayHasLoaded = true;
+				
+			}
+			
+			if (Std.is (display, DisplayObject)) {
+				
+				Lib.current.addChild (display);
+				
+			}
+			
+			if (displayHasInit) {
+				
+				Reflect.callMethod (display, Reflect.field (display, "onInit"), []);
 				
 			}
 			
@@ -40,45 +61,11 @@ class Preloader extends LimePreloader {
 	
 	public override function load (urls:Array<String>, types:Array<AssetType>):Void {
 		
-		#if (js && html5)
-		
-		var sounds = [];
-		var url = null;
-		
-		for (i in 0...urls.length) {
+		if (urls.length > 0) {
 			
-			url = urls[i];
-			
-			switch (types[i]) {
-				
-				case MUSIC, SOUND:
-					
-					var sound = Path.withoutExtension (url);
-					
-					if (!sounds.remove (sound)) {
-						
-						total++;
-						
-					}
-					
-					sounds.push (sound);
-				
-				default:
-				
-			}
+			init ();
 			
 		}
-		
-		for (soundName in sounds) {
-			
-			var sound = new Sound ();
-			sound.addEventListener (Event.COMPLETE, sound_onComplete);
-			sound.addEventListener (IOErrorEvent.IO_ERROR, sound_onIOError);
-			sound.load (new URLRequest (soundName + ".ogg"));
-			
-		}
-		
-		#end
 		
 		super.load (urls, types);
 		
@@ -87,10 +74,25 @@ class Preloader extends LimePreloader {
 	
 	private override function start ():Void {
 		
-		if (display != null && Std.is (display, OpenFLPreloader)) {
+		if (displayHasLoaded) {
 			
-			display.addEventListener (Event.COMPLETE, display_onComplete);
-			cast (display, OpenFLPreloader).onLoaded ();
+			if (Std.is (display, IEventDispatcher)) {
+				
+				(display:IEventDispatcher).addEventListener (Event.COMPLETE, display_onComplete);
+				
+			}
+			
+			Reflect.callMethod (display, Reflect.field (display, "onLoaded"), []);
+			
+			if (display != null && !Std.is (display, IEventDispatcher)) {
+				
+				display_onComplete (null);
+				
+			}
+			
+		} else if (display != null) {
+			
+			display_onComplete (null);
 			
 		} else {
 			
@@ -103,9 +105,9 @@ class Preloader extends LimePreloader {
 	
 	private override function update (loaded:Int, total:Int):Void {
 		
-		if (display != null && Std.is (display, OpenFLPreloader)) {
+		if (displayHasUpdate) {
 			
-			cast (display, OpenFLPreloader).onUpdate (loaded, total);
+			Reflect.callMethod (display, Reflect.field (display, "onUpdate"), [ loaded, total ]);
 			
 		}
 		
@@ -121,8 +123,22 @@ class Preloader extends LimePreloader {
 	
 	@:noCompletion private function display_onComplete (event:Event):Void {
 		
-		display.removeEventListener (Event.COMPLETE, display_onComplete);
-		Lib.current.removeChild (display);
+		if (display != null && Std.is (display, IEventDispatcher)) {
+			
+			(display:IEventDispatcher).removeEventListener (Event.COMPLETE, display_onComplete);
+			
+		}
+		
+		if (Std.is (display, DisplayObject)) {
+			
+			if (display.parent == Lib.current) {
+				
+				Lib.current.removeChild (display);
+				
+			}
+			
+		}
+		
 		Lib.current.stage.focus = null;
 		display = null;
 		
@@ -131,52 +147,157 @@ class Preloader extends LimePreloader {
 	}
 	
 	
-	#if (js && html5)
-	@:noCompletion private function sound_onComplete (event:Event):Void {
+}
+
+
+@:dox(hide) class DefaultPreloader extends Sprite implements IPreloader {
+	
+	
+	private var endAnimation:Int;
+	private var outline:Sprite;
+	private var progress:Sprite;
+	private var startAnimation:Int;
+	
+	
+	public function new () {
 		
-		loaded++;
+		super ();
 		
-		onProgress.dispatch (loaded, total);
+		var backgroundColor = getBackgroundColor ();
+		var r = backgroundColor >> 16 & 0xFF;
+		var g = backgroundColor >> 8  & 0xFF;
+		var b = backgroundColor & 0xFF;
+		var perceivedLuminosity = (0.299 * r + 0.587 * g + 0.114 * b);
+		var color = 0x000000;
 		
-		if (loaded == total) {
+		if (perceivedLuminosity < 70) {
 			
-			start ();
+			color = 0xFFFFFF;
+			
+		}
+		
+		var x = 30;
+		var height = 7;
+		var y = getHeight () / 2 - height / 2;
+		var width = getWidth () - x * 2;
+		
+		var padding = 2;
+		
+		outline = new Sprite ();
+		outline.graphics.beginFill (color, 0.07);
+		outline.graphics.drawRect (0, 0, width, height);
+		outline.x = x;
+		outline.y = y;
+		outline.alpha = 0;
+		addChild (outline);
+		
+		progress = new Sprite ();
+		progress.graphics.beginFill (color, 0.35);
+		progress.graphics.drawRect (0, 0, width - padding * 2, height - padding * 2);
+		progress.x = x + padding;
+		progress.y = y + padding;
+		progress.scaleX = 0;
+		progress.alpha = 0;
+		addChild (progress);
+		
+		startAnimation = Lib.getTimer () + 100;
+		endAnimation = startAnimation + 1000;
+		
+	}
+	
+	
+	public function getBackgroundColor ():Int {
+		
+		return Lib.current.stage.window.config.background;
+		
+	}
+	
+	
+	public function getHeight ():Float {
+		
+		var height = Lib.current.stage.window.config.height;
+		
+		if (height > 0) {
+			
+			return height;
+			
+		} else {
+			
+			return Lib.current.stage.stageHeight;
 			
 		}
 		
 	}
 	
 	
-	@:noCompletion private function sound_onIOError (event:IOErrorEvent):Void {
+	public function getWidth ():Float {
 		
-		// if it is actually valid, it will load later when requested
+		var width = Lib.current.stage.window.config.width;
 		
-		loaded++;
-		
-		onProgress.dispatch (loaded, total);
-		
-		if (loaded == total) {
+		if (width > 0) {
 			
-			start ();
+			return width;
+			
+		} else {
+			
+			return Lib.current.stage.stageWidth;
 			
 		}
 		
 	}
-	#end
+	
+	
+	@:keep public function onInit ():Void {
+		
+		addEventListener (Event.ENTER_FRAME, this_onEnterFrame);
+		
+	}
+	
+	
+	@:keep public function onLoaded ():Void {
+		
+		removeEventListener (Event.ENTER_FRAME, this_onEnterFrame);
+		dispatchEvent (new Event (Event.COMPLETE));
+		
+	}
+	
+	
+	@:keep public function onUpdate (bytesLoaded:Int, bytesTotal:Int):Void {
+		
+		var percentLoaded = bytesLoaded / bytesTotal;
+		
+		if (percentLoaded > 1) {
+			
+			percentLoaded = 1;
+			
+		}
+		
+		progress.scaleX = percentLoaded;
+		
+	}
+	
+	
+	
+	
+	// Event Handlers
+	
+	
+	
+	
+	private function this_onEnterFrame (event:Event):Void {
+		
+		var elapsed = Lib.getTimer () - startAnimation;
+		var total = endAnimation - startAnimation;
+		
+		var percent = elapsed / total;
+		
+		if (percent < 0) percent = 0;
+		if (percent > 1) percent = 1;
+		
+		outline.alpha = percent;
+		progress.alpha = percent;
+		
+	}
 	
 	
 }
-
-
-#if tools
-typedef OpenFLPreloader = NMEPreloader
-#else
-private class OpenFLPreloader extends Sprite {
-	
-	public function new () { super (); }
-	public function onInit ():Void {};
-	public function onUpdate (loaded:Int, total:Int):Void {};
-	public function onLoaded ():Void {};
-	
-}
-#end

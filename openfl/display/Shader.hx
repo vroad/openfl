@@ -22,14 +22,18 @@ class Shader {
 	
 	
 	public var byteCode (null, default):ByteArray;
-	public var data:ShaderData;
-	public var glFragmentSource:String;
-	public var glProgram:GLProgram;
-	public var glVertexSource:String;
+	public var data (get, set):ShaderData;
+	public var glFragmentSource (get, set):String;
+	public var glProgram (default, null):GLProgram;
+	public var glVertexSource (get, set):String;
 	public var precisionHint:ShaderPrecision;
 	
 	private var gl:GLRenderContext;
 	
+	private var __data:ShaderData;
+	private var __glFragmentSource:String;
+	private var __glSourceDirty:Bool;
+	private var __glVertexSource:String;
 	private var __isUniform:Map<String, Bool>;
 	private var __inputBitmapData:Array<ShaderInput<BitmapData>>;
 	private var __paramBool:Array<ShaderParameter<Bool>>;
@@ -56,7 +60,7 @@ class Shader {
 				
 			} else {
 				
-				gl_FragColor = vec4 (color.rgb / color.a, color.a * vAlpha);
+				gl_FragColor = color * vAlpha;
 				
 			}
 			
@@ -91,7 +95,7 @@ class Shader {
 		byteCode = code;
 		precisionHint = FULL;
 		
-		__init ();
+		__glSourceDirty = true;
 		
 	}
 	
@@ -108,6 +112,12 @@ class Shader {
 	
 	
 	private function __disableGL ():Void {
+		
+		if (data.uImage0 != null) {
+			
+			data.uImage0.input = null;
+			
+		}
 		
 		for (parameter in __paramBool) {
 			
@@ -174,13 +184,13 @@ class Shader {
 	
 	private function __init ():Void {
 		
-		if (data == null) {
+		if (__data == null) {
 			
-			data = cast new ShaderData (null);
+			__data = cast new ShaderData (null);
 			
 		}
 		
-		if (glFragmentSource != null && glVertexSource != null) {
+		if (__glFragmentSource != null && __glVertexSource != null && (glProgram == null || __glSourceDirty)) {
 			
 			__initGL ();
 			
@@ -191,7 +201,10 @@ class Shader {
 	
 	private function __initGL ():Void {
 		
-		if (__inputBitmapData == null) {
+		if (__glSourceDirty || __isUniform == null) {
+			
+			__glSourceDirty = false;
+			glProgram = null;
 			
 			__isUniform = new Map ();
 			
@@ -210,7 +223,7 @@ class Shader {
 			
 		}
 		
-		if (gl != null && glProgram == null && glFragmentSource != null && glVertexSource != null) {
+		if (gl != null && glProgram == null) {
 			
 			var fragment = 
 				
@@ -403,6 +416,18 @@ class Shader {
 				gl.activeTexture (GLES20.TEXTURE0 + textureCount);
 				gl.bindTexture (GLES20.TEXTURE_2D, input.input.getTexture (gl));
 				
+				if (input.smoothing) {
+					
+					gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.LINEAR);
+					gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.LINEAR);
+					
+				} else {
+					
+					gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.NEAREST);
+					gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.NEAREST);
+					
+				}
+				
 			}
 			
 			textureCount++;
@@ -561,6 +586,73 @@ class Shader {
 	}
 	
 	
+	
+	
+	// Get & Set Methods
+	
+	
+	
+	
+	private function get_data ():ShaderData {
+		
+		if (__glSourceDirty || __data == null) {
+			
+			__init ();
+			
+		}
+		
+		return __data;
+		
+	}
+	
+	
+	private function set_data (value:ShaderData):ShaderData {
+		
+		return __data = cast value;
+		
+	}
+	
+	
+	private function get_glFragmentSource ():String {
+		
+		return __glFragmentSource;
+		
+	}
+	
+	
+	private function set_glFragmentSource (value:String):String {
+		
+		if (value != __glFragmentSource) {
+			
+			__glSourceDirty = true;
+			
+		}
+		
+		return __glFragmentSource = value;
+		
+	}
+	
+	
+	private function get_glVertexSource ():String {
+		
+		return __glVertexSource;
+		
+	}
+	
+	
+	private function set_glVertexSource (value:String):String {
+		
+		if (value != __glFragmentSource) {
+			
+			__glSourceDirty = true;
+			
+		}
+		
+		return __glFragmentSource = value;
+		
+	}
+	
+	
 }
 
 
@@ -623,7 +715,11 @@ class Shader {
 			processFields (glVertexSource, "uniform", shaderDataFields, isBaseClass, pos);
 			processFields (glFragmentSource, "uniform", shaderDataFields, isBaseClass, pos);
 			
-			if (shaderDataFields.length > 0) {
+			if (isBaseClass) {
+				
+				dataClassName = "ShaderData";
+				
+			} else if (shaderDataFields.length > 0) {
 				
 				dataClassName = "_" + localClass.name + "_ShaderData";
 				
@@ -632,7 +728,7 @@ class Shader {
 					pos: pos,
 					pack: localClass.pack,
 					name: dataClassName,
-					kind: TDClass ({ pack: [ "openfl", "display" ], name: isBaseClass ? "ShaderData" : "_Shader_ShaderData", params: [] }, null, false),
+					kind: TDClass ({ pack: [ "openfl", "display" ], name: "ShaderData", params: [] }, null, false),
 					fields: shaderDataFields,
 					params: [],
 					meta: [ { name: ":dox", params: [ macro hide ], pos: pos }, { name: ":noCompletion", pos: pos }, { name: ":hack", pos: pos } ]
@@ -668,12 +764,24 @@ class Shader {
 							
 						}
 						
-						if (glVertexSource != null) block.unshift (macro if (glVertexSource == null) glVertexSource = $v{glVertexSource});
-						if (glFragmentSource != null) block.unshift (macro if (glFragmentSource == null) glFragmentSource = $v{glFragmentSource});
+						if (glVertexSource != null) block.unshift (macro if (__glVertexSource == null) __glVertexSource = $v{glVertexSource});
+						if (glFragmentSource != null) block.unshift (macro if (__glFragmentSource == null) __glFragmentSource = $v{glFragmentSource});
 					
-					case "data":
+					case "__data":
 						
 						field.kind = FVar (TPath ({ name: dataClassName, pack: localClass.pack, params: [] }), Context.parse ("new " + dataClassName + " (null)", pos));
+					
+					case "get_data":
+						
+						switch (field.kind) {
+							
+							case FFun (f):
+								
+								f.ret = TPath ({ name: dataClassName, pack: localClass.pack, params: [] });
+							
+							default:
+							
+						}
 					
 					default:
 					

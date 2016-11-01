@@ -58,8 +58,12 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (child.parent == this) {
 			
-			__children.remove (child);
-			__children.insert (index, child);
+			if (__children[index] != child) {
+				
+				__children.remove (child);
+				__children.insert (index, child);
+				
+			}
 			
 		} else {
 			
@@ -296,31 +300,8 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		if (child1.parent == this && child2.parent == this) {
 			
-			#if (haxe_ver > 3.1)
-			
 			var index1 = __children.indexOf (child1);
 			var index2 = __children.indexOf (child2);
-			
-			#else
-			
-			var index1 = -1;
-			var index2 = -1;
-			
-			for (i in 0...__children.length) {
-				
-				if (__children[i] == child1) {
-					
-					index1 = i;
-					
-				} else if (__children[i] == child2) {
-					
-					index2 = i;
-					
-				}
-				
-			}
-			
-			#end
 			
 			__children[index1] = child2;
 			__children[index2] = child1;
@@ -344,7 +325,7 @@ class DisplayObjectContainer extends InteractiveObject {
 		
 		var success = __dispatchEvent (event);
 		
-		if (success) {
+		if (success && __children != null) {
 			
 			for (child in __children) {
 				

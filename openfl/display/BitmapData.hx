@@ -27,6 +27,7 @@ import openfl._internal.renderer.cairo.CairoRenderer;
 import openfl._internal.renderer.cairo.CairoMaskManager;
 import openfl._internal.renderer.canvas.CanvasMaskManager;
 import openfl._internal.renderer.RenderSession;
+import openfl._internal.utils.PerlinNoise;
 import openfl.errors.IOError;
 import openfl.errors.TypeError;
 import openfl.filters.BitmapFilter;
@@ -814,13 +815,15 @@ class BitmapData implements IBitmapDrawable {
 			
 			#if (js && html5)
 			
-			if (textureImage.premultiplied) {
-				
-				gl.pixelStorei (GLES20.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
-				
-			} else {
+			if (textureImage.type != DATA && !textureImage.premultiplied) {
 				
 				gl.pixelStorei (GLES20.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+				
+			} else if (!textureImage.premultiplied && textureImage.transparent) {
+				
+				gl.pixelStorei (GLES20.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
+				textureImage = textureImage.clone ();
+				textureImage.premultiplied = true;
 				
 			}
 			
@@ -839,7 +842,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			if (textureImage.type == DATA) {
 				
-				gl.texImage2D (gl.TEXTURE_2D, 0, internalFormat, textureImage.buffer.width, textureImage.buffer.height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
+				gl.texImage2D (GLES20.TEXTURE_2D, 0, internalFormat, textureImage.buffer.width, textureImage.buffer.height, 0, format, GLES20.UNSIGNED_BYTE, textureImage.data);
 				
 			} else {
 				
@@ -1136,7 +1139,9 @@ class BitmapData implements IBitmapDrawable {
 	
 	public function perlinNoise (baseX:Float, baseY:Float, numOctaves:UInt, randomSeed:Int, stitch:Bool, fractalNoise:Bool, channelOptions:UInt = 7, grayScale:Bool = false, offsets:Array<Point> = null):Void {
 		
-		openfl.Lib.notImplemented ();
+		if (!__isValid) return;
+		var noise = new PerlinNoise (randomSeed, numOctaves, 0.01);
+		noise.fill (this, baseX, baseY, 0);
 		
 	}
 	
@@ -1357,7 +1362,11 @@ class BitmapData implements IBitmapDrawable {
 		#if (js && html5)
 		if (!__isValid) return;
 		
-		ImageCanvasUtil.convertToCanvas (image);
+		if (image.type == DATA) {
+			
+			ImageCanvasUtil.convertToCanvas (image);
+			
+		}
 		
 		var context = renderSession.context;
 		

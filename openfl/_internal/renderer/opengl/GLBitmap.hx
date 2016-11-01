@@ -19,32 +19,21 @@ class GLBitmap {
 		
 		if (!bitmap.__renderable || bitmap.__worldAlpha <= 0) return;
 		
-		var gl = renderSession.gl;
-		
 		if (bitmap.bitmapData != null && bitmap.bitmapData.__isValid) {
 			
+			var renderer:GLRenderer = cast renderSession.renderer;
+			var gl = renderSession.gl;
+			
 			renderSession.blendModeManager.setBlendMode (bitmap.blendMode);
-			renderSession.filterManager.pushObject (bitmap);
 			renderSession.maskManager.pushObject (bitmap);
 			
-			var renderer:GLRenderer = cast renderSession.renderer;
-			var shader = renderSession.shaderManager.currentShader;
+			var shader = renderSession.filterManager.pushObject (bitmap);
 			
-			gl.uniformMatrix4fv (shader.data.uMatrix.getUniformLocation (), false, renderer.getMatrix (bitmap.__renderTransform));
+			shader.data.uImage0.input = bitmap.bitmapData;
+			shader.data.uImage0.smoothing = renderSession.allowSmoothing && (bitmap.smoothing || renderSession.upscaled);
+			shader.data.uMatrix.value = renderer.getMatrix (bitmap.__renderTransform);
 			
-			gl.bindTexture (GLES20.TEXTURE_2D, bitmap.bitmapData.getTexture (gl));
-			
-			if (renderSession.allowSmoothing && (bitmap.smoothing || renderSession.upscaled)) {
-				
-				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.LINEAR);
-				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.LINEAR);
-				
-			} else {
-				
-				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MAG_FILTER, GLES20.NEAREST);
-				gl.texParameteri (GLES20.TEXTURE_2D, GLES20.TEXTURE_MIN_FILTER, GLES20.NEAREST);
-				
-			}
+			renderSession.shaderManager.setShader (shader);
 			
 			gl.bindBuffer (GLES20.ARRAY_BUFFER, bitmap.bitmapData.getBuffer (gl, bitmap.__worldAlpha));
 			gl.vertexAttribPointer (shader.data.aPosition.getAttributeLocation (), 3, GLES20.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
@@ -53,8 +42,8 @@ class GLBitmap {
 			
 			gl.drawArrays (GLES20.TRIANGLE_STRIP, 0, 4);
 			
-			renderSession.maskManager.popObject (bitmap);
 			renderSession.filterManager.popObject (bitmap);
+			renderSession.maskManager.popObject (bitmap);
 			
 		}
 		
