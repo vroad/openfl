@@ -602,7 +602,6 @@ import openfl.profiler.Telemetry;
 		GLUtils.CheckGLError ();
 		
 		__renderToTexture = null;
-		__scissorRectangle = null;
 		__updateBackbufferViewport ();
 		__updateScissorRectangle ();
 		__updateDepthAndStencilState ();
@@ -732,7 +731,6 @@ import openfl.profiler.Telemetry;
 		}
 		
 		__renderToTexture = texture;
-		__scissorRectangle = null;
 		__rttDepthAndStencil = enableDepthAndStencil;
 		__updateScissorRectangle ();
 		__updateDepthAndStencilState ();
