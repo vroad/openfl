@@ -36,7 +36,7 @@ import haxe.Timer;
 		__optimizeForRenderToTexture = optimizeForRenderToTexture;
 		__streamingLevels = streamingLevels;
 		
-		//uploadFromTypedArray (null);
+		uploadFromTypedArray (null);
 		
 	}
 	
