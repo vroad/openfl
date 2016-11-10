@@ -61,17 +61,6 @@ import openfl.media.Sound;
 		if (!__isValid) return;
 		
 		__source.stop ();
-		__dispose ();
-		
-	}
-	
-	
-	private function __dispose ():Void {
-		
-		if (!__isValid) return;
-		
-		__source.dispose ();
-		__isValid = false;
 		
 	}
 	
@@ -160,8 +149,6 @@ import openfl.media.Sound;
 	private function source_onComplete ():Void {
 		
 		SoundMixer.__unregisterSoundChannel (this);
-		
-		__dispose ();
 		dispatchEvent (new Event (Event.SOUND_COMPLETE));
 		
 	}
